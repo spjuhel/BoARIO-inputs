@@ -1,0 +1,18 @@
+{
+    "bool_run_detailled": true,
+    "register_stocks": false,
+    "psi_param": 0.85,
+    "model_time_step": 1,
+    "timestep_dividing_factor": 365,
+    "inventory_restoration_time": 6,
+    "alpha_base": 1.0,
+    "alpha_max": 1.25,
+    "alpha_tau": 365,
+    "rebuild_tau": 10000,
+    "n_timesteps": 730,
+    "min_duration": 730,
+    "impacted_region_base_production_toward_rebuilding": 0.001,
+    "row_base_production_toward_rebuilding": 0.0,
+    "n_timesteps_simulated": 730,
+    "has_crashed": false
+}
