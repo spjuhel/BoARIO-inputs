@@ -148,7 +148,7 @@ rule mv_to_final:
                ])
     shell:
         """
-        mkdir -p {params.final_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
+        mkdir -p {params.final_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
         cp {params.output_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
         """
 
@@ -189,7 +189,8 @@ rule indicators:
         disk_mb=500
     shell:
         """
-        nice -n 10 python {config[ARIO_DIR]}/scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/'
+        cd {config[ARIO_DIR]};
+        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/'
         """
 
 rule run_RoW:
@@ -220,13 +221,14 @@ rule run_RoW:
         mem_mb=4000,
         disk_mb=50
     params:
-        mrios_path = config["BUILDED_DATA_DIR"]+"mrios/",
+        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         ario_dir = config["ARIO_DIR"],
         output_dir = config["OUTPUT_DIR"],
         flood_gdp = config["FLOOD_GDP_SHARE_FILE"]
     shell:
         """
-        nice -n 10 python {config[ARIO_DIR]}/scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        cd {params.ario_dir};
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_Full_dmg_raw:
@@ -260,12 +262,13 @@ rule run_Full_dmg_raw:
     conda:
         "ario3"
     params:
-        mrios_path = config["BUILDED_DATA_DIR"]+"mrios/",
+        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         output_dir = config["OUTPUT_DIR"],
         flood_gdp = config["FLOOD_GDP_SHARE_FILE"]
     shell:
         """
-        nice -n 10 python {config[ARIO_DIR]}/scripts/mono_run_dmg.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.flood} {params.mrios_path} {params.output_dir} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        cd {config[ARIO_DIR]};
+        nice -n 10 python ./scripts/mono_run_dmg.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.flood} {params.mrios_path} {params.output_dir} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_Full:
@@ -299,12 +302,13 @@ rule run_Full:
     conda:
         "ario3"
     params:
-        mrios_path = config["BUILDED_DATA_DIR"]+"mrios/",
+        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         output_dir = config["OUTPUT_DIR"],
         flood_gdp = config["FLOOD_GDP_SHARE_FILE"]
     shell:
         """
-        nice -n 10 python {config[ARIO_DIR]}/scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        cd {config[ARIO_DIR]};
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule mrio_full:
