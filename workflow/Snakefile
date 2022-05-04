@@ -182,7 +182,7 @@ rule indicators:
                    "prod_chg.json",
                    "fd_loss.json"])
     conda:
-        "ario3"
+        "env/ario3.yml"
     resources:
         vmem_mb=15000,
         mem_mb = 12000,
@@ -216,7 +216,9 @@ rule run_RoW:
                    "simulated_params.json",
                    "simulation.log"])
     conda:
-        "ario3"
+        "env/ario3.yml"
+    wildcard_constraints:
+        flood="max|min|\d{1,2}%"
     resources:
         mem_mb=4000,
         disk_mb=50
@@ -229,6 +231,45 @@ rule run_RoW:
         """
         cd {params.ario_dir};
         nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        """
+
+rule run_RoW_dmg:
+    input:
+        mrio = expand("{inputdir}/mrios/mrio_{{region}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        event_template = expand("{inputdir}/event_template_snakemake.json",inputdir=config["CONFIG_DIR"]),
+        params_file = expand("{inputdir}/params_snakemake.json",inputdir=config["CONFIG_DIR"]),
+        mrio_params = expand("{inputdir}/mrio_params_snakemake.json",inputdir=config["CONFIG_DIR"])
+    output:
+        expand("{out}/{{region}}_type_RoW_qdmg_raw_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+               out=config["OUTPUT_DIR"],
+               files=[
+                   "indexes.json",
+                   "classic_demand_record",
+                   "final_demand_unmet_record",
+                   "iotable_X_max_record",
+                   "iotable_XVA_record",
+                   "limiting_stocks_record",
+                   "overprodvector_record",
+                   "rebuild_demand_record",
+                   "rebuild_prod_record",
+                   "simulated_events.json",
+                   "simulated_params.json",
+                   "simulation.log"])
+    conda:
+        "env/ario3.yml"
+    wildcard_constraints:
+        flood="\d+"
+    resources:
+        mem_mb=4000,
+        disk_mb=50
+    params:
+        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
+        ario_dir = config["ARIO_DIR"],
+        output_dir = config["OUTPUT_DIR"]
+    shell:
+        """
+        cd {params.ario_dir};
+        nice -n 10 python ./scripts/mono_run_dmg.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.flood} {params.mrios_path} {params.output_dir} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_Full_dmg_raw:
@@ -260,7 +301,7 @@ rule run_Full_dmg_raw:
         mem_mb=2000,
         disk_mb=500
     conda:
-        "ario3"
+        "env/ario3.yml"
     params:
         mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         output_dir = config["OUTPUT_DIR"],
@@ -277,8 +318,6 @@ rule run_Full:
         event_template = expand("{inputdir}/event_template_snakemake.json",inputdir=config["CONFIG_DIR"]),
         params_file = expand("{inputdir}/params_snakemake.json",inputdir=config["CONFIG_DIR"]),
         mrio_params = expand("{inputdir}/mrio_params_snakemake.json",inputdir=config["CONFIG_DIR"])
-    wildcard_constraints:
-        flood="max|min|\d{1,2}%"
     output:
         expand("{out}/{{region}}_type_Full_qdmg_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
@@ -295,12 +334,14 @@ rule run_Full:
                    "simulated_events.json",
                    "simulated_params.json",
                    "simulation.log"])
+    wildcard_constraints:
+        flood="max|min|\d{1,2}%"
     resources:
         vmem_mb=3000,
         mem_mb=2000,
         disk_mb=500
     conda:
-        "ario3"
+        "env/ario3.yml"
     params:
         mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         output_dir = config["OUTPUT_DIR"],
@@ -317,7 +358,7 @@ rule mrio_full:
         sector_aggreg_file = expand("{inputdir}/133_74_sector_aggregation_exiobase3.ods",inputdir=config["SOURCE_DATA_DIR"]),
         sector_renaming_file = expand("{inputdir}/sector_renaming_74.json",inputdir=config["CONFIG_DIR"])
     conda:
-        "ario3"
+        "env/ario3.yml"
     output:
         expand("{outputdir}/mrios/mrio_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
@@ -336,7 +377,7 @@ rule mrio_region:
         sector_renaming_file = expand("{inputdir}/sector_renaming_74.json",inputdir=config["CONFIG_DIR"]),
         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"])
     conda:
-        "ario3"
+        "env/ario3.yml"
     output:
         expand("{outputdir}/mrios/mrio_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
