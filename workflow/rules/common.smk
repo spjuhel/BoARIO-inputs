@@ -18,7 +18,7 @@ def check_config(config):
         files = [str(x.name) for x in script_dir.glob("*.py") if x.is_file()]
         for script in required_scripts:
             if script not in files:
-                raise FileNotFoundError("Script {} is not in the directory, yet is required".format(script))
+                raise FileNotFoundError("Script {} is not in the directory {}, yet is required".format(script,script_dir))
 
         config['INPUTS_GENERATION_SCRIPTS_DIR'] = str(script_dir.resolve())
 
