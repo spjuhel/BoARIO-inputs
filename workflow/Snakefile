@@ -221,7 +221,8 @@ rule run_RoW:
         flood="max|min|\d{1,2}%"
     resources:
         mem_mb=4000,
-        disk_mb=50
+        disk_mb=50,
+        vmem_mb=4000
     params:
         mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         ario_dir = config["ARIO_DIR"],
@@ -261,7 +262,8 @@ rule run_RoW_dmg:
         flood="\d+"
     resources:
         mem_mb=4000,
-        disk_mb=50
+        disk_mb=50,
+        vmem_mb=4000
     params:
         mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         ario_dir = config["ARIO_DIR"],
