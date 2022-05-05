@@ -97,6 +97,7 @@ def aggreg(exio_path, sector_aggregator_path, new_sectors_name_path, old_mrio_pa
     scriptLogger.info("Done")
     scriptLogger.info("Renaming sectors from {}".format(pathlib.Path(new_sectors_name_path).absolute()))
     exio3.rename_sectors(a)
+    exio3.calc_all()
     scriptLogger.info("Done")
     name = save_path
     scriptLogger.info("Saving to {}".format(pathlib.Path(name).absolute()))
