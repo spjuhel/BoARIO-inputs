@@ -1,3 +1,4 @@
+import os
 import pathlib
 import pymrio as pym
 import pandas as pd
@@ -8,9 +9,13 @@ import json
 import country_converter as coco
 from pymrio.core.mriosystem import IOSystem
 
-parser = argparse.ArgumentParser(description='Aggregate an EXIOBASE3 MRIO table in less sectors (an optionally less regions)')
+cc = coco.CountryConverter()
+
+parser = argparse.ArgumentParser(description='Aggregate an EXIOBASE3 MRIO table in less regions')
 parser.add_argument('exio_path', type=str, help='The str path to the exio3 (zip file or already pre-treated pkl file)')
-parser.add_argument('regions_aggregator', type=str, help='A coco (country converter) classification to aggregate to, or the path to the json file with the regions aggregation')
+parser.add_argument('regions_aggregator', type=str,
+                    help="""A coco (country converter) classification to aggregate to, or the path to the json file with the regions aggregation.
+                    Valid classification are : {} \n Not all were tested, use with care and check result !""".format(cc.valid_class))
 parser.add_argument('-o', "--output", type=str, help='The str path to save the pickled mrio to', nargs='?', default='./mrio_dump')
 
 args = parser.parse_args()
@@ -23,8 +28,14 @@ scriptLogger.addHandler(consoleHandler)
 scriptLogger.setLevel(logging.INFO)
 scriptLogger.propagate = False
 
+def most_common(lst):
+    return max(set(lst), key=lst.count)
+
 def aggreg(exio_path,  regions_aggregator, save_path=None):
-    scriptLogger.info("Loading aggregator")
+    scriptLogger.info("Loading region aggregator")
+    scriptLogger.info("Make sure you use the same python environment as the one loading the pickle file (especial pymrio and pandas version !)")
+    scriptLogger.info("Your current environment is: {}".format(os.environ['CONDA_PREFIX']))
+    region_agg = None
     if "json" in regions_aggregator:
         regions_aggregator = pathlib.Path(regions_aggregator)
         if not regions_aggregator.exists():
@@ -34,7 +45,6 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
                 region_agg = json.load(f)
             json_agg = True
     else:
-        cc = coco.CountryConverter()
         if regions_aggregator not in cc.valid_class:
             raise ValueError("Given aggregator ({}) is not a valid country_converter class, choose one in: {}".format(regions_aggregator,cc.valid_class))
         else:
@@ -48,7 +58,7 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
     if exio_path.suffix == ".zip":
         scriptLogger.info("Parsing EXIOBASE3 from {}".format(exio_path.resolve()))
         exio3 = pym.parse_exiobase3(path=exio_path)
-    elif exio_path.suffix == "pkl":
+    elif exio_path.suffix == ".pkl":
         with exio_path.open('rb') as f:
             scriptLogger.info("Loading EXIOBASE3 from {}".format(exio_path.resolve()))
             exio3 = pkl.load(f)
@@ -70,6 +80,12 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
     scriptLogger.info("Done")
     if not json_agg:
         region_agg = {region: cc.convert(region, src="EXIO3",to=regions_aggregator) for region in original_regions}
+
+    for k,v in region_agg.items():
+        if isinstance(v, list):
+            agg = most_common(v)
+            scriptLogger.warning("Multiple possible aggregate found for region {} : {}, selecting most common: {}".format(k,set(v),agg))
+            region_agg[k] = agg
 
     regions_aggregator = coco.agg_conc(original_countries=exio3.get_regions(),
                                            aggregates=region_agg)

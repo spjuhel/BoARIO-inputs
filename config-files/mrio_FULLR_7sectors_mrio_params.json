@@ -1,0 +1,22 @@
+{
+    "monetary_unit": 1000000,
+    "main_inv_dur": 90,
+    "capital_ratio_dict": {
+        "Agriculture & other": 2.9,
+        "Extraction": 5.1,
+        "Manufacture": 2.161,
+        "Energy and utilities": 2.385,
+        "Construction": 0.5,
+        "Sales, Transports and Services": 2.804,
+        "Others": 1.0
+    },
+    "inventories_dict": {
+        "Agriculture & other": 90.0,
+        "Extraction": 90.0,
+        "Manufacture": 90.0,
+        "Energy and utilities": 90.0,
+        "Construction": 90.0,
+        "Sales, Transports and Services": Infinity,
+        "Others": Infinity
+    }
+}
