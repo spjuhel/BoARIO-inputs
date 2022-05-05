@@ -238,7 +238,7 @@ rule run_RoW:
     shell:
         """
         cd {params.ario_dir};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.flood} {wildcards.run_type} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.run_type} {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_Full:
@@ -278,7 +278,7 @@ rule run_Full:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.flood} {wildcards.run_type} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule mrio_full:
