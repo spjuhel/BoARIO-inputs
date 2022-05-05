@@ -28,6 +28,35 @@ scriptLogger.addHandler(consoleHandler)
 scriptLogger.setLevel(logging.INFO)
 scriptLogger.propagate = False
 
+
+def lexico_reindex(mrio: pym.IOSystem) -> pym.IOSystem:
+    """Reindex IOSystem lexicographicaly
+
+    Sort indexes and columns of the dataframe of a :ref:`pymrio.IOSystem` by
+    lexical order.
+
+    Parameters
+    ----------
+    mrio : pym.IOSystem
+        The IOSystem to sort
+
+    Returns
+    -------
+    pym.IOSystem
+        The sorted IOSystem
+
+    """
+
+    mrio.Z = mrio.Z.reindex(sorted(mrio.Z.index), axis=0)
+    mrio.Z = mrio.Z.reindex(sorted(mrio.Z.columns), axis=1)
+    mrio.Y = mrio.Y.reindex(sorted(mrio.Y.index), axis=0)
+    mrio.Y = mrio.Y.reindex(sorted(mrio.Y.columns), axis=1)
+    mrio.x = mrio.x.reindex(sorted(mrio.x.index), axis=0) #type: ignore
+    mrio.A = mrio.A.reindex(sorted(mrio.A.index), axis=0)
+    mrio.A = mrio.A.reindex(sorted(mrio.A.columns), axis=1)
+
+    return mrio
+
 def most_common(lst):
     return max(set(lst), key=lst.count)
 
@@ -77,6 +106,7 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
     scriptLogger.info("Done")
     scriptLogger.info("Computing the IO components")
     exio3.calc_all()
+    exio3 = lexico_reindex(exio3)
     scriptLogger.info("Done")
     if not json_agg:
         region_agg = {region: cc.convert(region, src="EXIO3",to=regions_aggregator) for region in original_regions}
@@ -91,6 +121,7 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
                                            aggregates=region_agg)
     exio3.aggregate(region_agg=regions_aggregator)
     exio3.calc_all()
+    exio3 = lexico_reindex(exio3)
     name = save_path
     scriptLogger.info("Saving to {}".format(pathlib.Path(name).absolute()))
     with open(name, 'wb') as f:

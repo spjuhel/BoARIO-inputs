@@ -28,6 +28,34 @@ scriptLogger.addHandler(consoleHandler)
 scriptLogger.setLevel(logging.INFO)
 scriptLogger.propagate = False
 
+def lexico_reindex(mrio: pym.IOSystem) -> pym.IOSystem:
+    """Reindex IOSystem lexicographicaly
+
+    Sort indexes and columns of the dataframe of a :ref:`pymrio.IOSystem` by
+    lexical order.
+
+    Parameters
+    ----------
+    mrio : pym.IOSystem
+        The IOSystem to sort
+
+    Returns
+    -------
+    pym.IOSystem
+        The sorted IOSystem
+
+    """
+
+    mrio.Z = mrio.Z.reindex(sorted(mrio.Z.index), axis=0)
+    mrio.Z = mrio.Z.reindex(sorted(mrio.Z.columns), axis=1)
+    mrio.Y = mrio.Y.reindex(sorted(mrio.Y.index), axis=0)
+    mrio.Y = mrio.Y.reindex(sorted(mrio.Y.columns), axis=1)
+    mrio.x = mrio.x.reindex(sorted(mrio.x.index), axis=0) #type: ignore
+    mrio.A = mrio.A.reindex(sorted(mrio.A.index), axis=0)
+    mrio.A = mrio.A.reindex(sorted(mrio.A.columns), axis=1)
+
+    return mrio
+
 def new_params_from_old(new_sectors,old_mrio_params,sec_agg_matrix):
     sec_agg_matrix.index = new_sectors
     sector_mapping = {k : [kk for kk in v.keys() if v[kk] == 1] for k,v in sec_agg_matrix.T.to_dict().items()}
@@ -90,6 +118,7 @@ def aggreg(exio_path, sector_aggregator_path, new_sectors_name_path, old_mrio_pa
     scriptLogger.info("Done")
     scriptLogger.info("Computing the IO components")
     exio3.calc_all()
+    exio3 = lexico_reindex(exio3)
     scriptLogger.info("Done")
     scriptLogger.info("Reading aggregation matrix from sheet 'input' in file {}".format(pathlib.Path(sector_aggregator_path).absolute()))
     scriptLogger.info("Aggregating from {} to {} sectors".format(len(exio3.get_sectors()), sec_agg_matrix.shape[0])) #type:ignore
@@ -101,6 +130,7 @@ def aggreg(exio_path, sector_aggregator_path, new_sectors_name_path, old_mrio_pa
     scriptLogger.info("Done")
     name = save_path
     scriptLogger.info("Saving to {}".format(pathlib.Path(name).absolute()))
+    exio3 = lexico_reindex(exio3)
     with open(name, 'wb') as f:
         pkl.dump(exio3, f)
 
