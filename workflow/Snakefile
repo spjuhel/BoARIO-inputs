@@ -202,10 +202,10 @@ rule indicators:
 
 rule run_RoW:
     input:
-        mrio = expand("{inputdir}/mrios/mrio_{{region}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        event_template = expand("{inputdir}/event_template_snakemake.json",inputdir=config["CONFIG_DIR"]),
-        params_file = expand("{inputdir}/params_snakemake.json",inputdir=config["CONFIG_DIR"]),
-        mrio_params = expand("{inputdir}/mrio_params_snakemake.json",inputdir=config["CONFIG_DIR"])
+        mrio = expand("{inputdir}/mrios/{mrio_full}_{{region}}.pkl",inputdir=config["BUILDED_DATA_DIR"], mrio_full=config["MAIN_MRIO_PKLFILE"]),
+        event_template = expand("{inputdir}/{event_template}",inputdir=config["CONFIG_DIR"], event_template=config["EVENT_TEMPLATE"]),
+        params_file = expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=config["PARAMS_TEMPLATE"]),
+        mrio_params = expand("{inputdir}/{mrio_params_template}",inputdir=config["CONFIG_DIR"], mrio_params_template=config["MRIO_PARAMS"])
     output:
         expand("{out}/{{region}}_type_RoW_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
@@ -243,10 +243,10 @@ rule run_RoW:
 
 rule run_Full:
     input:
-        mrio = expand("{inputdir}/mrios/mrio_full.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        event_template = expand("{inputdir}/event_template_snakemake.json",inputdir=config["CONFIG_DIR"]),
-        params_file = expand("{inputdir}/params_snakemake.json",inputdir=config["CONFIG_DIR"]),
-        mrio_params = expand("{inputdir}/mrio_params_snakemake.json",inputdir=config["CONFIG_DIR"])
+        mrio = expand("{inputdir}/mrios/{mrio_full}",inputdir=config["BUILDED_DATA_DIR"], mrio_full=config["MAIN_MRIO_PKLFILE"]),
+        event_template = expand("{inputdir}/{event_template}",inputdir=config["CONFIG_DIR"], event_template=config["EVENT_TEMPLATE"]),
+        params_file = expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=config["PARAMS_TEMPLATE"]),
+        mrio_params = expand("{inputdir}/{mrio_params_template}",inputdir=config["CONFIG_DIR"], mrio_params_template=config["MRIO_PARAMS"])
     output:
         expand("{out}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
@@ -278,14 +278,12 @@ rule run_Full:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule mrio_full:
     input:
         mrio_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
-        sector_aggreg_file = expand("{inputdir}/133_74_sector_aggregation_exiobase3.ods",inputdir=config["SOURCE_DATA_DIR"]),
-        sector_renaming_file = expand("{inputdir}/sector_renaming_74.json",inputdir=config["CONFIG_DIR"])
     conda:
         "env/ario3.yml"
     output:
@@ -296,27 +294,47 @@ rule mrio_full:
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[ARIO_DIR]}/scripts/aggreg_exio3.py -o {output} {input.mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -o {output} {input.mrio_file}
         """
 
-rule mrio_region:
+rule mrio_aggreg:
+    #TODO : Rework also
+
+rule mrio_sector_aggreg:
     input:
-        mrio_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
-        sector_aggreg_file = expand("{inputdir}/133_74_sector_aggregation_exiobase3.ods",inputdir=config["SOURCE_DATA_DIR"]),
-        sector_renaming_file = expand("{inputdir}/sector_renaming_74.json",inputdir=config["CONFIG_DIR"]),
-        region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"])
+        full_mrio_file = expand("{outputdir}/mrios/mrio_full.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        sector_aggreg_file = expand("{inputdir}/{sector_aggreg_file}",inputdir=config["AGGREG_FILES_DIR"], sector_aggreg_file=config["SECTOR_AGGREG_FILE"]),
+        sector_renaming_file = expand("{inputdir}/{sector_renaming_file}",inputdir=config["AGGREG_FILES_DIR"], sector_renaming_file=config["SECTOR_RENAMING_FILE"])
     conda:
         "env/ario3.yml"
     output:
-        expand("{outputdir}/mrios/mrio_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        expand("{outputdir}/mrios/mrio_sector_agg.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
         vmem_mb=6000,
         mem_mb=5000,
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3.py -o {output} {input.mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file} {input.region_aggreg_file}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file} -o {config[BUILDED_DATA_DIR]}/mrios/mrio_sector_agg.pkl
         """
+
+# rule mrio_region_aggreg:
+#     #TODO : To rework
+#     input:
+#         mrio_zip_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
+#         region_aggreg_file = expand("{inputdir}/aggreg/{regional_aggreg_file}",inputdir=config["BUILDED_DATA_DIR"], regional_aggreg_file=config["REGION_AGGREG_FILE"])
+#     conda:
+#         "env/ario3.yml"
+#     output:
+#         expand("{outputdir}/mrios/mrio_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
+#     resources:
+#         vmem_mb=6000,
+#         mem_mb=5000,
+#         disk_mb=2000
+#     shell:
+#         """
+#         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3.py -o {output} {input.mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file} {input.region_aggreg_file}
+#         """
 
 rule region_aggreg_dict:
     output:

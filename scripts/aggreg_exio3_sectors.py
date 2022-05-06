@@ -137,7 +137,7 @@ def aggreg(exio_path, sector_aggregator_path, new_sectors_name_path, old_mrio_pa
     if params:
         scriptLogger.info("Generation new mrio params from {}".format(pathlib.Path(old_mrio_params_path).absolute()))
         new_params = new_params_from_old(exio3.get_sectors(),old_mrio_params,sec_agg_matrix) #type:ignore
-        scriptLogger.info("Saving these new params to {}".format(pathlib.Path(name).absolute()))
+        scriptLogger.info("Saving these new params to {}".format(pathlib.Path(mrio_params_save_path).absolute()))
         with pathlib.Path(mrio_params_save_path).open('w') as f:
             json.dump(new_params, f, indent=4)
         scriptLogger.info("Done")
