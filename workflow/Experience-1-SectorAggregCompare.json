@@ -2,7 +2,7 @@
     "XP_NAME": "Experience-1-SectorAggregCompare",
     "FOLDER" : "experience-1",
     "MRIOS" : ["exiobase3_7_sectors"],
-    "FLOOD_GDP_SHARE_FILE": "/home/sjuhel/Nextcloud/Thesis/Workbench/Data/BoARIO-inputs/source-data/flood_country_gdp_share.json",
+    "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",
