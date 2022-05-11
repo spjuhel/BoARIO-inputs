@@ -1,7 +1,7 @@
 {
     "XP_NAME": "Experience-1-SectorAggregCompare",
     "FOLDER" : "experience-1",
-    "MRIOS" : ["exiobase3_7_sectors"],
+    "MRIOS" : ["exiobase3_7_sectors", "exiobase3_full", "exiobase3_74_sectors"],
     "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
@@ -18,7 +18,7 @@
         "AT"
     ],
     "PSI": [
-        "0_99"
+        "0_99","0_9999","0_90"
     ],
     "INV_TAU": [
         60
