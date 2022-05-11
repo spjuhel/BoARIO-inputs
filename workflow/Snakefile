@@ -1,102 +1,96 @@
+import pathlib
+
 include: "./rules/common.smk"
 configfile: "workflow/config.json"
 check_config(config)
 
-def raw_dmg_runs():
+ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
+
+xps_names = []
+xps = {}
+exps_jsons = pathlib.Path(config['EXPS_JSONS'])
+for xp in config['EXPS']:
+    with (exps_jsons/xp).open('r') as f:
+        dico = json.load(f)
+        xps[dico['FOLDER']] = dico
+        xps_names.append(dico['FOLDER'])
+
+test = {
+    "REGIONS" : "FR",
+    "TYPES" : "Full",
+    "FLOOD_DMG" : 200000,
+    "FLOOD_INT" : 0,
+    "PSI" : "0_99",
+    "INV_TAU" : 60,
+    "INV_TIME": 90
+}
+
+def runs(xp):
+    dmg_type = xp['DMG_TYPE']
+    xp_folder = xp['FOLDER']
     if config["LONG_TERM_DIR"] == config["OUTPUT_DIR"]:
-        return expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+        return expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
                       out=config["OUTPUT_DIR"],
-                      region=config["REGIONS"],
-                      stype=config["TYPES"],
-                      flood=config["FLOOD_DMG"],
-                      psi=config["PSI"],
-                      inv=config["INV_TAU"],
-                      inv_t=config["INV_TIME"])
+                      mrio_used = xp['MRIOS'],
+                      region=xp["REGIONS"],
+                      stype=xp["TYPES"],
+                      flood=xp["FLOOD_INT"],
+                      psi=xp["PSI"],
+                      inv=xp["INV_TAU"],
+                      inv_t=xp["INV_TIME"])
     else :
-        return expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+        return expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
                       out=config["LONG_TERM_DIR"],
-                      region=config["REGIONS"],
-                      stype=config["TYPES"],
-                      flood=config["FLOOD_DMG"],
-                      psi=config["PSI"],
-                      inv=config["INV_TAU"],
-                      inv_t=config["INV_TIME"])
+                      mrio_used=xp['MRIOS'],
+                      region=xp["REGIONS"],
+                      stype=xp["TYPES"],
+                      flood=xp["FLOOD_INT"],
+                      psi=xp["PSI"],
+                      inv=xp["INV_TAU"],
+                      inv_t=xp["INV_TIME"])
 
-def runs():
-    if config["LONG_TERM_DIR"] == config["OUTPUT_DIR"]:
-        return expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-                      out=config["OUTPUT_DIR"],
-                      region=config["REGIONS"],
-                      stype=config["TYPES"],
-                      flood=config["FLOOD_INT"],
-                      psi=config["PSI"],
-                      inv=config["INV_TAU"],
-                      inv_t=config["INV_TIME"])
-    else :
-        return expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-                      out=config["LONG_TERM_DIR"],
-                      region=config["REGIONS"],
-                      stype=config["TYPES"],
-                      flood=config["FLOOD_INT"],
-                      psi=config["PSI"],
-                      inv=config["INV_TAU"],
-                      inv_t=config["INV_TIME"])
+RUNS = [runs(xp) for folder, xp in xps.items()]
 
-RAW_DMG_RUNS = raw_dmg_runs()
-
-RUNS = runs()
-
-TEST_RUN_FULL = expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+TEST_RUN_FULL_RAW = expand("{out}/test/mrio_full/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
                        out=config["OUTPUT_DIR"],
-                       region=config["REGIONS"][0],
-                       stype=config["TYPES"][0],
-                       flood=config["FLOOD_INT"][0],
-                       psi=config["PSI"][0],
-                       inv=config["INV_TAU"][0],
-                       inv_t=config["INV_TIME"][0]) + expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-                                                             out=config["OUTPUT_DIR"],
-                                                             region=config["REGIONS"][0],
-                                                             stype=config["TYPES"][0],
-                                                             flood=config["FLOOD_DMG"][0],
-                                                             psi=config["PSI"][0],
-                                                             inv=config["INV_TAU"][0],
-                                                             inv_t=config["INV_TIME"][0])
+                       region=test["REGIONS"],
+                       stype=test["TYPES"],
+                       flood=test["FLOOD_INT"],
+                       psi=test["PSI"],
+                       inv=test["INV_TAU"],
+                       inv_t=test["INV_TIME"])
 
-rule all_raw:
-    input:
-        RAW_DMG_RUNS
-
-rule all_intensity:
+rule all_xp:
     input:
         RUNS
 
 rule test:
     input:
-        TEST_RUN_FULL
+        TEST_RUN_FULL_RAW
 
-INT_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-               out=config["OUTPUT_DIR"],
-               region=config["REGIONS"],
-               stype=config["TYPES"],
-               flood=config["FLOOD_INT"],
-               psi=config["PSI"],
-               inv=config["INV_TAU"],
-               inv_t=config["INV_TIME"])
+# INT_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+#                out=config["OUTPUT_DIR"],
+#                region=config["REGIONS"],
+#                stype=config["TYPES"],
+#                flood=config["FLOOD_INT"],
+#                psi=config["PSI"],
+#                inv=config["INV_TAU"],
+#                inv_t=config["INV_TIME"])
 
-RAW_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-               out=config["OUTPUT_DIR"],
-               region=config["REGIONS"],
-               stype=config["TYPES"],
-               flood=config["FLOOD_DMG"],
-               psi=config["PSI"],
-               inv=config["INV_TAU"],
-               inv_t=config["INV_TIME"])
+# RAW_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+#                out=config["OUTPUT_DIR"],
+#                region=config["REGIONS"],
+#                stype=config["TYPES"],
+#                flood=config["FLOOD_DMG"],
+#                psi=config["PSI"],
+#                inv=config["INV_TAU"],
+#                inv_t=config["INV_TIME"])
 
-ALL_IND_JSON = INT_IND_JSON + RAW_IND_JSON
+# ALL_IND_JSON = INT_IND_JSON + RAW_IND_JSON
 
 rule mv_to_final:
     input:
-        expand("{out}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
             "indexes.json",
@@ -128,7 +122,7 @@ rule mv_to_final:
     wildcard_constraints:
         run_type="raw|int"
     output:
-        expand("{out}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["LONG_TERM_DIR"],
                files=[
                    "indexes.json",
@@ -153,13 +147,13 @@ rule mv_to_final:
                ])
     shell:
         """
-        mkdir -p {params.final_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
-        cp {params.output_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
+        mkdir -p {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
+        cp {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
         """
 
 rule indicators:
     input:
-        expand("{inp}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=[
                    "indexes.json",
@@ -176,7 +170,7 @@ rule indicators:
                    "simulation.log"]
                )
     output:
-        expand("{out}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
                    "indicators.json",
@@ -197,17 +191,34 @@ rule indicators:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/'
+        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/'
         """
+
+def run_inputs(wildcards):
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"], expfolder=xp_config["FOLDER"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config['PARAMS_TEMPLATE']),
+        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
+        "flood_gdp" : xp_config["FLOOD_GDP_SHARE_FILE"]
+    }
+
+def run_RoW_inputs(wildcards):
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config['PARAMS_TEMPLATE']),
+        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
+        "flood_gdp" : xp_config["FLOOD_GDP_SHARE_FILE"]
+    }
 
 rule run_RoW:
     input:
-        mrio = expand("{inputdir}/mrios/{mrio_full}_{{region}}.pkl",inputdir=config["BUILDED_DATA_DIR"], mrio_full=config["MAIN_MRIO_PKLFILE"]),
-        event_template = expand("{inputdir}/{event_template}",inputdir=config["CONFIG_DIR"], event_template=config["EVENT_TEMPLATE"]),
-        params_file = expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=config["PARAMS_TEMPLATE"]),
-        mrio_params = expand("{inputdir}/{mrio_params_template}",inputdir=config["CONFIG_DIR"], mrio_params_template=config["MRIO_PARAMS"])
+        unpack(run_RoW_inputs)
     output:
-        expand("{out}/{{region}}_type_RoW_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_RoW_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
                    "indexes.json",
@@ -231,24 +242,19 @@ rule run_RoW:
         disk_mb=50,
         vmem_mb=4000
     params:
-        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         ario_dir = config["ARIO_DIR"],
         output_dir = config["OUTPUT_DIR"],
-        flood_gdp = config["FLOOD_GDP_SHARE_FILE"]
     shell:
         """
         cd {params.ario_dir};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} RoW {wildcards.run_type} {wildcards.flood} {params.mrios_path} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} RoW {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_Full:
     input:
-        mrio = expand("{inputdir}/mrios/{mrio_full}",inputdir=config["BUILDED_DATA_DIR"], mrio_full=config["MAIN_MRIO_PKLFILE"]),
-        event_template = expand("{inputdir}/{event_template}",inputdir=config["CONFIG_DIR"], event_template=config["EVENT_TEMPLATE"]),
-        params_file = expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=config["PARAMS_TEMPLATE"]),
-        mrio_params = expand("{inputdir}/{mrio_params_template}",inputdir=config["CONFIG_DIR"], mrio_params_template=config["MRIO_PARAMS"])
+        unpack(run_inputs)
     output:
-        expand("{out}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
                    "indexes.json",
@@ -272,29 +278,28 @@ rule run_Full:
     conda:
         "env/ario3.yml"
     params:
-        mrios_path = config["BUILDED_DATA_DIR"]+"/mrios/",
         output_dir = config["OUTPUT_DIR"],
-        flood_gdp = config["FLOOD_GDP_SHARE_FILE"]
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_file} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir} {params.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
-rule mrio_full:
+rule generate_mrio_full_from_zip:
     input:
         mrio_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
+        full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "env/ario3.yml"
     output:
-        expand("{outputdir}/mrios/mrio_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        mrioout = expand("{outputdir}/mrios/exiobase3_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
         vmem_mb=6000,
         mem_mb=5000,
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -o {output} {input.mrio_file}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -o {output.mrioout} {input.mrio_file};
         """
 
 rule mrio_aggreg:
@@ -302,39 +307,43 @@ rule mrio_aggreg:
 
 rule mrio_sector_aggreg:
     input:
-        full_mrio_file = expand("{outputdir}/mrios/mrio_full.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        sector_aggreg_file = expand("{inputdir}/{sector_aggreg_file}",inputdir=config["AGGREG_FILES_DIR"], sector_aggreg_file=config["SECTOR_AGGREG_FILE"]),
-        sector_renaming_file = expand("{inputdir}/{sector_renaming_file}",inputdir=config["AGGREG_FILES_DIR"], sector_renaming_file=config["SECTOR_RENAMING_FILE"])
+        full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
+        full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"]),
+        sector_aggreg_file = expand("{inputdir}/{{sector_aggreg_name}}.ods",inputdir=config["AGGREG_FILES_DIR"])
     conda:
         "env/ario3.yml"
     output:
-        expand("{outputdir}/mrios/mrio_sector_agg.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+    wildcard_constraints:
+        sector_aggreg_name="(.(?!(full)))*"
     resources:
         vmem_mb=6000,
         mem_mb=5000,
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file} -o {config[BUILDED_DATA_DIR]}/mrios/mrio_sector_agg.pkl
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} {input.full_mrio_params} -o {output.out_mrio} -po {output.out_params}
         """
 
-# rule mrio_region_aggreg:
-#     #TODO : To rework
-#     input:
-#         mrio_zip_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
-#         region_aggreg_file = expand("{inputdir}/aggreg/{regional_aggreg_file}",inputdir=config["BUILDED_DATA_DIR"], regional_aggreg_file=config["REGION_AGGREG_FILE"])
-#     conda:
-#         "env/ario3.yml"
-#     output:
-#         expand("{outputdir}/mrios/mrio_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
-#     resources:
-#         vmem_mb=6000,
-#         mem_mb=5000,
-#         disk_mb=2000
-#     shell:
-#         """
-#         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3.py -o {output} {input.mrio_file} {input.sector_aggreg_file} {input.sector_renaming_file} {input.region_aggreg_file}
-#         """
+rule mrio_one_region_RoW_aggreg:
+    input:
+         mrio_file = expand("{outputdir}/mrios/{{mrio}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"])
+    conda:
+         "env/ario3.yml"
+    output:
+         expand("{outputdir}/mrios/{{mrio}}_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
+    resources:
+         vmem_mb=6000,
+         mem_mb=5000,
+         disk_mb=2000
+    wildcard_constraints:
+        region="[A-Z]{2}"
+    shell:
+         """
+         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_region.py {input.mrio_file} {input.region_aggreg_file} -o {output}
+         """
 
 rule region_aggreg_dict:
     output:

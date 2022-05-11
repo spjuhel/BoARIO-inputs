@@ -1,15 +1,18 @@
 {
-    "aff-regions": ["FR"],
+    "aff-regions": [
+        "FR"
+    ],
     "aff-sectors": "all",
-    "dmg-distrib-regions": [ 1 ],
+    "dmg-distrib-regions": [
+        1
+    ],
     "dmg-distrib-sectors-type": "gdp",
     "dmg-distrib-sectors": [],
     "duration": 1,
     "name": "0",
     "occur": 7,
-    "q_dmg":20000000,
+    "q_dmg": 20000000,
     "rebuilding-sectors": {
-        "Construction" : 0.15,
-        "Manufacture" : 0.85
+        "Construction": 1.0
     }
 }
