@@ -3,7 +3,7 @@
     "main_inv_dur": 90,
     "capital_ratio_dict": {
         "Cultivation of paddy rice":2.9,
- "Cultivation of wheat":2.9,
+	"Cultivation of wheat":2.9,
  "Cultivation of cereal grains nec":2.9,
  "Cultivation of vegetables, fruit, nuts":2.9,
  "Cultivation of oil seeds":2.9,
