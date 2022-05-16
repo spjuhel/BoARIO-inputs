@@ -28,26 +28,27 @@ test = {
 def runs(xp):
     dmg_type = xp['DMG_TYPE']
     xp_folder = xp['FOLDER']
+    inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
     if config["LONG_TERM_DIR"] == config["OUTPUT_DIR"]:
-        return expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
                       out=config["OUTPUT_DIR"],
                       mrio_used = xp['MRIOS'],
                       region=xp["REGIONS"],
                       stype=xp["TYPES"],
                       flood=xp["FLOOD_INT"],
-                      psi=xp["PSI"],
-                      inv=xp["INV_TAU"],
-                      inv_t=xp["INV_TIME"])
+                      psi=xp["PSI"])
+        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
+        return expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     else :
-        return expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
+        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
                       out=config["LONG_TERM_DIR"],
                       mrio_used=xp['MRIOS'],
                       region=xp["REGIONS"],
                       stype=xp["TYPES"],
                       flood=xp["FLOOD_INT"],
-                      psi=xp["PSI"],
-                      inv=xp["INV_TAU"],
-                      inv_t=xp["INV_TIME"])
+                      psi=xp["PSI"])
+        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
+        return expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
