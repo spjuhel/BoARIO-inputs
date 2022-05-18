@@ -1,6 +1,6 @@
 {
-    "XP_NAME": "Experience-Inventory-Compare-1",
-    "FOLDER" : "experience-inventory-compare-1",
+    "XP_NAME": "Experience-DirectIndirectRelation-1",
+    "FOLDER" : "experience-direct-indirect-relation-1",
     "MRIOS" : ["exiobase3_74_sectors"],
     "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
     "EVENT_TEMPLATE": "event_template.json",

@@ -1,6 +1,6 @@
 {
-    "XP_NAME": "Experience-FloodDottori-2",
-    "FOLDER" : "experience-flood-dottori-2",
+    "XP_NAME": "Experience-FloodDottori-3",
+    "FOLDER" : "experience-flood-dottori-3",
     "MRIOS" : ["exiobase3_74_sectors"],
     "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
     "EVENT_TEMPLATE": "event_template.json",
