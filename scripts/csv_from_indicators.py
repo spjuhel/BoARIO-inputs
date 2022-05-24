@@ -26,6 +26,24 @@ parser.add_argument('folder', type=str, help='The str path to the main folder')
 parser.add_argument('run_type', type=str, help='The type of runs to produce csv from ("raw", "int" or "all")')
 parser.add_argument('-o', "--output", type=str, help='Path where to save csv')
 
+def deserialize_multiindex_dataframe(dataframe_json: dict) -> pd.DataFrame:
+    """Deserialize the dataframe json into a dataframe object.
+    The dataframe json must be generated with DataFrame.to_json(orient="split")
+    This function is to address the fact that `pd.read_json()` isn't behaving correctly (yet)
+    https://github.com/pandas-dev/pandas/issues/4889
+    """
+    def convert_index(json_obj):
+        to_tuples = [tuple(i) if isinstance(i, list) else i for i in json_obj]
+        if all(isinstance(i, list) for i in json_obj):
+            return pd.MultiIndex.from_tuples(to_tuples)
+        else:
+            return pd.Index(to_tuples)
+    json_dict = dataframe_json
+    columns = convert_index(json_dict['columns'])
+    index = convert_index(json_dict['index'])
+    dataframe = pd.DataFrame(json_dict["data"], index, columns)
+    return dataframe
+
 def produce_general_csv(folder,run_type,save_path):
     future_df = []
     files = list(folder.glob('**/*'+run_type+'*/indicators.json'))
@@ -60,10 +78,11 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
             pass
         else:
             with ind.open('r') as f:
-                dico = json.load(f)
+                js = json.load(f)
 
-            dico['run_name'] = ind.parent.name
-            df = pd.DataFrame(dico)
+            df = deserialize_multiindex_dataframe(js)
+            df.rename_axis("run_name",axis=0, inplace=True)
+            df.rename_axis(["sector type","region"],axis=1, inplace=True)
             if future_df is None:
                 future_df = df.copy()
             else:
@@ -79,15 +98,15 @@ def produce_region_fd_loss_csv(folder,run_type,save_path):
             pass
         else:
             with ind.open('r') as f:
-                dico = json.load(f)
+                js = json.load(f)
 
-            dico['run_name'] = ind.parent.name
-            df = pd.DataFrame(dico)
+            df = deserialize_multiindex_dataframe(js)
+            df.rename_axis("run_name",axis=0, inplace=True)
+            df.rename_axis(["sector type","region"],axis=1, inplace=True)
             if future_df is None:
                 future_df = df.copy()
             else:
                 future_df = pd.concat([future_df,df])
-
     future_df=future_df.set_index("run_name")
     future_df.to_csv(save_path)
 
