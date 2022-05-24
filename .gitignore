@@ -1,3 +1,16 @@
+.snakemake/
+aggregation-files/BAK_163_74_sector_aggregation_exiobase3.ods
+aggregation-files/BAK_163_7_sector_aggregation_exiobase3.ods
+aggregation-files/exiobase3_74_to_7_sectors.ods
+builded-data/mrios/exiobase3_74_sectors_params.json
+builded-data/mrios/exiobase3_7_sectors_params.json
+config-files/archive/
+config-files/exiobase3_7_sectors_event_template.json
+nohup.out
+snakelog.log
+source-data/exiobase_3rx.mat
+workflow/.snakemake/
+workflow/config_full.json
 *.pkl
 *.zip
 workflow/config.json
