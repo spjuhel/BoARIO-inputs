@@ -119,11 +119,11 @@ if __name__ == '__main__':
     consoleHandler.setFormatter(logFormatter)
 
     if args.run_type == "raw":
-        runtype = "raw_dmg_"
+        runtype = "raw_"
     elif args.run_type == "int":
-        runtype = "int_dmg_"
+        runtype = "int_"
     elif args.run_type == "all":
-        runtype="all_dmg_"
+        runtype="all_"
     else:
         scriptLogger.warning('Unrecognized run type.')
         parser.print_usage()
