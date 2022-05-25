@@ -47,6 +47,11 @@ def deserialize_multiindex_dataframe(dataframe_json: dict) -> pd.DataFrame:
 def produce_general_csv(folder,run_type,save_path):
     future_df = []
     files = list(folder.glob('**/*'+run_type+'*/indicators.json'))
+    if len(files) == 0:
+        raise ValueError(
+            """No indicators file found. Perhaps folder is mistyped ? :
+            Looked in {} for runtype {}
+            """.format(folder,run_type))
     scriptLogger.info('Found {} indicators files to regroup'.format(len(files)))
     for ind in files:
         with ind.open('r') as f:
