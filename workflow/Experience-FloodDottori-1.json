@@ -11,7 +11,7 @@
         "Full"
     ],
     "FLOOD_INT": [
-        "min", "10%", "50%", "90%", "99%" "max"
+        "min", "10%", "50%", "90%", "99%", "max"
     ],
     "GDP_SHARE": [],
     "REGIONS": ["WE", "WL", "AT", "AU", "WA", "BE", "BG", "WF", "BR", "CA", "CH",
