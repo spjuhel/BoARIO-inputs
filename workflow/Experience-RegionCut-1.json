@@ -1,0 +1,38 @@
+{
+    "XP_NAME": "Experience-RegionCut-1",
+    "FOLDER" : "experience-region-cut-relation-1",
+    "MRIOS" : [
+    	"exiobase3_74_sectors_FR_sliced_in_2",
+    	"exiobase3_74_sectors_FR_sliced_in_3",
+    	"exiobase3_74_sectors_FR_sliced_in_5",
+    	"exiobase3_74_sectors_FR_sliced_in_10",
+    	"exiobase3_74_sectors_FR_sliced_in_20"
+    ],
+    "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
+    "EVENT_TEMPLATE": "event_template.json",
+    "PARAMS_TEMPLATE": "params_template_snakemake.json",
+    "MRIO_PARAMS": "mrio_params_snakemake.json",
+    "DMG_TYPE": "raw",
+    "MRIOTYPES": [
+        "Subregions"
+    ],
+    "FLOOD_INT": [
+        500000000
+    ],
+    "GDP_SHARE": [],
+    "REGIONS": [
+        "FR"
+    ],
+    "SUBREGIONS":[
+    	"all", "one"
+    ],
+    "PSI": [
+        "0_9999"
+    ],
+    "INV_TAU": [
+        60
+    ],
+    "INV_TIME": [
+        90
+    ]
+}

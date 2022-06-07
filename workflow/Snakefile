@@ -17,7 +17,7 @@ for xp in config['EXPS']:
 
 test = {
     "REGIONS" : "FR",
-    "TYPES" : "Full",
+    "MRIOTYPES" : "Full",
     "FLOOD_DMG" : 200000,
     "FLOOD_INT" : 0,
     "PSI" : "0_99",
@@ -25,127 +25,104 @@ test = {
     "INV_TIME": 90
 }
 
+run_output_files = [
+    "indexes.json",
+    "classic_demand_record",
+    "final_demand_unmet_record",
+    "iotable_X_max_record",
+    "iotable_XVA_record",
+    "limiting_stocks_record",
+    "overprodvector_record",
+    "rebuild_demand_record",
+    "rebuild_prod_record",
+    "simulated_events.json",
+    "simulated_params.json",
+    "simulation.log"]
+
+to_move_files = [
+    "indexes.json",
+    "classic_demand_record",
+    "final_demand_unmet_record",
+    "iotable_X_max_record",
+    "iotable_XVA_record",
+    "limiting_stocks_record",
+    "overprodvector_record",
+    "rebuild_demand_record",
+    "rebuild_prod_record",
+    "simulated_events.json",
+    "simulated_params.json",
+    "simulation.log",
+    "indicators.json",
+    "treated_df_limiting.parquet",
+    "treated_df_loss.parquet",
+    "prod_df.parquet",
+    "c_demand_df.parquet",
+    "prod_chg.json",
+    "fd_loss.json"
+]
+
 def runs(xp):
     dmg_type = xp['DMG_TYPE']
     xp_folder = xp['FOLDER']
     inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
+    if xp["MRIOTYPES"] == "subregions":
+        if "SUBREGIONS" not in xp.keys():
+            raise ValueError("Run is a subregions run but SUBREGIONS key is not present in the experience dictionnary")
+        else:
+            subregions = ["-"+sub for sub in xp["SUBREGIONS"]]
+    else:
+        subregions = [""]
     if config["LONG_TERM_DIR"] == config["OUTPUT_DIR"]:
-        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
+        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}{subregions}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
                       out=config["OUTPUT_DIR"],
-                      mrio_used = xp['MRIOS'],
+                      mrio_used=xp['MRIOS'],
                       region=xp["REGIONS"],
-                      stype=xp["TYPES"],
+                      stype=xp["MRIOTYPES"],
+                      subregions=subregions,
                       flood=xp["FLOOD_INT"],
                       psi=xp["PSI"])
         inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
         return expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     else :
-        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
+        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}{subregions}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
                       out=config["LONG_TERM_DIR"],
                       mrio_used=xp['MRIOS'],
                       region=xp["REGIONS"],
-                      stype=xp["TYPES"],
+                      stype=xp["MRIOTYPES"],
+                      subregions=subregions,
                       flood=xp["FLOOD_INT"],
                       psi=xp["PSI"])
         inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
-        return expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
+        a = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
+        return a
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
-TEST_RUN_FULL_RAW = expand("{out}/test/mrio_full/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-                       out=config["OUTPUT_DIR"],
-                       region=test["REGIONS"],
-                       stype=test["TYPES"],
-                       flood=test["FLOOD_INT"],
-                       psi=test["PSI"],
-                       inv=test["INV_TAU"],
-                       inv_t=test["INV_TIME"])
+wildcard_constraints:
+    run_type="raw|int",
+    #region="[A−Z]{2,3}",
+    #subregion="^$|[A-Z]{2,3}\d{1,2}",
+    stype="Full|Subregion|RoW"
 
 rule all_xp:
     input:
         RUNS
 
-rule test:
-    input:
-        TEST_RUN_FULL_RAW
-
-# INT_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_int_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-#                out=config["OUTPUT_DIR"],
-#                region=config["REGIONS"],
-#                stype=config["TYPES"],
-#                flood=config["FLOOD_INT"],
-#                psi=config["PSI"],
-#                inv=config["INV_TAU"],
-#                inv_t=config["INV_TIME"])
-
-# RAW_IND_JSON = expand("{out}/{region}_type_{stype}_qdmg_raw_{flood}_Psi_{psi}_inv_tau_{inv}_inv_time_{inv_t}/indicators.json",
-#                out=config["OUTPUT_DIR"],
-#                region=config["REGIONS"],
-#                stype=config["TYPES"],
-#                flood=config["FLOOD_DMG"],
-#                psi=config["PSI"],
-#                inv=config["INV_TAU"],
-#                inv_t=config["INV_TIME"])
-
-# ALL_IND_JSON = INT_IND_JSON + RAW_IND_JSON
-
 rule mv_to_final:
     input:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
-               files=[
-            "indexes.json",
-            "classic_demand_record",
-            "final_demand_unmet_record",
-            "iotable_X_max_record",
-            "iotable_XVA_record",
-            "limiting_stocks_record",
-            "overprodvector_record",
-            "rebuild_demand_record",
-            "rebuild_prod_record",
-            "simulated_events.json",
-            "simulated_params.json",
-            "simulation.log",
-            "indicators.json",
-            "treated_df_limiting.parquet",
-            "treated_df_loss.parquet",
-            "prod_df.parquet",
-            "c_demand_df.parquet",
-            "prod_chg.json",
-            "fd_loss.json"
-        ])
+               files=to_move_files)
     params:
         final_dir = config["LONG_TERM_DIR"],
         output_dir = config["OUTPUT_DIR"]
     resources:
         mem_mb = 500,
         vmem_mb = 500
-    wildcard_constraints:
-        run_type="raw|int"
     output:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["LONG_TERM_DIR"],
-               files=[
-                   "indexes.json",
-                   "classic_demand_record",
-                   "final_demand_unmet_record",
-                   "iotable_X_max_record",
-                   "iotable_XVA_record",
-                   "limiting_stocks_record",
-                   "overprodvector_record",
-                   "rebuild_demand_record",
-                   "rebuild_prod_record",
-                   "simulated_events.json",
-                   "simulated_params.json",
-                   "simulation.log",
-                   "indicators.json",
-                   "treated_df_limiting.parquet",
-                   "treated_df_loss.parquet",
-                   "prod_df.parquet",
-                   "c_demand_df.parquet",
-                   "prod_chg.json",
-                   "fd_loss.json"
-               ])
+               files=to_move_files)
     shell:
         """
         mkdir -p {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
@@ -156,20 +133,7 @@ rule indicators:
     input:
         expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
-               files=[
-                   "indexes.json",
-                   "classic_demand_record",
-                   "final_demand_unmet_record",
-                   "iotable_X_max_record",
-                   "iotable_XVA_record",
-                   "limiting_stocks_record",
-                   "overprodvector_record",
-                   "rebuild_demand_record",
-                   "rebuild_prod_record",
-                   "simulated_events.json",
-                   "simulated_params.json",
-                   "simulation.log"]
-               )
+               files=run_output_files)
     output:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
@@ -181,8 +145,6 @@ rule indicators:
                    "c_demand_df.parquet",
                    "prod_chg.json",
                    "fd_loss.json"])
-    wildcard_constraints:
-        run_type="raw|int"
     conda:
         "env/ario3.yml"
     resources:
@@ -205,73 +167,13 @@ def run_inputs(wildcards):
         "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
     }
 
-def run_RoW_inputs(wildcards):
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
-    }
-
-rule run_RoW:
-    input:
-        unpack(run_RoW_inputs)
-    output:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_RoW_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-               out=config["OUTPUT_DIR"],
-               files=[
-                   "indexes.json",
-                   "classic_demand_record",
-                   "final_demand_unmet_record",
-                   "iotable_X_max_record",
-                   "iotable_XVA_record",
-                   "limiting_stocks_record",
-                   "overprodvector_record",
-                   "rebuild_demand_record",
-                   "rebuild_prod_record",
-                   "simulated_events.json",
-                   "simulated_params.json",
-                   "simulation.log"])
-    conda:
-        "env/ario3.yml"
-    wildcard_constraints:
-        run_type="raw|int"
-    resources:
-        mem_mb=4000,
-        disk_mb=50,
-        vmem_mb=4000
-    params:
-        ario_dir = config["ARIO_DIR"],
-        output_dir = config["OUTPUT_DIR"],
-    shell:
-        """
-        cd {params.ario_dir};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} RoW {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
-        """
-
 rule run_Full:
     input:
         unpack(run_inputs)
     output:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
-               files=[
-                   "indexes.json",
-                   "classic_demand_record",
-                   "final_demand_unmet_record",
-                   "iotable_X_max_record",
-                   "iotable_XVA_record",
-                   "limiting_stocks_record",
-                   "overprodvector_record",
-                   "rebuild_demand_record",
-                   "rebuild_prod_record",
-                   "simulated_events.json",
-                   "simulated_params.json",
-                   "simulation.log"])
-    wildcard_constraints:
-        run_type="raw|int"
+               files=run_output_files)
     resources:
         vmem_mb=3000,
         mem_mb=2000,
@@ -386,4 +288,38 @@ rule generate_csv:
     shell:
         """
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {config[LONG_TERM_DIR]} {wildcards.run_type} -o {config[LONG_TERM_DIR]}
+        """
+
+def run_RoW_inputs(wildcards):
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
+        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
+    }
+
+rule run_RoW:
+    input:
+        unpack(run_RoW_inputs)
+    output:
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_RoW_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+               out=config["OUTPUT_DIR"],
+               files=run_output_files)
+    conda:
+        "env/ario3.yml"
+    wildcard_constraints:
+        run_type="raw|int"
+    resources:
+        mem_mb=4000,
+        disk_mb=50,
+        vmem_mb=4000
+    params:
+        ario_dir = config["ARIO_DIR"],
+        output_dir = config["OUTPUT_DIR"],
+    shell:
+        """
+        cd {params.ario_dir};
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} RoW {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """

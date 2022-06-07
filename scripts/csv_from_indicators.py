@@ -93,7 +93,8 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
             else:
                 future_df = pd.concat([future_df,df])
 
-    future_df=future_df.set_index("run_name")
+    #print(future_df.reset_index())
+    #future_df=future_df.set_index("run_name")
     future_df.to_csv(save_path)
 
 def produce_region_fd_loss_csv(folder,run_type,save_path):
@@ -112,7 +113,7 @@ def produce_region_fd_loss_csv(folder,run_type,save_path):
                 future_df = df.copy()
             else:
                 future_df = pd.concat([future_df,df])
-    future_df=future_df.set_index("run_name")
+    #future_df=future_df.set_index("run_name")
     future_df.to_csv(save_path)
 
 if __name__ == '__main__':
