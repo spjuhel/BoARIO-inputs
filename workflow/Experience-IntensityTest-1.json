@@ -11,7 +11,7 @@
         "Full"
     ],
     "FLOOD_INT": [
-        "min", "1%", "5%", "90%", "max"
+        "min"
     ],
     "GDP_SHARE": [],
     "REGIONS": [
