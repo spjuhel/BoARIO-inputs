@@ -7,11 +7,11 @@
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",
     "DMG_TYPE": "int",
-    "TYPES": [
+    "MRIOTYPES": [
         "Full"
     ],
     "FLOOD_INT": [
-        "min", "10%", "50%", "90%", "99%", "max"
+        "min", "10%", "50%", "90%", "99%" "max"
     ],
     "GDP_SHARE": [],
     "REGIONS": ["WE", "WL", "AT", "AU", "WA", "BE", "BG", "WF", "BR", "CA", "CH",
@@ -21,7 +21,7 @@
        "NL"
     ],
     "PSI": [
-        "0_9999"
+        "0_999999999"
     ],
     "INV_TAU": [
         60
