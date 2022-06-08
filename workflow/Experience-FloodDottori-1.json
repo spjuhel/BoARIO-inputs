@@ -5,7 +5,6 @@
     "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
-    "MRIO_PARAMS": "mrio_params_snakemake.json",
     "DMG_TYPE": "int",
     "MRIOTYPES": [
         "Full"

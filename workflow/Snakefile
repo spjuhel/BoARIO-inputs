@@ -2,7 +2,6 @@ import pathlib
 
 include: "./rules/common.smk"
 configfile: "workflow/config.json"
-check_config(config)
 
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
@@ -104,6 +103,9 @@ wildcard_constraints:
     #region="[A−Z]{2,3}",
     #subregion="^$|[A-Z]{2,3}\d{1,2}",
     stype="Full|Subregion|RoW"
+
+onstart:
+     check_config(config)
 
 rule all_xp:
     input:
@@ -246,7 +248,7 @@ rule mrio_one_region_RoW_aggreg:
          mem_mb=5000,
          disk_mb=2000
     wildcard_constraints:
-        region="FR"
+        region="[A-Z]{2}"
     shell:
          """
          nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_region.py {input.mrio_file} {input.region_aggreg_file} {input.old_mrio_params} -o {output.out_mrio} -po {output.out_params}

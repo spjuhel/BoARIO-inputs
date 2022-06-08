@@ -61,7 +61,7 @@
         ],
         "dmg-distrib-sectors-type": "gdp",
         "dmg-distrib-sectors": [],
-        "duration": 3,
+        "duration": 1,
         "name": "0",
         "occur": 7,
         "q_dmg": 20000000,
