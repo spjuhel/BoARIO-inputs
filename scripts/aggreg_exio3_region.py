@@ -16,7 +16,9 @@ parser.add_argument('exio_path', type=str, help='The str path to the exio3 (zip 
 parser.add_argument('regions_aggregator', type=str,
                     help="""A coco (country converter) classification to aggregate to, or the path to the json file with the regions aggregation.
                     Valid classification are : {} \n Not all were tested, use with care and check result !""".format(cc.valid_class))
+parser.add_argument('original_mrio_params', type=str, help='A path to the json file of the original mrio parameters file', nargs='?', default=None)
 parser.add_argument('-o', "--output", type=str, help='The str path to save the pickled mrio to', nargs='?', default='./mrio_dump')
+parser.add_argument('-po', "--params_output", type=str, help='The path to save the new params to')
 
 args = parser.parse_args()
 logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] %(name)s %(message)s", datefmt="%H:%M:%S")
@@ -60,10 +62,21 @@ def lexico_reindex(mrio: pym.IOSystem) -> pym.IOSystem:
 def most_common(lst):
     return max(set(lst), key=lst.count)
 
-def aggreg(exio_path,  regions_aggregator, save_path=None):
+def aggreg(exio_path,  regions_aggregator, old_mrio_params_path, save_path=None, mrio_params_save_path=None):
     scriptLogger.info("Loading region aggregator")
     scriptLogger.info("Make sure you use the same python environment as the one loading the pickle file (especial pymrio and pandas version !)")
     scriptLogger.info("Your current environment is: {}".format(os.environ['CONDA_PREFIX']))
+    params=False
+    if old_mrio_params_path is not None:
+        old_mrio_params_path = pathlib.Path(old_mrio_params_path)
+        if not old_mrio_params_path.exists():
+            raise FileNotFoundError("Given mrio params file not found - {}".format(old_mrio_params_path))
+        else:
+            with pathlib.Path(old_mrio_params_path).open('r') as f:
+                old_mrio_params = json.load(f)
+            params=True
+
+
     region_agg = None
     if "json" in regions_aggregator:
         regions_aggregator = pathlib.Path(regions_aggregator)
@@ -127,7 +140,15 @@ def aggreg(exio_path,  regions_aggregator, save_path=None):
     with open(name, 'wb') as f:
         pkl.dump(exio3, f)
 
+    if params:
+        scriptLogger.info("Generation new mrio params from {}".format(pathlib.Path(old_mrio_params_path).absolute()))
+        new_params = old_mrio_params
+        scriptLogger.info("Saving these new params to {}".format(pathlib.Path(mrio_params_save_path).absolute()))
+        with pathlib.Path(mrio_params_save_path).open('w') as f:
+            json.dump(new_params, f, indent=4)
+        scriptLogger.info("Done")
+
 if __name__ == '__main__':
     args = parser.parse_args()
     name = pathlib.Path(args.exio_path).stem
-    aggreg(args.exio_path, regions_aggregator=args.regions_aggregator, save_path=args.output)
+    aggreg(args.exio_path, regions_aggregator=args.regions_aggregator, old_mrio_params_path=args.original_mrio_params, save_path=args.output, mrio_params_save_path=args.params_output)

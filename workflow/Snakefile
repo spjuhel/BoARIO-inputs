@@ -5,6 +5,7 @@ configfile: "workflow/config.json"
 check_config(config)
 
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
+ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
 xps_names = []
 xps = {}
@@ -219,7 +220,8 @@ rule mrio_sector_aggreg:
         out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
         out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
     wildcard_constraints:
-        sector_aggreg_name="(.(?!(full)))*"
+        #sector_aggreg_name="(.(?!(full)))*"
+        sector_aggreg_name="exiobase3_\d+_sectors"
     resources:
         vmem_mb=6000,
         mem_mb=5000,
@@ -232,20 +234,22 @@ rule mrio_sector_aggreg:
 rule mrio_one_region_RoW_aggreg:
     input:
          mrio_file = expand("{outputdir}/mrios/{{mrio}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"])
+         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"]),
+         old_mrio_params = expand("{outputdir}/mrios/{{mrio}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
          "env/ario3.yml"
     output:
-         expand("{outputdir}/mrios/{{mrio}}_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{outputdir}/mrios/{{mrio}}_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/{{mrio}}_{{region}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
     resources:
          vmem_mb=6000,
          mem_mb=5000,
          disk_mb=2000
     wildcard_constraints:
-        region="[A-Z]{2}"
+        region="FR"
     shell:
          """
-         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_region.py {input.mrio_file} {input.region_aggreg_file} -o {output}
+         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_region.py {input.mrio_file} {input.region_aggreg_file} {input.old_mrio_params} -o {output.out_mrio} -po {output.out_params}
          """
 
 rule region_aggreg_dict:
