@@ -8,7 +8,7 @@
     	"exiobase3_74_sectors_FR_sliced_in_10",
     	"exiobase3_74_sectors_FR_sliced_in_20"
     ],
-    "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
+    "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",

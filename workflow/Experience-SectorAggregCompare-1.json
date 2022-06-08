@@ -2,7 +2,7 @@
     "XP_NAME": "Experience-SectorAggregCompare-1",
     "FOLDER" : "experience-sector-aggreg-1",
     "MRIOS" : ["exiobase3_7_sectors", "exiobase3_full", "exiobase3_74_sectors"],
-    "FLOOD_GDP_SHARE_FILE": "flood_country_gdp_share.json",
+    "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",

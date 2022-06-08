@@ -1,24 +1,29 @@
 {
-    "XP_NAME": "Experience-SectorAggregCompare-2",
-    "FOLDER" : "experience-sector-aggreg-2",
-    "MRIOS" : ["exiobase3_7_sectors", "exiobase3_74_sectors", "exiobase3_full"],
+    "XP_NAME": "Experience-RegionCut-2",
+    "FOLDER" : "experience-region-cut-2",
+    "MRIOS" : [
+    	"exiobase3_2_sectors_FR"
+    ],
     "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",
     "DMG_TYPE": "raw",
-    "TYPES": [
+    "MRIOTYPES": [
         "Full"
     ],
     "FLOOD_INT": [
-        5000000000
+        500000000
     ],
     "GDP_SHARE": [],
     "REGIONS": [
-        "AT","CN"
+        "FR"
+    ],
+    "SUBREGIONS":[
+    	"all", "one"
     ],
     "PSI": [
-        "1_0", "0_99"
+        "0_9999"
     ],
     "INV_TAU": [
         60
