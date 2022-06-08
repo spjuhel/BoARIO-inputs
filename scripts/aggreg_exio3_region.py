@@ -131,7 +131,10 @@ def aggreg(exio_path,  regions_aggregator, old_mrio_params_path, save_path=None,
             region_agg[k] = agg
 
     regions_aggregator = coco.agg_conc(original_countries=exio3.get_regions(),
-                                           aggregates=region_agg)
+                                           aggregates=region_agg['aggregates'],
+                                       missing_countries=region_agg["missing"]
+                                       )
+    print(regions_aggregator)
     exio3.aggregate(region_agg=regions_aggregator)
     exio3.calc_all()
     exio3 = lexico_reindex(exio3)

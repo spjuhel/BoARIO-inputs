@@ -1,21 +1,17 @@
 {
     "XP_NAME": "Experience-RegionCut-1",
-    "FOLDER" : "experience-region-cut-relation-1",
-    "MRIOS" : [
-    	"exiobase3_74_sectors_FR_sliced_in_2",
-    	"exiobase3_74_sectors_FR_sliced_in_3",
-    	"exiobase3_74_sectors_FR_sliced_in_5",
-    	"exiobase3_74_sectors_FR_sliced_in_10",
-    	"exiobase3_74_sectors_FR_sliced_in_20"
+    "FOLDER" : "experience-region-cut-1",
+    "MAINMRIO": "exiobase3_2_sectors_FR-RoW",
+    "MRIOS": "placeholder",
+    "SUBREGIONS_MRIOS": [
+        "exiobase3_2_sectors_FR-RoW_FR_sliced_in_2"
     ],
     "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "MRIO_PARAMS": "mrio_params_snakemake.json",
     "DMG_TYPE": "raw",
-    "MRIOTYPES": [
-        "Subregions"
-    ],
+    "MRIOTYPES": "Subregions",
     "FLOOD_INT": [
         500000000
     ],

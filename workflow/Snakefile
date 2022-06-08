@@ -61,40 +61,6 @@ to_move_files = [
     "fd_loss.json"
 ]
 
-def runs(xp):
-    dmg_type = xp['DMG_TYPE']
-    xp_folder = xp['FOLDER']
-    inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
-    if xp["MRIOTYPES"] == "subregions":
-        if "SUBREGIONS" not in xp.keys():
-            raise ValueError("Run is a subregions run but SUBREGIONS key is not present in the experience dictionnary")
-        else:
-            subregions = ["-"+sub for sub in xp["SUBREGIONS"]]
-    else:
-        subregions = [""]
-    if config["LONG_TERM_DIR"] == config["OUTPUT_DIR"]:
-        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}{subregions}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                      out=config["OUTPUT_DIR"],
-                      mrio_used=xp['MRIOS'],
-                      region=xp["REGIONS"],
-                      stype=xp["MRIOTYPES"],
-                      subregions=subregions,
-                      flood=xp["FLOOD_INT"],
-                      psi=xp["PSI"])
-        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
-        return expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
-    else :
-        tmp = expand("{out}/"+xp_folder+"/{mrio_used}/{region}{subregions}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                      out=config["LONG_TERM_DIR"],
-                      mrio_used=xp['MRIOS'],
-                      region=xp["REGIONS"],
-                      stype=xp["MRIOTYPES"],
-                      subregions=subregions,
-                      flood=xp["FLOOD_INT"],
-                      psi=xp["PSI"])
-        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
-        a = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
-        return a
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
@@ -102,7 +68,7 @@ wildcard_constraints:
     run_type="raw|int",
     #region="[A−Z]{2,3}",
     #subregion="^$|[A-Z]{2,3}\d{1,2}",
-    stype="Full|Subregion|RoW"
+    stype="Full|Subregions|RoW"
 
 onstart:
      check_config(config)
@@ -181,6 +147,8 @@ rule run_Full:
         vmem_mb=3000,
         mem_mb=2000,
         disk_mb=500
+    wildcard_constraints:
+        region="[A-Z]{2}"
     conda:
         "env/ario3.yml"
     params:
@@ -189,6 +157,52 @@ rule run_Full:
         """
         cd {config[ARIO_DIR]};
         nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        """
+
+rule run_subregions_mrio:
+    input:
+        unpack(run_inputs)
+    output:
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Subregions_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+               out=config["OUTPUT_DIR"],
+               files=run_output_files)
+    resources:
+        vmem_mb=3000,
+        mem_mb=2000,
+        disk_mb=500
+    wildcard_constraints:
+        region="(?:[A-Z]{2}-[A-Z]{2}\d+)|([A-Z]{2}-all)",
+        mrio_used="exiobase3_(?:Full|\d+_sectors)_(?:FullWorld|[A-Z]{2}-RoW)_[A-Z]{2}_sliced_in_\d+"
+    conda:
+        "env/ario3.yml"
+    params:
+        output_dir = config["OUTPUT_DIR"],
+    shell:
+        """
+        cd {config[ARIO_DIR]};
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        """
+
+rule generate_subregions_mrio:
+    input:
+        in_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        mrio_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+    output:
+        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+    conda:
+        "env/ario3.yml"
+    wildcard_constraints:
+        sector_aggreg_name="exiobase3_(?:Full|\d+_sectors)",
+        region_aggreg_name="FullWorkd|[A-Z]{2}-RoW",
+#        subregions="[A−Z]{2}_sliced_in_\d*"
+    resources:
+        vmem_mb=6000,
+        mem_mb=5000,
+        disk_mb=2000
+    shell:
+        """
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/mrio_subregions.py {input.in_mrio} {wildcards.subregions} {input.mrio_params} -o {output.out_mrio} -po {output.out_params}
         """
 
 rule generate_mrio_full_from_zip:
@@ -208,9 +222,6 @@ rule generate_mrio_full_from_zip:
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -o {output.mrioout} {input.mrio_file};
         """
 
-rule mrio_aggreg:
-    #TODO : Rework also
-
 rule mrio_sector_aggreg:
     input:
         full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
@@ -219,8 +230,8 @@ rule mrio_sector_aggreg:
     conda:
         "env/ario3.yml"
     output:
-        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_FullWorld.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_FullWorld_params.json",outputdir=config["BUILDED_DATA_DIR"])
     wildcard_constraints:
         #sector_aggreg_name="(.(?!(full)))*"
         sector_aggreg_name="exiobase3_\d+_sectors"
@@ -235,14 +246,14 @@ rule mrio_sector_aggreg:
 
 rule mrio_one_region_RoW_aggreg:
     input:
-         mrio_file = expand("{outputdir}/mrios/{{mrio}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"]),
-         old_mrio_params = expand("{outputdir}/mrios/{{mrio}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        mrio_file = expand("{outputdir}/mrios/{{mrio}}_FullWorld.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"]),
+        old_mrio_params = expand("{outputdir}/mrios/{{mrio}}_FullWorld_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
          "env/ario3.yml"
     output:
-        out_mrio = expand("{outputdir}/mrios/{{mrio}}_{{region}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        out_params = expand("{outputdir}/mrios/{{mrio}}_{{region}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW_params.json",outputdir=config["BUILDED_DATA_DIR"])
     resources:
          vmem_mb=6000,
          mem_mb=5000,
