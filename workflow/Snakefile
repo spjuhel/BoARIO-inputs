@@ -315,12 +315,12 @@ rule generate_csv_from_xp:
         expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"])
     output:
         expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["_general", "_prodloss","_fdloss"])
+    conda:
+        "env/ario3.yml"
     shell:
         """
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {input} {wildcards.run_type} -o {input}
         """
-    conda:
-        "env/ario3.yml"
 
 rule generate_csv:
     input:
