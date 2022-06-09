@@ -16,8 +16,7 @@
     "REGIONS": ["WE", "WL", "AT", "AU", "WA", "BE", "BG", "WF", "BR", "CA", "CH",
        "CN", "CZ", "DE", "WM", "ES", "FI", "FR", "GB", "GR", "HR", "HU",
        "ID", "IE", "IN", "IT", "JP", "KR", "LT", "LV", "MX", "NO", "PL",
-       "PT", "RO", "RU", "SE", "SI", "SK", "TR", "US", "ZA", "EE", "LU",
-       "NL"
+       "PT", "RO", "RU", "SE", "SI", "SK", "TR", "US", "ZA", "EE", "LU"
     ],
     "PSI": [
         "0_999999999"
