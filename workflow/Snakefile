@@ -297,6 +297,31 @@ def which_runs(wildcards):
     else:
         raise ValueError("Unrecognized run_type.")
 
+
+def csv_from_all_xp(xps):
+    all_csv = []
+    for xp, dico in xps.items():
+        xp_type = dico["DMG_TYPE"]
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        all_csv.append(tmp)
+    return all_csv
+
+rule generate_csv_from_all_xp:
+    input:
+        csv_from_all_xp(xps)
+
+rule generate_csv_from_xp:
+    input:
+        expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"])
+    output:
+        expand("{outputdir}/{{expdir}}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["{run_type}_general", "{run_type}_prodloss","{run_type}_fdloss"])
+    shell:
+        """
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {input} {wildcards.run_type} -o {config[LONG_TERM_DIR]}
+        """
+    conda:
+        "env/ario3.yml"
+
 rule generate_csv:
     input:
         which_runs
