@@ -46,6 +46,55 @@ def check_config(config):
     print("Here are the configuration you are using :")
     print(json.dumps(config, indent=4))
 
+def run_Full_get_mem_mb(wildcards, input):
+    run_config = Path(str(input.params_template))
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 2000*n_2years
+
+def run_Full_get_vmem_mb(wildcards, input):
+    run_config = Path(str(input.params_template))
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 3000*n_2years
+
+def run_Full_get_disk_mb(wildcards, input):
+    run_config = Path(str(input.params_template))
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 500*n_2years
+
+def indicators_get_mem_mb(wildcards, input):
+    run_config = (Path(input[0]).parent)/"simulated_params.json"
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 12000*n_2years
+
+def indicators_get_vmem_mb(wildcards, input):
+    run_config = (Path(input[0]).parent)/"simulated_params.json"
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 15000*n_2years
+
+def indicators_get_disk_mb(wildcards, input):
+    run_config = (Path(input[0]).parent)/"simulated_params.json"
+    with run_config.open("r") as f:
+        params_template = json.load(f)
+
+    n_2years = params_template["n_timesteps"] // 730
+    return 500*n_2years
+
+
 def runs(xp):
     dmg_type = xp['DMG_TYPE']
     xp_folder = xp['FOLDER']

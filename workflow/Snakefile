@@ -117,9 +117,9 @@ rule indicators:
     conda:
         "env/ario3.yml"
     resources:
-        vmem_mb=15000,
-        mem_mb = 12000,
-        disk_mb=500
+        vmem_mb=indicators_get_vmem_mb,
+        mem_mb=indicators_get_mem_mb,
+        disk_mb=indicators_get_disk_mb
     shell:
         """
         cd {config[ARIO_DIR]};
@@ -144,9 +144,9 @@ rule run_Full:
                out=config["OUTPUT_DIR"],
                files=run_output_files)
     resources:
-        vmem_mb=3000,
-        mem_mb=2000,
-        disk_mb=500
+        vmem_mb=run_Full_get_vmem_mb,
+        mem_mb=run_Full_get_mem_mb,
+        disk_mb=run_Full_get_disk_mb
     wildcard_constraints:
         region="[A-Z]{2}"
     conda:
