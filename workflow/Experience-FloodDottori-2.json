@@ -17,11 +17,10 @@
     "REGIONS": ["WE", "WL", "AT", "AU", "WA", "BE", "BG", "WF", "BR", "CA", "CH",
        "CN", "CZ", "DE", "WM", "ES", "FI", "FR", "GB", "GR", "HR", "HU",
        "ID", "IE", "IN", "IT", "JP", "KR", "LT", "LV", "MX", "NO", "PL",
-       "PT", "RO", "RU", "SE", "SI", "SK", "TR", "US", "ZA", "EE", "LU",
-       "NL"
+       "PT", "RO", "RU", "SE", "SI", "SK", "TR", "US", "ZA", "EE"
     ],
     "PSI": [
-        "0_95"
+        "0_99", "0_95"
     ],
     "INV_TAU": [
         60
