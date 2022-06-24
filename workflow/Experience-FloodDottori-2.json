@@ -1,7 +1,7 @@
 {
     "XP_NAME": "Experience-FloodDottori-2",
     "FOLDER" : "experience-flood-dottori-2",
-    "MRIOS" : ["exiobase3_74_sectors"],
+    "MRIOS" : ["exiobase3_2019_74_sectors"],
     "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
