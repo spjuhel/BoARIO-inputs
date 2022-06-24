@@ -207,12 +207,12 @@ rule generate_subregions_mrio:
 
 rule generate_mrio_full_from_zip:
     input:
-        mrio_file = expand("{inputfile}",inputfile=config["IOT_zip_file"]),
-        full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        mrio_file = expand("{inputdir}/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"]),
+        full_mrio_params = expand("{outputdir}/mrios/exiobase3_{{year}}_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "env/ario3.yml"
     output:
-        mrioout = expand("{outputdir}/mrios/exiobase3_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
         vmem_mb=6000,
         mem_mb=5000,
@@ -225,16 +225,17 @@ rule generate_mrio_full_from_zip:
 rule mrio_sector_aggreg:
     input:
         full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
-        full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"]),
-        sector_aggreg_file = expand("{inputdir}/{{sector_aggreg_name}}.ods",inputdir=config["AGGREG_FILES_DIR"])
+        full_mrio_params = expand("{outputdir}/mrios/exiobase3_{{year}}_full_params.json",outputdir=config["BUILDED_DATA_DIR"]),
+        sector_aggreg_file = expand("{inputdir}/exiobase3_{{sector_aggreg_name}}.ods",inputdir=config["AGGREG_FILES_DIR"])
     conda:
         "env/ario3.yml"
     output:
-        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_FullWorld.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_FullWorld_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{outputdir}/mrios/exiobase3_{{year}}_{{sector_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
+        out_params = expand("{outputdir}/mrios/exiobase3_{{year}}_{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
     wildcard_constraints:
         #sector_aggreg_name="(.(?!(full)))*"
-        sector_aggreg_name="exiobase3_\d+_sectors"
+        sector_aggreg_name="\d+_sectors",
+        year="\d\d\d\d"
     resources:
         vmem_mb=6000,
         mem_mb=5000,
