@@ -303,7 +303,7 @@ def csv_from_all_xp(xps):
     all_csv = []
     for xp, dico in xps.items():
         xp_type = dico["DMG_TYPE"]
-        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
         all_csv.append(tmp)
     return all_csv
 
@@ -313,9 +313,9 @@ rule generate_csv_from_all_xp:
 
 rule generate_csv_from_xp:
     input:
-        expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"])
+        expand("{outputdir}/{{expdir}}/", outputdir=config["LONG_TERM_DIR"])
     output:
-        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
+        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["general", "prodloss","fdloss"])
     conda:
         "env/ario3.yml"
     shell:
