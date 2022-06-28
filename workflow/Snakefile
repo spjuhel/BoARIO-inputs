@@ -143,6 +143,8 @@ rule run_Full:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=run_output_files)
+    threads:
+        4
     resources:
         vmem_mb=run_Full_get_vmem_mb,
         mem_mb=run_Full_get_mem_mb,
@@ -166,6 +168,8 @@ rule run_subregions_mrio:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Subregions_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=run_output_files)
+    threads:
+        8
     resources:
         vmem_mb=3000,
         mem_mb=2000,
