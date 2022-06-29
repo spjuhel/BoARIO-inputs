@@ -76,7 +76,7 @@ def indicators_get_mem_mb(wildcards, input):
         params_template = json.load(f)
 
     n_2years = params_template["n_timesteps"] // 730
-    return 12000*n_2years
+    return 8000*n_2years
 
 def indicators_get_vmem_mb(wildcards, input):
     run_config = (Path(input[0]).parent)/"simulated_params.json"
@@ -84,7 +84,7 @@ def indicators_get_vmem_mb(wildcards, input):
         params_template = json.load(f)
 
     n_2years = params_template["n_timesteps"] // 730
-    return 15000*n_2years
+    return 7000*n_2years
 
 def indicators_get_disk_mb(wildcards, input):
     run_config = (Path(input[0]).parent)/"simulated_params.json"

@@ -58,6 +58,7 @@ def produce_general_csv(folder,run_type,save_path):
             dico = json.load(f)
 
         dico['run_name'] = ind.parent.name
+        dico['mrio'] = ind.parent.parent.name
         if isinstance(dico['region'],list) and len(dico['region'])==1:
             dico['region'] = dico['region'][0]
         ##################################
@@ -85,6 +86,7 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
             with ind.open('r') as f:
                 js = json.load(f)
 
+            js["index"] = [[ind.parent.parent.name,js["index"][0]]]
             df = deserialize_multiindex_dataframe(js)
             df.rename_axis("run_name",axis=0, inplace=True)
             df.rename_axis(["sector type","region"],axis=1, inplace=True)
@@ -106,6 +108,7 @@ def produce_region_fd_loss_csv(folder,run_type,save_path):
             with ind.open('r') as f:
                 js = json.load(f)
 
+            js["index"] = [[ind.parent.parent.name,js["index"][0]]]
             df = deserialize_multiindex_dataframe(js)
             df.rename_axis("run_name",axis=0, inplace=True)
             df.rename_axis(["sector type","region"],axis=1, inplace=True)
