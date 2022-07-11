@@ -14,3 +14,6 @@ workflow/config_full.json
 *.pkl
 *.zip
 workflow/config.json
+builded-data/*
+snakejobs/*
+*.parquet
