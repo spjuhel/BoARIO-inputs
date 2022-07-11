@@ -155,3 +155,6 @@ def runs(xp):
         inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
         runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     return expand("{out}/{runs}", out=config['LONG_TERM_DIR'], runs=runs)
+
+def runs_from_parquet(parquet_df):
+    pass

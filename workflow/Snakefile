@@ -84,7 +84,7 @@ rule all_full_exio:
 
 rule all_74_sect_exio:
     input:
-        ALL_74_EXIO
+        ALL_74_EXIO[0]
 
 rule all_xp:
     input:
@@ -229,13 +229,15 @@ rule generate_mrio_full_from_zip:
     #    full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "env/ario3.yml"
+    benchmark:
+        "mrios/exiobase3_{year}_full_bench.csv"
     output:
         mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
     threads:
-        8
+        4
     resources:
-        vmem_mb=6000,
-        mem_mb=5000,
+        vmem_mb=8000,
+        mem_mb=7000,
         disk_mb=2000
     shell:
         """
