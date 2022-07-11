@@ -84,7 +84,7 @@ rule all_full_exio:
 
 rule all_74_sect_exio:
     input:
-        ALL_74_EXIO[0]
+        ALL_74_EXIO
 
 rule all_xp:
     input:
