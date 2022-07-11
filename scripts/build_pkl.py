@@ -55,7 +55,6 @@ def lexico_reindex(mrio: pym.IOSystem) -> pym.IOSystem:
 def aggreg(exio_path, save_path=None):
     scriptLogger.info("Make sure you use the same python environment as the one loading the pickle file (especial pymrio and pandas version !)")
     scriptLogger.info("Your current environment is: {}".format(os.environ['CONDA_PREFIX']))
-    params=False
     exio_path = pathlib.Path(exio_path)
     if not exio_path.exists():
         raise FileNotFoundError("Exiobase file not found - {}".format(exio_path))

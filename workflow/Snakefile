@@ -61,6 +61,11 @@ to_move_files = [
     "fd_loss.json"
 ]
 
+ALL_YEARS_MRIO = glob_wildcards(config['SOURCE_DATA_DIR']+"/IOT_{year}_ixi.zip").year
+
+ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
+
+ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
@@ -72,6 +77,14 @@ wildcard_constraints:
 
 onstart:
      check_config(config)
+
+rule all_full_exio:
+    input:
+        ALL_FULL_EXIO
+
+rule all_74_sect_exio:
+    input:
+        ALL_74_EXIO
 
 rule all_xp:
     input:
@@ -211,12 +224,15 @@ rule generate_subregions_mrio:
 
 rule generate_mrio_full_from_zip:
     input:
-        mrio_file = expand("{inputdir}/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"]),
-        full_mrio_params = expand("{outputdir}/mrios/exiobase3_{{year}}_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        mrio_file = expand("{inputdir}/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"])
+    #params:
+    #    full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "env/ario3.yml"
     output:
         mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
+    threads:
+        8
     resources:
         vmem_mb=6000,
         mem_mb=5000,
@@ -229,8 +245,9 @@ rule generate_mrio_full_from_zip:
 rule mrio_sector_aggreg:
     input:
         full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
-        full_mrio_params = expand("{outputdir}/mrios/exiobase3_{{year}}_full_params.json",outputdir=config["BUILDED_DATA_DIR"]),
         sector_aggreg_file = expand("{inputdir}/exiobase3_{{sector_aggreg_name}}.ods",inputdir=config["AGGREG_FILES_DIR"])
+    params:
+        full_mrio_params = expand("{outputdir}/mrios/exiobase3_2019_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "env/ario3.yml"
     output:
@@ -246,7 +263,7 @@ rule mrio_sector_aggreg:
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} {input.full_mrio_params} -o {output.out_mrio} -po {output.out_params}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} {params.full_mrio_params} -o {output.out_mrio} -po {output.out_params}
         """
 
 rule mrio_one_region_RoW_aggreg:
