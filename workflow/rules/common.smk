@@ -1,4 +1,6 @@
 import json
+import pandas
+import re
 from pathlib import Path
 
 required_scripts = ['aggreg_exio3.py', 'flood_country_aggreg.py']
@@ -158,7 +160,7 @@ def runs(xp):
 
 def runs_from_parquet(xp):
     parquet_df_path = config['SOURCE_DATA_DIR']+"/"+xp['FLOOD_GDP_SHARE_FILE']
-    df = pd.read_parquet(parquet_df_path)
+    df = pandas.read_parquet(parquet_df_path)
     dmg_type = xp['DMG_TYPE']
     xp_folder = xp['FOLDER']
     inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
