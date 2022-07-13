@@ -69,6 +69,8 @@ ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputd
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
+RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
+
 wildcard_constraints:
     run_type="raw|int",
     #region="[A−Z]{2,3}",
@@ -89,6 +91,10 @@ rule all_74_sect_exio:
 rule all_xp:
     input:
         RUNS
+
+rule all_xp_parquet:
+    input:
+        RUNS_PARQUET
 
 rule mv_to_final:
     input:
@@ -143,7 +149,6 @@ def run_inputs(wildcards):
     xp_config = xps[wildcards.xp_folder]
     return {
         "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"], expfolder=xp_config["FOLDER"]),
         "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
         "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
         "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
@@ -156,6 +161,9 @@ rule run_Full:
         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=run_output_files)
+    params:
+        output_dir = config["OUTPUT_DIR"],
+        event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.xp_folder)
     threads:
         4
     resources:
@@ -166,12 +174,10 @@ rule run_Full:
         region="[A-Z]{2}"
     conda:
         "env/ario3.yml"
-    params:
-        output_dir = config["OUTPUT_DIR"],
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {params.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_subregions_mrio:

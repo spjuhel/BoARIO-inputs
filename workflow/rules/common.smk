@@ -156,5 +156,30 @@ def runs(xp):
         runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     return expand("{out}/{runs}", out=config['LONG_TERM_DIR'], runs=runs)
 
-def runs_from_parquet(parquet_df):
-    pass
+def runs_from_parquet(xp):
+    parquet_df_path = config['SOURCE_DATA_DIR']+"/"+xp['FLOOD_GDP_SHARE_FILE']
+    df = pd.read_parquet(parquet_df_path)
+    dmg_type = xp['DMG_TYPE']
+    xp_folder = xp['FOLDER']
+    inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
+    all_sims = list(map(list, zip(*list(df.groupby(['EXIO3_region', 'class']).groups))))
+    tmp_1 = expand("{region}_type_Full_qdmg_int_{intensity}", zip, region=all_sims[0], intensity=all_sims[1])
+    tmp = expand(xp_folder+"/{mrio_used}/{region_int}_Psi_{psi}",
+                 mrio_used=xp['MRIOS'],
+                 region_int=tmp_1,
+                 psi=xp["PSI"])
+    inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
+    runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
+    return expand("{out}/{runs}", out=config['LONG_TERM_DIR'], runs=runs)
+
+def get_event_template(mrio_used,xp_folder):
+    mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
+    match = re.search(mrio_re, mrio_used)
+    if match:
+        if match.group("custom"):
+            raise NotImplementedError("This kind of custom mrio is not yet implemented (or there is a problem in your filename)")
+        else:
+            event_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
+    else:
+        raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
+    return expand("{maindir}/../exps/{expfolder}/{tmpl}_event_template.json",maindir=config["CONFIG_DIR"], expfolder=xp_folder, tmpl=event_tmpl)
