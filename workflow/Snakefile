@@ -262,6 +262,10 @@ rule mrio_params_build:
     params:
         monetary = 1000000,
         main_inv_duration = 90
+    resources:
+        vmem_mb=100,
+        mem_mb=100,
+        disk_mb=10
     output:
         mrio_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"]),
         event_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_event_params.json",outputdir=config["BUILDED_DATA_DIR"])
