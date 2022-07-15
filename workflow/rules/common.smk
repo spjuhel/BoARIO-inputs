@@ -185,3 +185,15 @@ def get_event_template(mrio_used,xp_folder):
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
     return expand("{maindir}/../exps/{expfolder}/{tmpl}_event_template.json",maindir=config["CONFIG_DIR"], expfolder=xp_folder, tmpl=event_tmpl)
+
+def get_mrio_params(mrio_used,xp_folder):
+    mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
+    match = re.search(mrio_re, mrio_used)
+    if match:
+        if match.group("custom"):
+            raise NotImplementedError("This kind of custom mrio is not yet implemented (or there is a problem in your filename)")
+        else:
+            params_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
+    else:
+        raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
+    return expand("{outputdir}/mrios/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)

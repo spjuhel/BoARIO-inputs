@@ -1,6 +1,7 @@
 {
     "register_stocks": false,
-    "psi_param": 0.99,
+    "psi_param": 0.85,
+    "order_type": "alt",
     "model_time_step": 4,
     "timestep_dividing_factor": 365,
     "inventory_restoration_time": 60,
