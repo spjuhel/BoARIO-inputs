@@ -80,7 +80,7 @@ wildcard_constraints:
 onstart:
      check_config(config)
 
-print(RUNS_PARQUET[0][0])
+print(RUNS_PARQUET)
 
 rule all_full_exio:
     input:
