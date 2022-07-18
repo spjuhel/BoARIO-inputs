@@ -184,7 +184,7 @@ def get_event_template(mrio_used,xp_folder):
             event_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-    return expand("{maindir}/mrios/{tmpl}_event_template.json",maindir=config["BUILDED_DATA_DIR"], expfolder=xp_folder, tmpl=event_tmpl)
+    return expand("{maindir}/mrios/{tmpl}_event_params.json",maindir=config["BUILDED_DATA_DIR"], expfolder=xp_folder, tmpl=event_tmpl)
 
 def get_mrio_params(mrio_used,xp_folder):
     mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
