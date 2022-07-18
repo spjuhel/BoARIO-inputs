@@ -98,6 +98,10 @@ rule all_xp_parquet:
     input:
         RUNS_PARQUET
 
+rule test_parquet:
+    input:
+        RUNS_PARQUET[0][0:3]
+
 # rule mv_to_final:
 #     input:
 #         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
