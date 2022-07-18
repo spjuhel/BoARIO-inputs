@@ -43,8 +43,8 @@ def event_tmpl_from_ods(ods_file):
     event_params["occur"] = 7
     event_params["q_dmg"] = -1
     df = pd.read_excel(ods_file)
-    event_params["aff_sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
-    event_params["rebuilding_sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
+    event_params["aff-sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
+    event_params["rebuilding-sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
     return event_params
 
 if __name__ == '__main__':
