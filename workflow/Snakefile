@@ -96,7 +96,7 @@ rule all_xp:
 
 rule all_xp_parquet:
     input:
-        RUNS_PARQUET[0][0:1]
+        RUNS_PARQUET[0][0:3]
 
 # rule mv_to_final:
 #     input:
