@@ -98,26 +98,26 @@ rule all_xp_parquet:
     input:
         RUNS_PARQUET[0][0:1]
 
-rule mv_to_final:
-    input:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-               out=config["OUTPUT_DIR"],
-               files=to_move_files)
-    params:
-        final_dir = config["LONG_TERM_DIR"],
-        output_dir = config["OUTPUT_DIR"]
-    resources:
-        mem_mb = 500,
-        vmem_mb = 500
-    output:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-               out=config["LONG_TERM_DIR"],
-               files=to_move_files)
-    shell:
-        """
-        mkdir -p {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
-        cp {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
-        """
+# rule mv_to_final:
+#     input:
+#         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+#                out=config["OUTPUT_DIR"],
+#                files=to_move_files)
+#     params:
+#         final_dir = config["LONG_TERM_DIR"],
+#         output_dir = config["OUTPUT_DIR"]
+#     resources:
+#         mem_mb = 500,
+#         vmem_mb = 500
+#     output:
+#         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+#                out=config["LONG_TERM_DIR"],
+#                files=to_move_files)
+#     shell:
+#         """
+#         mkdir -p {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
+#         cp {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
+#         """
 
 rule indicators:
     input:
