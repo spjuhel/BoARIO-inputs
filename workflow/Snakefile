@@ -96,7 +96,7 @@ rule all_xp:
 
 rule all_xp_parquet:
     input:
-        RUNS_PARQUET[0][0]
+        RUNS_PARQUET[0][0:1]
 
 rule mv_to_final:
     input:
@@ -245,8 +245,6 @@ rule generate_mrio_full_from_zip:
         "mrios/exiobase3_{year}_full_bench.csv"
     output:
         mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
-    threads:
-        4
     resources:
         vmem_mb=8000,
         mem_mb=7000,
