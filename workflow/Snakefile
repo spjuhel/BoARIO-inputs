@@ -332,15 +332,15 @@ rule region_aggreg_dict:
 
 rule csv_raw:
     input:
-        expand("{outputdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["raw_dmg_general", "raw_dmg_prodloss","raw_dmg_fdloss"])
+        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["raw_dmg_general", "raw_dmg_prodloss","raw_dmg_fdloss"])
 
 rule csv_int:
     input:
-        expand("{outputdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["int_dmg_general", "int_dmg_prodloss","int_dmg_fdloss"])
+        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["int_dmg_general", "int_dmg_prodloss","int_dmg_fdloss"])
 
 rule all_csv:
     input:
-        expand("{outputdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["all_dmg_general", "all_dmg_prodloss","all_dmg_fdloss"])
+        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["all_dmg_general", "all_dmg_prodloss","all_dmg_fdloss"])
 
 def which_runs(wildcards):
     if wildcards.run_type=="raw":
@@ -357,7 +357,7 @@ def csv_from_all_xp(xps):
     all_csv = []
     for xp, dico in xps.items():
         xp_type = dico["DMG_TYPE"]
-        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
         all_csv.append(tmp)
     return all_csv
 
@@ -367,9 +367,9 @@ rule generate_csv_from_all_xp:
 
 rule generate_csv_from_xp:
     input:
-        expand("{outputdir}/{{expdir}}/", outputdir=config["LONG_TERM_DIR"])
+        expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"])
     output:
-        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["general", "prodloss","fdloss"])
+        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
     conda:
         "env/ario3.yml"
     shell:
@@ -381,10 +381,10 @@ rule generate_csv:
     input:
         which_runs
     output:
-        expand("{outputdir}/{files}.csv", outputdir=config["LONG_TERM_DIR"], files=["{run_type}_dmg_general", "{run_type}_dmg_prodloss","{run_type}_dmg_fdloss"])
+        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["{run_type}_dmg_general", "{run_type}_dmg_prodloss","{run_type}_dmg_fdloss"])
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {config[LONG_TERM_DIR]} {wildcards.run_type} -o {config[LONG_TERM_DIR]}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {config[OUTPUT_DIR]} {wildcards.run_type} -o {config[OUTPUT_DIR]}
         """
 
 def run_RoW_inputs(wildcards):
