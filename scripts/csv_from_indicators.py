@@ -86,7 +86,7 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
             with ind.open('r') as f:
                 js = json.load(f)
 
-            js["index"] = [[ind.parent.parent.name,js["index"][0]]]
+            #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
             df = deserialize_multiindex_dataframe(js)
             df.rename_axis(["mrio","run_name"],axis=0, inplace=True)
             df.rename_axis(["sector type","region"],axis=1, inplace=True)
@@ -108,7 +108,7 @@ def produce_region_fd_loss_csv(folder,run_type,save_path):
             with ind.open('r') as f:
                 js = json.load(f)
 
-            js["index"] = [[ind.parent.parent.name,js["index"][0]]]
+            #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
             df = deserialize_multiindex_dataframe(js)
             df.rename_axis(["mrio","run_name"],axis=0, inplace=True)
             df.rename_axis(["sector type","region"],axis=1, inplace=True)
