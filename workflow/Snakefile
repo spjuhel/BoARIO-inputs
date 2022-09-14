@@ -67,6 +67,8 @@ ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=c
 
 ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
 
+MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2011_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
+
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
 RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
@@ -81,6 +83,10 @@ onstart:
      check_config(config)
 
 print(RUNS_PARQUET)
+
+rule minimal_exio:
+    input:
+        MINIMAL_7_EXIO
 
 rule all_full_exio:
     input:
@@ -101,27 +107,6 @@ rule all_xp_parquet:
 rule test_parquet:
     input:
         RUNS_PARQUET[0][0:3]
-
-# rule mv_to_final:
-#     input:
-#         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-#                out=config["OUTPUT_DIR"],
-#                files=to_move_files)
-#     params:
-#         final_dir = config["LONG_TERM_DIR"],
-#         output_dir = config["OUTPUT_DIR"]
-#     resources:
-#         mem_mb = 500,
-#         vmem_mb = 500
-#     output:
-#         expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-#                out=config["LONG_TERM_DIR"],
-#                files=to_move_files)
-#     shell:
-#         """
-#         mkdir -p {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/;
-#         cp {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/* {params.final_dir}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/
-#         """
 
 rule indicators:
     input:
