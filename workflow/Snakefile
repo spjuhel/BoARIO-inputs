@@ -82,7 +82,7 @@ wildcard_constraints:
 onstart:
      check_config(config)
 
-print(RUNS_PARQUET)
+# print(RUNS_PARQUET)
 
 rule minimal_exio:
     input:
