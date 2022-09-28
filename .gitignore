@@ -17,3 +17,4 @@ workflow/config.json
 builded-data/*
 snakejobs/*
 *.parquet
+snakejob.*
