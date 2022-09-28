@@ -36,8 +36,8 @@ run_output_files = [
     "rebuild_demand_record",
     "rebuild_prod_record",
     "simulated_events.json",
-    "simulated_params.json",
-    "simulation.log"]
+    "simulated_params.json"
+    ]
 
 to_move_files = [
     "indexes.json",
@@ -157,6 +157,9 @@ rule run_Full:
         output_dir = config["OUTPUT_DIR"]
     threads:
         4
+    log:
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/simulation.log",
+               out=config["OUTPUT_DIR"])
     resources:
         vmem_mb=run_Full_get_vmem_mb,
         mem_mb=run_Full_get_mem_mb,
