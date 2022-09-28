@@ -53,7 +53,7 @@ def run_Full_get_mem_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 2000*n_2years
 
 def run_Full_get_vmem_mb(wildcards, input):
@@ -61,7 +61,7 @@ def run_Full_get_vmem_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 3000*n_2years
 
 def run_Full_get_disk_mb(wildcards, input):
@@ -69,7 +69,7 @@ def run_Full_get_disk_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 500*n_2years
 
 def indicators_get_mem_mb(wildcards, input):
@@ -77,7 +77,7 @@ def indicators_get_mem_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 8000*n_2years
 
 def indicators_get_vmem_mb(wildcards, input):
@@ -85,7 +85,7 @@ def indicators_get_vmem_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 7000*n_2years
 
 def indicators_get_disk_mb(wildcards, input):
@@ -93,7 +93,7 @@ def indicators_get_disk_mb(wildcards, input):
     with run_config.open("r") as f:
         params_template = json.load(f)
 
-    n_2years = params_template["n_timesteps"] // 730
+    n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 500*n_2years
 
 

@@ -34,17 +34,17 @@ def params_from_ods(ods_file,monetary,main_inv_dur):
 
 def event_tmpl_from_ods(ods_file):
     event_params = {}
-    event_params["aff-regions"] = ["Undefined"]
-    event_params["dmg-distrib-regions"] = [1]
-    event_params["dmg-distrib-sectors-type"] = "gdp"
-    event_params["dmg-distrib-sectors"] = []
+    event_params["aff_regions"] = ["Undefined"]
+    event_params["dmg_distrib_regions"] = [1]
+    event_params["dmg_distrib_sectors_type"] = "gdp"
+    event_params["dmg_distrib_sectors"] = []
     event_params["duration"] = -1
     event_params["name"] = "Undefined"
     event_params["occur"] = 7
     event_params["q_dmg"] = -1
     df = pd.read_excel(ods_file)
-    event_params["aff-sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
-    event_params["rebuilding-sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
+    event_params["aff_sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
+    event_params["rebuilding_sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
     return event_params
 
 if __name__ == '__main__':
