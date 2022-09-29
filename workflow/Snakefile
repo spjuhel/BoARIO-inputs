@@ -125,7 +125,7 @@ rule indicators:
                    "prod_chg.json",
                    "fd_loss.json"])
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     resources:
         vmem_mb=indicators_get_vmem_mb,
         mem_mb=indicators_get_mem_mb,
@@ -167,7 +167,7 @@ rule run_Full:
     wildcard_constraints:
         region="[A-Z]{2}"
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     shell:
         """
         cd {config[ARIO_DIR]};
@@ -195,7 +195,7 @@ rule run_subregions_mrio:
         region="(?:[A-Z]{2}-[A-Z]{2}\d+)|([A-Z]{2}-all)",
         mrio_used="exiobase3_(?:Full|\d+_sectors)_(?:FullWorld|[A-Z]{2}-RoW)_[A-Z]{2}_sliced_in_\d+"
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     params:
         output_dir = config["OUTPUT_DIR"],
     shell:
@@ -212,7 +212,7 @@ rule generate_subregions_mrio:
         out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
         #out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     wildcard_constraints:
         sector_aggreg_name="exiobase3_(?:Full|\d+_sectors)",
         region_aggreg_name="FullWorkd|[A-Z]{2}-RoW",
@@ -232,7 +232,7 @@ rule generate_mrio_full_from_zip:
     #params:
     #    full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     benchmark:
         "mrios/exiobase3_{year}_full_bench.csv"
     output:
@@ -271,7 +271,7 @@ rule mrio_sector_aggreg:
     params:
         full_mrio_params = expand("{folder}/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     output:
         out_mrio = expand("{folder}/mrios/exiobase3_{{year}}_{{sector_aggreg_name}}.pkl",folder=config["BUILDED_DATA_DIR"])
     wildcard_constraints:
@@ -293,7 +293,7 @@ rule mrio_one_region_RoW_aggreg:
         region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"]),
         old_mrio_params = expand("{outputdir}/mrios/{{mrio}}_FullWorld_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
-         "env/boario-dev.yml"
+         "env/boario-use_2.yml"
     output:
         out_mrio = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW.pkl",outputdir=config["BUILDED_DATA_DIR"]),
         out_params = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW_params.json",outputdir=config["BUILDED_DATA_DIR"])
@@ -359,7 +359,7 @@ rule generate_csv_from_xp:
     output:
         expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     shell:
         """
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {input} {wildcards.run_type} -o {input}
@@ -393,7 +393,7 @@ rule run_RoW:
                out=config["OUTPUT_DIR"],
                files=run_output_files)
     conda:
-        "env/boario-dev.yml"
+        "env/boario-use_2.yml"
     wildcard_constraints:
         run_type="raw|int"
     resources:
