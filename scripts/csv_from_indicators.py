@@ -89,7 +89,12 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
             #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
             df = deserialize_multiindex_dataframe(js)
             df.rename_axis(["mrio","run_name"],axis=0, inplace=True)
-            df.rename_axis(["sector type","region"],axis=1, inplace=True)
+            if df.columns.nlevels == 2:
+                df.rename_axis(["sector type","region"],axis=1, inplace=True)
+            elif df.columns.nlevels ==3:
+                df.rename_axis(["semester", "sector type","region"],axis=1, inplace=True)
+            else:
+                raise ValueError("Dataframe columns have {} levels (2 or 3 expected)".format(df.columns.nlevels))
             if future_df is None:
                 future_df = df.copy()
             else:
