@@ -18,3 +18,5 @@ builded-data/*
 snakejobs/*
 *.parquet
 snakejob.*
+slurm-*.out
+source-data/*
