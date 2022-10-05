@@ -171,11 +171,6 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     "total_dmg": "Direct damage to capital (€)"
     })
 
-    df_prod["year"] = pd.DatetimeIndex(df_prod["date_start"]).year
-    df_prod["date_start"] = pd.DatetimeIndex(df_prod["date_start"])
-    bins = [np.datetime64(date(1970,12,31)), np.datetime64(date(2005,12,31)), np.datetime64(date(2015,12,31)), np.datetime64(date(2034,12,31)), np.datetime64(date(2049,12,31)), np.datetime64(date(2069,12,31)), np.datetime64(date(2099,12,31)), np.datetime64(date(2149,12,31))] #type: ignore
-    group_names = ["historic","[2006-2016[", "[2016-2035[", "[2035-2050[", "[2051-2070[", "[2071-2100[", "2100+"]
-    df_prod["date_cat"] = pd.cut(df_prod.date_start, bins, labels=group_names)
     str_rebuild = "rebuild"
     str_non_rebuild = "non-rebuild"
     str_fdloss = "fdloss"
@@ -183,15 +178,15 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     str_unit = r"\(M€\)"
     re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
     df_prod = df_prod.reset_index()
-    df_prod_all_events = df_prod.groupby(["mrio","model", "date_cat"])[list(df_prod.filter(regex = re_all))].agg("sum")
+    df_prod_all_events = df_prod.groupby(["mrio","model", "period"])[list(df_prod.filter(regex = re_all))].agg("sum")
     assert df_prod_all_events is not None
     df_prod_all_events.columns = df_prod_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_prod_by_region_impacted = df_prod.groupby(["mrio", "model", "EXIO3_region", "date_cat"])[list(df_prod.filter(regex = re_all))].agg("sum")
+    df_prod_by_region_impacted = df_prod.groupby(["mrio", "model", "EXIO3_region", "period"])[list(df_prod.filter(regex = re_all))].agg("sum")
     assert df_prod_by_region_impacted is not None
     df_prod_by_region_impacted.columns = df_prod_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
     df_prod_by_region_impacted = df_prod_by_region_impacted.reset_index()
-    prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","date_cat"]).apply(get_impacted_prodloss)
-    prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "date_cat", "affected region", "sector_type"]
+    prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period"]).apply(get_impacted_prodloss)
+    prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "affected region", "sector_type"]
     prodloss_from_local_events = prodloss_from_local_events.droplevel(4)
     prodloss_from_local_events.name = "Production change due to local events (M€)"
 
@@ -203,11 +198,6 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     "total_dmg": "Direct damage to capital (€)"
     })
 
-    df_final_demand["year"] = pd.DatetimeIndex(df_final_demand["date_start"]).year
-    df_final_demand["date_start"] = pd.DatetimeIndex(df_final_demand["date_start"])
-    bins = [np.datetime64(date(1970,12,31)), np.datetime64(date(2005,12,31)), np.datetime64(date(2015,12,31)), np.datetime64(date(2034,12,31)), np.datetime64(date(2049,12,31)), np.datetime64(date(2069,12,31)), np.datetime64(date(2099,12,31)), np.datetime64(date(2149,12,31))] #type: ignore
-    group_names = ["historic","[2006-2016[", "[2016-2035[", "[2035-2050[", "[2051-2070[", "[2071-2100[", "2100+"]
-    df_final_demand["date_cat"] = pd.cut(df_final_demand.date_start, bins, labels=group_names)
     str_rebuild = "rebuild"
     str_non_rebuild = "non-rebuild"
     str_fdloss = "fdloss"
@@ -215,20 +205,20 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     str_unit = r"\(M€\)"
     re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
     df_final_demand = df_final_demand.reset_index()
-    df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "date_cat"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
+    df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
     assert df_final_demand_all_events is not None
     df_final_demand_all_events.columns = df_final_demand_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "date_cat"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
+    df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
     assert df_final_demand_by_region_impacted is not None
     df_final_demand_by_region_impacted.columns = df_final_demand_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
     df_final_demand_by_region_impacted = df_final_demand_by_region_impacted.reset_index()
     #print(df_final_demand_by_region_impacted)
-    finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","date_cat"]).apply(get_impacted_fdloss)
-    finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "date_cat", "affected region", "sector_type"]
+    finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period"]).apply(get_impacted_fdloss)
+    finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "affected region", "sector_type"]
     finalloss_from_local_events = finalloss_from_local_events.droplevel(4)
     finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
 
-    total_direct_loss_df = df_prod.groupby(["mrio", "model", "EXIO3_region", "date_cat"])[["Direct damage to capital (€)","Direct production loss (GDP share)", "Direct production loss (M€)"]].sum()
+    total_direct_loss_df = df_prod.groupby(["mrio", "model", "EXIO3_region", "period"])[["Direct damage to capital (€)","Direct production loss (GDP share)", "Direct production loss (M€)"]].sum()
 
     df_prod_all_events = df_prod_all_events.melt(value_name="Projected total production change (M€)",var_name=["region","sector_type"], ignore_index=False)
     df_prod_all_events = df_prod_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
@@ -242,7 +232,7 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     df_for_map["Direct production loss (GDP share)"] = df_for_map["Direct production loss (GDP share)"].fillna(0)
     df_for_map["Direct production loss (M€)"] = df_for_map["Direct production loss (M€)"].fillna(0)
     df_for_map["Production change due to foreign events (M€)"] = df_for_map["Projected total production change (M€)"] - df_for_map["Production change due to local events (M€)"]
-    df_for_map = df_for_map.set_index(["mrio", "model", "EXIO3_region","sector_type", "date_cat"])
+    df_for_map = df_for_map.set_index(["mrio", "model", "EXIO3_region","sector_type", "period"])
     df_for_map = df_for_map.rename(index={"rebuild_prodloss (M€)":"Rebuilding",
                             "non-rebuild_prodloss (M€)":"Non-rebuilding"
                             })
