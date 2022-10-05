@@ -243,7 +243,7 @@ rule generate_mrio_full_from_zip:
         disk_mb=2000
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -o {output.mrioout} {input.mrio_file};
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -t "EXIO3" -o {output.mrioout} -i {input.mrio_file};
         """
 
 rule mrio_params_build:
