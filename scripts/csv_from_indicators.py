@@ -77,9 +77,9 @@ def produce_general_csv(folder,run_type,save_path):
     future_df=future_df.set_index("run_name")
     future_df.to_csv(save_path)
 
-def produce_region_prod_loss_csv(folder,run_type,save_path):
+def produce_region_loss_csv(folder,run_type,save_path, jsontype):
     future_df = None
-    for ind in folder.glob('**/*'+run_type+'*/prod_chg.json'):
+    for ind in folder.glob('**/*'+run_type+'*/'+jsontype+'.json'):
         if "RoW" in ind.parent.name:
             pass
         else:
@@ -101,26 +101,6 @@ def produce_region_prod_loss_csv(folder,run_type,save_path):
                 future_df = pd.concat([future_df,df])
 
     #print(future_df.reset_index())
-    #future_df=future_df.set_index("run_name")
-    future_df.to_csv(save_path)
-
-def produce_region_fd_loss_csv(folder,run_type,save_path):
-    future_df = None
-    for ind in folder.glob('**/*'+run_type+'*/fd_loss.json'):
-        if "RoW" in ind.parent.name:
-            pass
-        else:
-            with ind.open('r') as f:
-                js = json.load(f)
-
-            #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
-            df = deserialize_multiindex_dataframe(js)
-            df.rename_axis(["mrio","run_name"],axis=0, inplace=True)
-            df.rename_axis(["sector type","region"],axis=1, inplace=True)
-            if future_df is None:
-                future_df = df.copy()
-            else:
-                future_df = pd.concat([future_df,df])
     #future_df=future_df.set_index("run_name")
     future_df.to_csv(save_path)
 
@@ -149,5 +129,5 @@ if __name__ == '__main__':
     scriptLogger.info('Starting Script')
     scriptLogger.info('Will produce regrouped indicators for folder {}'.format(folder))
     produce_general_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"general.csv")
-    produce_region_prod_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"prodloss.csv")
-    produce_region_fd_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"fdloss.csv")
+    produce_region_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"prodloss.csv",jsontype="prod_chg")
+    produce_region_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"fdloss.csv", jsontype="fd_loss")
