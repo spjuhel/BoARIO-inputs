@@ -335,6 +335,7 @@ if __name__ == '__main__':
         df = df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
         general_df = general_df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
         general_df = general_df.join(df)
+        general_df = general_df.reset_index()
         general_df["gdp_dmg_share"] = general_df['share of GVA used as ARIO input']
         general_df = general_df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type"]]
         general_df = general_df.set_index(["period","mrio","run_name"])
