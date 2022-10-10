@@ -28,6 +28,19 @@ from scipy.interpolate import interp1d
 from datetime import date
 tqdm.pandas()
 
+import pandas as pd
+import pathlib
+import argparse
+import logging
+import pathlib
+import numpy as np
+import pandas as pd
+from tqdm.notebook import tqdm
+import pathlib
+import warnings
+from scipy.interpolate import interp1d
+from datetime import date
+tqdm.pandas()
 
 def prepare_general_df(general_csv:pathlib.Path, period:str) -> pd.DataFrame:
     df = pd.read_csv(general_csv)
@@ -57,14 +70,14 @@ def prepare_general_df(general_csv:pathlib.Path, period:str) -> pd.DataFrame:
     return df
 
 def prepare_loss_df(df_csv:pathlib.Path, period:str) -> pd.DataFrame:
-    df = pd.read_csv(df_csv,index_col=[0,1], header=[0,1])
+    df = pd.read_csv(df_csv,index_col=[0,1], header=[0,1,2])
     df['period'] = period
     return df.reset_index().set_index(["mrio","run_name","period"])
 
 def index_a_df(general_df:pd.DataFrame, df_to_index:pd.DataFrame) -> pd.DataFrame:
-    res_df = general_df.join(df_to_index.stack(level=0))
+    res_df = general_df.join(df_to_index.stack(level=list(range(df_to_index.columns.nlevels-1))))
     res_df = res_df.reset_index().set_index("run_name")
-    res_df = res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period"])
+    res_df = res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period","semester"])
     if res_df is not None:
         res_df = res_df.dropna(how="any",axis=0)
         return res_df
@@ -98,7 +111,7 @@ def interpolations_coefs(reg_df,x_values,ys):
             warnings.filterwarnings("error")
             np.seterr(invalid="raise")
             try:
-                reg_coefs = reg_df.groupby(["mrio", "Impacted EXIO3 region", "sector type"]).apply(lambda row_group: interp1d(row_group[x_values], row_group[y],fill_value="extrapolate"))
+                reg_coefs = reg_df.groupby(["mrio", "Impacted EXIO3 region", "sector type", "semester"]).apply(lambda row_group: interp1d(row_group[x_values], row_group[y],fill_value="extrapolate"))
             except FloatingPointError:
                 print(y)
         if reg_coefs is None:
@@ -114,12 +127,12 @@ def reg_coef_dict_to_df_to_dict(df:pd.DataFrame, regions:list, values:str = "gdp
     df_res = interpolations_coefs(df, values, regions)
     return df_res.to_dict()
 
-def projected_loss(loss_dict:dict, impacted_region:str, dmg:float, sector_type:str, mrio:str):
+def projected_loss(loss_dict:dict, impacted_region:str, dmg:float, sector_type:str, mrio:str, semester:str):
     """Return the projected loss for a given region, impacted region, sector, and damage."""
-    return lambda region: loss_dict[region][(mrio, impacted_region, sector_type)](dmg)
+    return lambda region: loss_dict[region][(mrio, impacted_region, sector_type, semester)](dmg)
 
-def projected_loss_region(group, loss_dict:dict, region:str, sector_type:str, mrio:str):
-    return pd.Series(projected_loss(loss_dict=loss_dict,impacted_region=group.head(1)["EXIO3_region"].values[0],dmg=group["dmg_as_gdp_share"], sector_type=sector_type, mrio=mrio)(region), name=region)
+def projected_loss_region(group, loss_dict:dict, region:str, sector_type:str, mrio:str, semester:str):
+    return pd.Series(projected_loss(loss_dict=loss_dict,impacted_region=group.head(1)["EXIO3_region"].values[0],dmg=group["dmg_as_2015_gva_share"], sector_type=sector_type, mrio=mrio, semester=semester)(region), name=region)
 
 def prepare_flood_base(df_base:pd.DataFrame, period:str) -> pd.DataFrame:
     df_base['period'] = period
@@ -128,29 +141,60 @@ def prepare_flood_base(df_base:pd.DataFrame, period:str) -> pd.DataFrame:
     mask = df_base.groupby(["EXIO3_region","period"]).count()
     df_base = df_base.set_index(["EXIO3_region","period"]).drop((mask[mask["final_cluster"]<=5].index))
     df_base = df_base.reset_index()
-    df_base = df_base.sort_values(by=["EXIO3_region","dmg_as_gdp_share"])
+    df_base = df_base.sort_values(by=["EXIO3_region","dmg_as_2015_gva_share"])
     return df_base
 
-def extend_df_mrio(df_base:pd.DataFrame, df_loss:pd.DataFrame) -> pd.DataFrame:
+def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame) -> pd.DataFrame:
     # expand for all mrio simulated
     df_mrio = pd.DataFrame({'mrio':[mrio for mrio in df_loss.mrio.unique()]})
+    df_semester = pd.DataFrame({'semester':[semester for semester in df_loss.semester.unique()]})
     flood_base_loss = df_base.copy().merge(df_mrio,how="cross")
+    flood_base_loss = flood_base_loss.merge(df_semester, how="cross")
     return flood_base_loss
 
-def run_interpolation(df_prodloss:pd.DataFrame, df_fdloss:pd.DataFrame, mrios, flood_base:pd.DataFrame, region_list:list, prodloss_dict:dict, fdloss_dict:dict) -> tuple[pd.DataFrame, pd.DataFrame]:
+def run_interpolation2(df_prodloss:pd.DataFrame, df_fdloss:pd.DataFrame, mrios, semesters, flood_base:pd.DataFrame, region_list:list, prodloss_dict:dict, fdloss_dict:dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     # TODO See how to do this with a pd.concat
     flood_base = flood_base.reset_index()
-    flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_gdp_share"])
+    flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"])
     flood_base_gr = flood_base.groupby("EXIO3_region")
     for mrio in mrios:
         print("Running interpolation for {}".format(mrio))
         for region in region_list:
             print("Running indirect impacted region {}".format(region))
-            df_prodloss.loc[mrio,region+"_non-rebuild_prodloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=prodloss_dict,group=group, region=region, sector_type="non-rebuilding", mrio=mrio)).values
-            df_prodloss.loc[mrio,region+"_rebuild_prodloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=prodloss_dict,group=group, region=region, sector_type="rebuilding", mrio=mrio)).values
-            df_fdloss.loc[mrio,region+"_non-rebuild_fdloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=fdloss_dict,group=group, region=region, sector_type="non-rebuilding", mrio=mrio)).values
-            df_fdloss.loc[mrio,region+"_rebuild_fdloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=fdloss_dict,group=group, region=region, sector_type="rebuilding", mrio=mrio)).values
+            for semester in semesters:
+                df_prodloss.loc[(mrio,semester),region+"_non-rebuild_prodloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=prodloss_dict,group=group, region=region, sector_type="non-rebuilding", mrio=mrio, semester=semester)).values
+                df_prodloss.loc[(mrio,semester),region+"_rebuild_prodloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=prodloss_dict,group=group, region=region, sector_type="rebuilding", mrio=mrio, semester=semester)).values
+                df_fdloss.loc[(mrio,semester),region+"_non-rebuild_fdloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=fdloss_dict,group=group, region=region, sector_type="non-rebuilding", mrio=mrio, semester=semester)).values
+                df_fdloss.loc[(mrio,semester),region+"_rebuild_fdloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=fdloss_dict,group=group, region=region, sector_type="rebuilding", mrio=mrio, semester=semester)).values
     return df_prodloss, df_fdloss
+
+def run_interpolation(df_loss:pd.DataFrame, mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
+    # TODO See how to do this with a pd.concat
+    flood_base = flood_base.reset_index()
+    flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"])
+    flood_base_gr = flood_base.groupby("EXIO3_region")
+    res_l = []
+    for region in region_list:
+        sect_l = []
+        print("Running indirect impacted region {}".format(region))
+        for sector_type in ["rebuilding","non-rebuilding"]:
+            mr_l = []
+            for mrio in mrios:
+                #print("Running interpolation for {}".format(mrio))
+                sem_l=[]
+                for semester in semesters:
+                    serie = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=loss_dict,group=group, region=region, sector_type=sector_type, mrio=mrio, semester=semester))
+                    serie.index = flood_base['final_cluster']
+                    sem_l.append(serie)
+                df_sem = pd.concat(sem_l, axis=0, keys=semesters)
+                mr_l.append(df_sem)
+            df_mr = pd.concat(mr_l, axis=0, keys=mrios)
+            sect_l.append(df_mr)
+        df_sect = pd.concat(sect_l, axis=1, keys=["rebuild_"+loss_type_str+" (M€)","non-rebuild_"+loss_type_str+" (M€)"])
+        res_l.append(df_sect)
+    print("Finished looping, doing last concatenation")
+    df_res = pd.concat(res_l, axis=1, keys=region_list)
+    return df_res
 
 def avoid_fragments(df:pd.DataFrame) -> pd.DataFrame:
     res = df.copy()
@@ -164,11 +208,11 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
         return (row.loc[:,[(row.name[2],"rebuild_fdloss (M€)"),(row.name[2],"non-rebuild_fdloss (M€)")]]).sum()
 
     df_prod = df_prod.rename(columns={
-    "dmg_as_gdp_share":"Direct damage to capital (GDP share)",
-    "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
-    "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-    "direct_prodloss_as_gdp_share":"Direct production loss (GDP share)",
-    "total_dmg": "Direct damage to capital (€)"
+        "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
+        "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
+        "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
+        "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
+        "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
     })
 
     str_rebuild = "rebuild"
@@ -181,21 +225,21 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     df_prod_all_events = df_prod.groupby(["mrio","model", "period"])[list(df_prod.filter(regex = re_all))].agg("sum")
     assert df_prod_all_events is not None
     df_prod_all_events.columns = df_prod_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_prod_by_region_impacted = df_prod.groupby(["mrio", "model", "EXIO3_region", "period"])[list(df_prod.filter(regex = re_all))].agg("sum")
+    df_prod_by_region_impacted = df_prod.groupby(["mrio", "model", "EXIO3_region", "period","semester"])[list(df_prod.filter(regex = re_all))].agg("sum")
     assert df_prod_by_region_impacted is not None
     df_prod_by_region_impacted.columns = df_prod_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
     df_prod_by_region_impacted = df_prod_by_region_impacted.reset_index()
-    prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period"]).apply(get_impacted_prodloss)
-    prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "affected region", "sector_type"]
-    prodloss_from_local_events = prodloss_from_local_events.droplevel(4)
+    prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_prodloss)
+    prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
+    prodloss_from_local_events = prodloss_from_local_events.droplevel(5)
     prodloss_from_local_events.name = "Production change due to local events (M€)"
 
     df_final_demand = df_final_demand.rename(columns={
-    "dmg_as_gdp_share":"Direct damage to capital (GDP share)",
+    "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
     "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
     "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-    "direct_prodloss_as_gdp_share":"Direct production loss (GDP share)",
-    "total_dmg": "Direct damage to capital (€)"
+    "direct_prodloss_as_gva_share":"Direct production loss (2015GVA share)",
+    "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
     })
 
     str_rebuild = "rebuild"
@@ -208,17 +252,17 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
     assert df_final_demand_all_events is not None
     df_final_demand_all_events.columns = df_final_demand_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
+    df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
     assert df_final_demand_by_region_impacted is not None
     df_final_demand_by_region_impacted.columns = df_final_demand_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
     df_final_demand_by_region_impacted = df_final_demand_by_region_impacted.reset_index()
     #print(df_final_demand_by_region_impacted)
-    finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period"]).apply(get_impacted_fdloss)
-    finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "affected region", "sector_type"]
-    finalloss_from_local_events = finalloss_from_local_events.droplevel(4)
+    finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_fdloss)
+    finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
+    finalloss_from_local_events = finalloss_from_local_events.droplevel(5)
     finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
 
-    total_direct_loss_df = df_prod.groupby(["mrio", "model", "EXIO3_region", "period"])[["Direct damage to capital (€)","Direct production loss (GDP share)", "Direct production loss (M€)"]].sum()
+    total_direct_loss_df = df_prod.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
 
     df_prod_all_events = df_prod_all_events.melt(value_name="Projected total production change (M€)",var_name=["region","sector_type"], ignore_index=False)
     df_prod_all_events = df_prod_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
@@ -228,11 +272,11 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
 
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
-    df_for_map["Direct damage to capital (€)"] = df_for_map["Direct damage to capital (€)"].fillna(0)
-    df_for_map["Direct production loss (GDP share)"] = df_for_map["Direct production loss (GDP share)"].fillna(0)
+    df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
+    df_for_map["Direct production loss (2015GVA share)"] = df_for_map["Direct production loss (2015GVA share)"].fillna(0)
     df_for_map["Direct production loss (M€)"] = df_for_map["Direct production loss (M€)"].fillna(0)
     df_for_map["Production change due to foreign events (M€)"] = df_for_map["Projected total production change (M€)"] - df_for_map["Production change due to local events (M€)"]
-    df_for_map = df_for_map.set_index(["mrio", "model", "EXIO3_region","sector_type", "period"])
+    df_for_map = df_for_map.set_index(["mrio", "model", "EXIO3_region","sector_type", "period", "semester"])
     df_for_map = df_for_map.rename(index={"rebuild_prodloss (M€)":"Rebuilding",
                             "non-rebuild_prodloss (M€)":"Non-rebuilding"
                             })
@@ -246,11 +290,11 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
 
     return df_for_map
 
-
 parser = argparse.ArgumentParser(description="Interpolate results and produce aggregated results from all simulations")
 parser.add_argument('-i', "--input", type=str, help='The str path to the input experiment folder', required=True)
 #parser.add_argument('run_type', type=str, help='The type of runs to produce csv from ("raw", "int" or "all")')
 parser.add_argument('-B', "--flood-base", type=str, help='Path where the flood database is.', required=True)
+parser.add_argument('-R', "--representative", type=str, help='Path where the representative events database is.', required=True)
 parser.add_argument('-N', "--period-name", type=str, help='Name of the period',required=True)
 parser.add_argument('-P', "--period", type=int, help='Starting and ending year for a specific period to study', nargs=2)
 parser.add_argument('-o', "--output", type=str, help='Path where to save parquets files')
@@ -285,8 +329,19 @@ if __name__ == '__main__':
     if args.period is not None:
         flood_base_df = filter_period(flood_base_df, args.period)
 
+    if (general_df["gdp_dmg_share"]==-1).any():
+        df = pd.read_parquet(args.representative)
+        df = df.reset_index().set_index(["EXIO3_region","class"])
+        df = df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
+        general_df = general_df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
+        general_df = general_df.join(df)
+        general_df["gdp_dmg_share"] = general_df['share of GVA used as ARIO input']
+        general_df = general_df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type"]]
+        general_df = general_df.set_index(["period","mrio","run_name"])
+        del df
+
     scriptLogger.info('Found all parquet files')
-    regions_list = list(prodloss_df.columns.get_level_values(1).unique())
+    regions_list = list(prodloss_df.columns.get_level_values(2).unique())
     flooded_regions = list(flood_base_df["EXIO3_region"].unique())
 
     scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
@@ -303,28 +358,27 @@ if __name__ == '__main__':
         prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
         finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
 
-    prodloss_df = extend_df_mrio(flood_base_df, prodloss_df)
-    finaldemand_df = extend_df_mrio(flood_base_df, finaldemand_df)
+    prodloss_df = extend_df(flood_base_df, prodloss_df)
+    finaldemand_df = extend_df(flood_base_df, finaldemand_df)
     mrios = prodloss_df.mrio.unique()
     prodloss_df = prodloss_df.set_index("mrio")
+    semesters = prodloss_df.semester.unique()
     finaldemand_df = finaldemand_df.set_index("mrio")
     scriptLogger.info("Running interpolation")
-    prodloss_df, finaldemand_df = run_interpolation(prodloss_df, finaldemand_df, mrios, flood_base_df, regions_list, prodloss_dict, finalloss_dict)
-    # prodloss_df =  run_interpolation(prodloss_df, mrios, flood_base_df, regions_list, prodloss_dict, "non-rebuilding","_non-rebuild_prodloss (M€)")
-    prodloss_df = avoid_fragments(prodloss_df)
-    # finaldemand_df = run_interpolation(finaldemand_df, mrios, flood_base_df, regions_list, finalloss_dict, "rebuilding","_rebuild_fdloss (M€)")
-    # finaldemand_df = run_interpolation(finaldemand_df, mrios, flood_base_df, regions_list, finalloss_dict, "non-rebuilding","_non-rebuild_fdloss (M€)")
-    finaldemand_df = avoid_fragments(finaldemand_df)
+    res_prodloss_df = run_interpolation(prodloss_df, mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
+    del prodloss_df
+    res_finaldemand_df = run_interpolation(finaldemand_df, mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
+    del finaldemand_df
 
     output = pathlib.Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
     scriptLogger.info("Writing result to {}".format(output))
-    prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
-    finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+    res_prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+    res_finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
 
     #prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
     #finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
     scriptLogger.info("Building df for maps")
-    df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
+    df_for_maps = prepare_for_maps(res_prodloss_df, res_finaldemand_df)
     df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
     scriptLogger.info("Everything finished !")
