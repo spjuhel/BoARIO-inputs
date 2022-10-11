@@ -364,13 +364,8 @@ if __name__ == '__main__':
     res_prodloss_df = run_interpolation(prodloss_df, mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
     res_prodloss_df = res_prodloss_df.rename_axis(index=["mrio","semester","final_cluster"])
     res_prodloss_df.columns = ["_".join(a) for a in res_prodloss_df.columns.to_flat_index()]
-    scriptLogger.info("Joining with metadata dataframe")
-    prodloss_df = prodloss_df.set_index("final_cluster", append=True)
-    prodloss_df = prodloss_df.join(res_prodloss_df)
-    del res_prodloss_df
-    del prodloss_dict
-    scriptLogger.info("Writing result to {}".format(output))
-    prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+    scriptLogger.info("Writing temp result to {}".format(output))
+    res_prodloss_df.to_parquet(output/"prodloss_full_flood_base_results_tmp.parquet")
     scriptLogger.info("#### DONE ####")
 
     scriptLogger.info("#### Doing finalloss result ####")
@@ -386,18 +381,31 @@ if __name__ == '__main__':
     scriptLogger.info("Running interpolation")
     res_finaldemand_df = run_interpolation(finaldemand_df, mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
     res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
-    scriptLogger.info("Joining with metadata dataframe")
-    finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
-    finaldemand_df = finaldemand_df.join(res_finaldemand_df)
-    del res_finaldemand_df
-    del finalloss_dict
-    scriptLogger.info("Writing result to {}".format(output))
-    finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+    scriptLogger.info("Writing temp result to {}".format(output))
+    res_prodloss_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
     scriptLogger.info("#### DONE ####")
 
-    #prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
-    #finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
-    scriptLogger.info("Building df for maps")
-    df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
-    df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
+    # scriptLogger.info("Joining with metadata dataframe")
+    # prodloss_df = prodloss_df.set_index("final_cluster", append=True)
+    # scriptLogger.info("Infos on dataframes : {}\n-----------\n{}".format(prodloss_df.info(),res_prodloss_df.info()))
+    # prodloss_df = prodloss_df.join(res_prodloss_df)
+    # del res_prodloss_df
+    # del prodloss_dict
+    # scriptLogger.info("Writing result to {}".format(output))
+    # prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+    # res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
+    # scriptLogger.info("Joining with metadata dataframe")
+    # finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
+    # finaldemand_df = finaldemand_df.join(res_finaldemand_df)
+    # del res_finaldemand_df
+    # del finalloss_dict
+    # scriptLogger.info("Writing result to {}".format(output))
+    # finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+    # scriptLogger.info("#### DONE ####")
+
+    # #prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
+    # #finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
+    # scriptLogger.info("Building df for maps")
+    # df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
+    # df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
     scriptLogger.info("Everything finished !")
