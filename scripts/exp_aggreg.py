@@ -440,5 +440,5 @@ if __name__ == '__main__':
         #df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
         #finalloss_from_local_events = pd.read_pickle(output/"fdloss_local.pkl")
         df_for_maps = prepare_for_maps2(df_prod_all_events, prodloss_from_local_events)
-        df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
+        df_for_maps.to_parquet(output/"df_for_maps.parquet")
         scriptLogger.info("Everything finished !")
