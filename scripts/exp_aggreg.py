@@ -186,76 +186,87 @@ def avoid_fragments(df:pd.DataFrame) -> pd.DataFrame:
     res = df.copy()
     return res
 
-def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.DataFrame:
+def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path) -> pd.DataFrame:
     def get_impacted_prodloss(row):
         return (row.loc[:,[(row.name[2],"rebuild_prodloss (M€)"),(row.name[2],"non-rebuild_prodloss (M€)")]]).sum()
 
     def get_impacted_fdloss(row):
         return (row.loc[:,[(row.name[2],"rebuild_fdloss (M€)"),(row.name[2],"non-rebuild_fdloss (M€)")]]).sum()
 
-    df_prod = df_prod.rename(columns={
+    if loss_type == "prod":
+
+        df_loss = df_loss.rename(columns={
+            "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
+            "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
+            "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
+            "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
+            "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
+        })
+
+        str_rebuild = "rebuild"
+        str_non_rebuild = "non-rebuild"
+        str_fdloss = "fdloss"
+        str_prodloss = "prodloss"
+        str_unit = r"\(M€\)"
+        re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
+        df_loss = df_loss.reset_index()
+        df_loss_all_events = df_loss.groupby(["mrio","model", "period"])[list(df_loss.filter(regex = re_all))].agg("sum")
+        assert df_loss_all_events is not None
+        df_loss_all_events.columns = df_loss_all_events.columns.str.split("_" ,n=1,expand=True)
+        df_prod_by_region_impacted = df_loss.groupby(["mrio", "model", "EXIO3_region", "period","semester"])[list(df_loss.filter(regex = re_all))].agg("sum")
+        assert df_prod_by_region_impacted is not None
+        df_prod_by_region_impacted.columns = df_prod_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
+        df_prod_by_region_impacted = df_prod_by_region_impacted.reset_index()
+        prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_prodloss)
+        prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
+        prodloss_from_local_events = prodloss_from_local_events.droplevel(5)
+        prodloss_from_local_events.name = "Production change due to local events (M€)"
+        total_direct_loss_df = df_loss.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
+        df_loss_all_events = df_loss_all_events.melt(value_name="Projected total production change (M€)",var_name=["region","sector_type"], ignore_index=False)
+        df_loss_all_events = df_loss_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
+        df_loss_all_events = df_loss_all_events.join(total_direct_loss_df)
+        total_direct_loss_df.to_parquet(save_path/"direct_loss.parquet")
+        prodloss_from_local_events.to_parquet(save_path/"prodloss_local.parquet")
+        df_loss_all_events.to_parquet(save_path/"prodloss_all.parquet")
+
+    elif loss_type == "final":
+
+        df_final_demand = df_loss.rename(columns={
         "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
         "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
         "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-        "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
+        "direct_prodloss_as_gva_share":"Direct production loss (2015GVA share)",
         "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
-    })
+        })
 
-    str_rebuild = "rebuild"
-    str_non_rebuild = "non-rebuild"
-    str_fdloss = "fdloss"
-    str_prodloss = "prodloss"
-    str_unit = r"\(M€\)"
-    re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
-    df_prod = df_prod.reset_index()
-    df_prod_all_events = df_prod.groupby(["mrio","model", "period"])[list(df_prod.filter(regex = re_all))].agg("sum")
-    assert df_prod_all_events is not None
-    df_prod_all_events.columns = df_prod_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_prod_by_region_impacted = df_prod.groupby(["mrio", "model", "EXIO3_region", "period","semester"])[list(df_prod.filter(regex = re_all))].agg("sum")
-    assert df_prod_by_region_impacted is not None
-    df_prod_by_region_impacted.columns = df_prod_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
-    df_prod_by_region_impacted = df_prod_by_region_impacted.reset_index()
-    prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_prodloss)
-    prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
-    prodloss_from_local_events = prodloss_from_local_events.droplevel(5)
-    prodloss_from_local_events.name = "Production change due to local events (M€)"
+        str_rebuild = "rebuild"
+        str_non_rebuild = "non-rebuild"
+        str_fdloss = "fdloss"
+        str_prodloss = "prodloss"
+        str_unit = r"\(M€\)"
+        re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
+        df_final_demand = df_final_demand.reset_index()
+        df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
+        assert df_final_demand_all_events is not None
+        df_final_demand_all_events.columns = df_final_demand_all_events.columns.str.split("_" ,n=1,expand=True)
+        df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
+        assert df_final_demand_by_region_impacted is not None
+        df_final_demand_by_region_impacted.columns = df_final_demand_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
+        df_final_demand_by_region_impacted = df_final_demand_by_region_impacted.reset_index()
+        #print(df_final_demand_by_region_impacted)
+        finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_fdloss)
+        finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
+        finalloss_from_local_events = finalloss_from_local_events.droplevel(5)
+        finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
 
-    df_final_demand = df_final_demand.rename(columns={
-    "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
-    "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
-    "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-    "direct_prodloss_as_gva_share":"Direct production loss (2015GVA share)",
-    "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
-    })
+        df_final_demand_all_events = df_final_demand_all_events.melt(value_name="Projected total final consumption not met (M€)",var_name=["region","sector_type"], ignore_index=False)
+        df_final_demand_all_events = df_final_demand_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
 
-    str_rebuild = "rebuild"
-    str_non_rebuild = "non-rebuild"
-    str_fdloss = "fdloss"
-    str_prodloss = "prodloss"
-    str_unit = r"\(M€\)"
-    re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
-    df_final_demand = df_final_demand.reset_index()
-    df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
-    assert df_final_demand_all_events is not None
-    df_final_demand_all_events.columns = df_final_demand_all_events.columns.str.split("_" ,n=1,expand=True)
-    df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
-    assert df_final_demand_by_region_impacted is not None
-    df_final_demand_by_region_impacted.columns = df_final_demand_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
-    df_final_demand_by_region_impacted = df_final_demand_by_region_impacted.reset_index()
-    #print(df_final_demand_by_region_impacted)
-    finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_fdloss)
-    finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
-    finalloss_from_local_events = finalloss_from_local_events.droplevel(5)
-    finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
+        finalloss_from_local_events.to_parquet(save_path/"fdloss_local.parquet")
+        df_final_demand_all_events.to_parquet(save_path/"fdloss_all.parquet")
 
-    total_direct_loss_df = df_prod.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
 
-    df_prod_all_events = df_prod_all_events.melt(value_name="Projected total production change (M€)",var_name=["region","sector_type"], ignore_index=False)
-    df_prod_all_events = df_prod_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
-    df_prod_all_events = df_prod_all_events.join(total_direct_loss_df)
-    df_final_demand_all_events = df_final_demand_all_events.melt(value_name="Projected total final consumption not met (M€)",var_name=["region","sector_type"], ignore_index=False)
-    df_final_demand_all_events = df_final_demand_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
-
+def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events:pd.DataFrame, df_final_demand_all_events, finalloss_from_local_events) -> pd.DataFrame:
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
     df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
@@ -273,7 +284,6 @@ def prepare_for_maps(df_prod:pd.DataFrame, df_final_demand:pd.DataFrame) -> pd.D
     df_for_map = df_for_map.join(tmp).reset_index()
     df_for_map["Final consumption not met due to local events (M€)"] = df_for_map["Final consumption not met due to local events (M€)"].fillna(0)
     df_for_map["Final consumption not met due to foreign events (M€)"] = df_for_map["Projected total final consumption not met (M€)"] - df_for_map["Final consumption not met due to local events (M€)"]
-
     return df_for_map
 
 parser = argparse.ArgumentParser(description="Interpolate results and produce aggregated results from all simulations")
@@ -402,8 +412,20 @@ if __name__ == '__main__':
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
         prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
+
+        preprepare_for_maps(prodloss_df,"prod",output)
+        del prodloss_df
+
         finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
+        preprepare_for_maps(finaldemand_df,"final",output)
+        del finaldemand_df
+
         scriptLogger.info("Building df for maps")
-        df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
+
+        df_prod_all_events = pd.read_parquet(output/"prodloss_all.parquet")
+        prodloss_from_local_events = pd.read_parquet(output/"prodloss_local.parquet")
+        df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
+        finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.parquet")
+        df_for_maps = prepare_for_maps(df_prod_all_events, prodloss_from_local_events, df_final_demand_all_events, finalloss_from_local_events)
         df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
         scriptLogger.info("Everything finished !")
