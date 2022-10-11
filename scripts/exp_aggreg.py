@@ -28,20 +28,6 @@ from scipy.interpolate import interp1d
 from datetime import date
 tqdm.pandas()
 
-import pandas as pd
-import pathlib
-import argparse
-import logging
-import pathlib
-import numpy as np
-import pandas as pd
-from tqdm.notebook import tqdm
-import pathlib
-import warnings
-from scipy.interpolate import interp1d
-from datetime import date
-tqdm.pandas()
-
 def prepare_general_df(general_csv:pathlib.Path, period:str) -> pd.DataFrame:
     df = pd.read_csv(general_csv)
     df['period'] = period
@@ -168,7 +154,7 @@ def run_interpolation2(df_prodloss:pd.DataFrame, df_fdloss:pd.DataFrame, mrios, 
                 df_fdloss.loc[(mrio,semester),region+"_rebuild_fdloss (M€)"] = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=fdloss_dict,group=group, region=region, sector_type="rebuilding", mrio=mrio, semester=semester)).values
     return df_prodloss, df_fdloss
 
-def run_interpolation(df_loss:pd.DataFrame, mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
+def run_interpolation(mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
     # TODO See how to do this with a pd.concat
     flood_base = flood_base.reset_index()
     flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"])
@@ -296,6 +282,7 @@ parser.add_argument('-i', "--input", type=str, help='The str path to the input e
 parser.add_argument('-B', "--flood-base", type=str, help='Path where the flood database is.', required=True)
 parser.add_argument('-R', "--representative", type=str, help='Path where the representative events database is.', required=True)
 parser.add_argument('-N', "--period-name", type=str, help='Name of the period',required=True)
+parser.add_argument("--phase", type=int, help='Call for the second phase', default=None)
 parser.add_argument('-P', "--period", type=int, help='Starting and ending year for a specific period to study', nargs=2)
 parser.add_argument('-o', "--output", type=str, help='Path where to save parquets files')
 parser.add_argument("--psi", type=float, help='Psi value to check (when multiple)', default=0.85)
@@ -312,100 +299,108 @@ if __name__ == '__main__':
     scriptLogger.info('Starting Script')
 
     folder = pathlib.Path(args.input).resolve()
-    if not folder.exists():
-        raise ValueError("Directory {}, doesn't exist".format(folder))
-    else:
-        general_df = prepare_general_df(general_csv=folder/"int_general.csv", period=args.period_name)
-        prodloss_df = prepare_loss_df(df_csv=folder/"int_prodloss.csv", period=args.period_name)
-        finaldemand_df = prepare_loss_df(df_csv=folder/"int_fdloss.csv", period=args.period_name)
-
-    floodbase_path = pathlib.Path(args.flood_base)
-    if not floodbase_path.exists():
-        raise ValueError("File {}, doesn't exist".format(floodbase_path))
-    else:
-        flood_base_df = pd.read_parquet(floodbase_path)
-
-    flood_base_df = prepare_flood_base(flood_base_df,period=args.period_name)
-    if args.period is not None:
-        flood_base_df = filter_period(flood_base_df, args.period)
-
-    if (general_df["gdp_dmg_share"]==-1).any():
-        df = pd.read_parquet(args.representative)
-        df = df.reset_index().set_index(["EXIO3_region","class"])
-        df = df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
-        general_df = general_df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
-        general_df = general_df.join(df)
-        general_df = general_df.reset_index()
-        general_df["gdp_dmg_share"] = general_df['share of GVA used as ARIO input']
-        general_df = general_df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type"]]
-        general_df = general_df.set_index(["period","mrio","run_name"])
-        del df
-
-    scriptLogger.info('Found all parquet files')
-    regions_list = list(prodloss_df.columns.get_level_values(2).unique())
-    flooded_regions = list(flood_base_df["EXIO3_region"].unique())
-
     output = pathlib.Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
 
-    scriptLogger.info("#### Doing prodloss result ####")
-    scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
-    prodloss_df = index_a_df(general_df, prodloss_df)
-    prodloss_df = remove_too_few_flood(prodloss_df)
-    if args.psi :
-        prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
-    scriptLogger.info("Computing regression coefficients")
-    prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, values="gdp_dmg_share")
-    prodloss_df = extend_df(flood_base_df, prodloss_df)
-    mrios = prodloss_df.mrio.unique()
-    prodloss_df = prodloss_df.set_index("mrio")
-    semesters = prodloss_df.semester.unique()
-    scriptLogger.info("Running interpolation")
-    res_prodloss_df = run_interpolation(prodloss_df, mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
-    res_prodloss_df = res_prodloss_df.rename_axis(index=["mrio","semester","final_cluster"])
-    res_prodloss_df.columns = ["_".join(a) for a in res_prodloss_df.columns.to_flat_index()]
-    scriptLogger.info("Writing temp result to {}".format(output))
-    res_prodloss_df.to_parquet(output/"prodloss_full_flood_base_results_tmp.parquet")
-    scriptLogger.info("#### DONE ####")
+    if args.phase is None:
+        if not folder.exists():
+            raise ValueError("Directory {}, doesn't exist".format(folder))
+        else:
+            general_df = prepare_general_df(general_csv=folder/"int_general.csv", period=args.period_name)
+            prodloss_df = prepare_loss_df(df_csv=folder/"int_prodloss.csv", period=args.period_name)
+            finaldemand_df = prepare_loss_df(df_csv=folder/"int_fdloss.csv", period=args.period_name)
 
-    scriptLogger.info("#### Doing finalloss result ####")
-    scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
-    finaldemand_df = index_a_df(general_df, finaldemand_df)
-    finaldemand_df = remove_too_few_flood(finaldemand_df)
-    if args.psi:
-        finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
-    scriptLogger.info("Computing regression coefficients")
-    finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
-    finaldemand_df = extend_df(flood_base_df, finaldemand_df)
-    finaldemand_df = finaldemand_df.set_index("mrio")
-    scriptLogger.info("Running interpolation")
-    res_finaldemand_df = run_interpolation(finaldemand_df, mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
-    res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
-    scriptLogger.info("Writing temp result to {}".format(output))
-    res_prodloss_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
-    scriptLogger.info("#### DONE ####")
+        floodbase_path = pathlib.Path(args.flood_base)
+        if not floodbase_path.exists():
+            raise ValueError("File {}, doesn't exist".format(floodbase_path))
+        else:
+            flood_base_df = pd.read_parquet(floodbase_path)
 
-    # scriptLogger.info("Joining with metadata dataframe")
-    # prodloss_df = prodloss_df.set_index("final_cluster", append=True)
-    # scriptLogger.info("Infos on dataframes : {}\n-----------\n{}".format(prodloss_df.info(),res_prodloss_df.info()))
-    # prodloss_df = prodloss_df.join(res_prodloss_df)
-    # del res_prodloss_df
-    # del prodloss_dict
-    # scriptLogger.info("Writing result to {}".format(output))
-    # prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
-    # res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
-    # scriptLogger.info("Joining with metadata dataframe")
-    # finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
-    # finaldemand_df = finaldemand_df.join(res_finaldemand_df)
-    # del res_finaldemand_df
-    # del finalloss_dict
-    # scriptLogger.info("Writing result to {}".format(output))
-    # finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
-    # scriptLogger.info("#### DONE ####")
+        flood_base_df = prepare_flood_base(flood_base_df,period=args.period_name)
+        if args.period is not None:
+            flood_base_df = filter_period(flood_base_df, args.period)
 
-    # #prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
-    # #finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
-    # scriptLogger.info("Building df for maps")
-    # df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
-    # df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
-    scriptLogger.info("Everything finished !")
+        if (general_df["gdp_dmg_share"]==-1).any():
+            df = pd.read_parquet(args.representative)
+            df = df.reset_index().set_index(["EXIO3_region","class"])
+            df = df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
+            general_df = general_df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
+            general_df = general_df.join(df)
+            general_df = general_df.reset_index()
+            general_df["gdp_dmg_share"] = general_df['share of GVA used as ARIO input']
+            general_df = general_df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type"]]
+            general_df = general_df.set_index(["period","mrio","run_name"])
+            del df
+
+        scriptLogger.info('Found all parquet files')
+        regions_list = list(prodloss_df.columns.get_level_values(2).unique())
+        flooded_regions = list(flood_base_df["EXIO3_region"].unique())
+
+        scriptLogger.info("#### Doing prodloss result ####")
+        scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
+        prodloss_df = index_a_df(general_df, prodloss_df)
+        prodloss_df = remove_too_few_flood(prodloss_df)
+        if args.psi :
+            prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
+        scriptLogger.info("Computing regression coefficients")
+        prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, values="gdp_dmg_share")
+        prodloss_df = extend_df(flood_base_df, prodloss_df)
+        mrios = prodloss_df.mrio.unique()
+        prodloss_df = prodloss_df.set_index("mrio")
+        scriptLogger.info("Writing temp result index to {}".format(output))
+        prodloss_df.to_parquet(output/"prodloss_full_index.parquet")
+        semesters = prodloss_df.semester.unique()
+        scriptLogger.info("Running interpolation")
+        res_prodloss_df = run_interpolation(mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
+        res_prodloss_df = res_prodloss_df.rename_axis(index=["mrio","semester","final_cluster"])
+        res_prodloss_df.columns = ["_".join(a) for a in res_prodloss_df.columns.to_flat_index()]
+        scriptLogger.info("Writing temp result to {}".format(output))
+        res_prodloss_df.to_parquet(output/"prodloss_full_flood_base_results_tmp.parquet")
+        scriptLogger.info("#### DONE ####")
+
+        scriptLogger.info("#### Doing finalloss result ####")
+        scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
+        finaldemand_df = index_a_df(general_df, finaldemand_df)
+        finaldemand_df = remove_too_few_flood(finaldemand_df)
+        if args.psi:
+            finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
+        scriptLogger.info("Computing regression coefficients")
+        finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
+        finaldemand_df = extend_df(flood_base_df, finaldemand_df)
+        finaldemand_df = finaldemand_df.set_index("mrio")
+        scriptLogger.info("Writing temp result index to {}".format(output))
+        finaldemand_df.to_parquet(output/"fdloss_full_index.parquet")
+        scriptLogger.info("Running interpolation")
+        res_finaldemand_df = run_interpolation(mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
+        res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
+        scriptLogger.info("Writing temp result to {}".format(output))
+        res_prodloss_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
+        scriptLogger.info("#### DONE ####")
+    elif args.phase == 2:
+        res_prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet")
+        prodloss_df = pd.read_parquet(output/"prodloss_full_index.parquet")
+        scriptLogger.info("Joining with metadata dataframe")
+        prodloss_df = prodloss_df.set_index("final_cluster", append=True)
+        scriptLogger.info("Infos on dataframes : {}\n-----------\n{}".format(prodloss_df.info(),res_prodloss_df.info()))
+        prodloss_df = prodloss_df.join(res_prodloss_df)
+        scriptLogger.info("Writing result to {}".format(output))
+        prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+        del prodloss_df
+        del res_prodloss_df
+
+        res_finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
+        finaldemand_df = pd.read_parquet(output/"fdloss_full_index.parquet")
+        res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
+        scriptLogger.info("Joining with metadata dataframe")
+        finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
+        finaldemand_df = finaldemand_df.join(res_finaldemand_df)
+        scriptLogger.info("Writing result to {}".format(output))
+        finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+        scriptLogger.info("#### DONE ####")
+    elif args.phase == 3:
+        prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
+        finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
+        scriptLogger.info("Building df for maps")
+        df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
+        df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
+        scriptLogger.info("Everything finished !")
