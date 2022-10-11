@@ -415,12 +415,10 @@ if __name__ == '__main__':
     elif args.phase == 3:
         prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
         preprepare_for_maps(prodloss_df,"prod",output)
-        del prodloss_df
-
+    elif args.phase == 4:
         finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
         preprepare_for_maps(finaldemand_df,"final",output)
-        del finaldemand_df
-
+    elif args.phase == 5:
         scriptLogger.info("Building df for maps")
 
         df_prod_all_events = pd.read_parquet(output/"prodloss_all.parquet")
