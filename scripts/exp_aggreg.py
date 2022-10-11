@@ -436,9 +436,9 @@ if __name__ == '__main__':
         scriptLogger.info("Building df for maps")
 
         df_prod_all_events = pd.read_parquet(output/"prodloss_all.parquet")
-        prodloss_from_local_events = pd.read_parquet(output/"prodloss_local.pkl")
+        prodloss_from_local_events = pd.read_pickle(output/"prodloss_local.pkl")
         #df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
-        #finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.pkl")
+        #finalloss_from_local_events = pd.read_pickle(output/"fdloss_local.pkl")
         df_for_maps = prepare_for_maps2(df_prod_all_events, prodloss_from_local_events)
         df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
         scriptLogger.info("Everything finished !")
