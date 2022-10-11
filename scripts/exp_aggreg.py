@@ -226,7 +226,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
         df_loss_all_events = df_loss_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
         df_loss_all_events = df_loss_all_events.join(total_direct_loss_df)
         total_direct_loss_df.to_parquet(save_path/"direct_loss.parquet")
-        #prodloss_from_local_events.to_parquet(save_path/"prodloss_local.parquet")
+        prodloss_from_local_events.to_pickle(save_path/"prodloss_local.pkl")
         df_loss_all_events.to_parquet(save_path/"prodloss_all.parquet")
         return prodloss_from_local_events
 
@@ -263,7 +263,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
         df_final_demand_all_events = df_final_demand_all_events.melt(value_name="Projected total final consumption not met (M€)",var_name=["region","sector_type"], ignore_index=False)
         df_final_demand_all_events = df_final_demand_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
 
-        #finalloss_from_local_events.to_parquet(save_path/"fdloss_local.parquet")
+        finalloss_from_local_events.to_pickle(save_path/"fdloss_local.pkl")
         df_final_demand_all_events.to_parquet(save_path/"fdloss_all.parquet")
         return finalloss_from_local_events
 
@@ -414,20 +414,19 @@ if __name__ == '__main__':
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
         prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
-
-        prodloss_from_local_events = preprepare_for_maps(prodloss_df,"prod",output)
+        preprepare_for_maps(prodloss_df,"prod",output)
         del prodloss_df
 
         finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
-        finalloss_from_local_events = preprepare_for_maps(finaldemand_df,"final",output)
+        preprepare_for_maps(finaldemand_df,"final",output)
         del finaldemand_df
 
         scriptLogger.info("Building df for maps")
 
         df_prod_all_events = pd.read_parquet(output/"prodloss_all.parquet")
-        #prodloss_from_local_events = pd.read_parquet(output/"prodloss_local.parquet")
+        prodloss_from_local_events = pd.read_parquet(output/"prodloss_local.pkl")
         df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
-        #finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.parquet")
+        finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.pkl")
         df_for_maps = prepare_for_maps(df_prod_all_events, prodloss_from_local_events, df_final_demand_all_events, finalloss_from_local_events)
         df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
         scriptLogger.info("Everything finished !")
