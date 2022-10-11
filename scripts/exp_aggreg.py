@@ -345,41 +345,59 @@ if __name__ == '__main__':
     regions_list = list(prodloss_df.columns.get_level_values(2).unique())
     flooded_regions = list(flood_base_df["EXIO3_region"].unique())
 
+    output = pathlib.Path(args.output)
+    output.mkdir(parents=True, exist_ok=True)
+
+    scriptLogger.info("#### Doing prodloss result ####")
     scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
     prodloss_df = index_a_df(general_df, prodloss_df)
     prodloss_df = remove_too_few_flood(prodloss_df)
-    finaldemand_df = index_a_df(general_df, finaldemand_df)
-    finaldemand_df = remove_too_few_flood(finaldemand_df)
-
-    scriptLogger.info("Computing regression coefficients")
-    prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, values="gdp_dmg_share")
-    finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
-
     if args.psi :
         prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
-        finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
-
+    scriptLogger.info("Computing regression coefficients")
+    prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, values="gdp_dmg_share")
     prodloss_df = extend_df(flood_base_df, prodloss_df)
-    finaldemand_df = extend_df(flood_base_df, finaldemand_df)
     mrios = prodloss_df.mrio.unique()
     prodloss_df = prodloss_df.set_index("mrio")
     semesters = prodloss_df.semester.unique()
-    finaldemand_df = finaldemand_df.set_index("mrio")
     scriptLogger.info("Running interpolation")
     res_prodloss_df = run_interpolation(prodloss_df, mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
-    del prodloss_df
-    res_finaldemand_df = run_interpolation(finaldemand_df, mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
-    del finaldemand_df
-
-    output = pathlib.Path(args.output)
-    output.mkdir(parents=True, exist_ok=True)
+    res_prodloss_df = res_prodloss_df.rename_axis(index=["mrio","semester","final_cluster"])
+    res_prodloss_df.columns = ["_".join(a) for a in res_prodloss_df.columns.to_flat_index()]
+    scriptLogger.info("Joining with metadata dataframe")
+    prodloss_df = prodloss_df.set_index("final_cluster", append=True)
+    prodloss_df = prodloss_df.join(res_prodloss_df)
+    del res_prodloss_df
+    del prodloss_dict
     scriptLogger.info("Writing result to {}".format(output))
-    res_prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
-    res_finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+    prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+    scriptLogger.info("#### DONE ####")
+
+    scriptLogger.info("#### Doing finalloss result ####")
+    scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
+    finaldemand_df = index_a_df(general_df, finaldemand_df)
+    finaldemand_df = remove_too_few_flood(finaldemand_df)
+    if args.psi:
+        finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
+    scriptLogger.info("Computing regression coefficients")
+    finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
+    finaldemand_df = extend_df(flood_base_df, finaldemand_df)
+    finaldemand_df = finaldemand_df.set_index("mrio")
+    scriptLogger.info("Running interpolation")
+    res_finaldemand_df = run_interpolation(finaldemand_df, mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
+    res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
+    scriptLogger.info("Joining with metadata dataframe")
+    finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
+    finaldemand_df = finaldemand_df.join(res_finaldemand_df)
+    del res_finaldemand_df
+    del finalloss_dict
+    scriptLogger.info("Writing result to {}".format(output))
+    finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
+    scriptLogger.info("#### DONE ####")
 
     #prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
     #finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
     scriptLogger.info("Building df for maps")
-    df_for_maps = prepare_for_maps(res_prodloss_df, res_finaldemand_df)
+    df_for_maps = prepare_for_maps(prodloss_df, finaldemand_df)
     df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
     scriptLogger.info("Everything finished !")
