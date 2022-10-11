@@ -288,6 +288,20 @@ def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events
     df_for_map["Final consumption not met due to foreign events (M€)"] = df_for_map["Projected total final consumption not met (M€)"] - df_for_map["Final consumption not met due to local events (M€)"]
     return df_for_map
 
+def prepare_for_maps2(df_prod_all_events:pd.DataFrame, prodloss_from_local_events:pd.DataFrame) -> pd.DataFrame:
+    df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
+    df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
+    df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
+    df_for_map["Direct production loss (2015GVA share)"] = df_for_map["Direct production loss (2015GVA share)"].fillna(0)
+    df_for_map["Direct production loss (M€)"] = df_for_map["Direct production loss (M€)"].fillna(0)
+    df_for_map["Production change due to foreign events (M€)"] = df_for_map["Projected total production change (M€)"] - df_for_map["Production change due to local events (M€)"]
+    df_for_map = df_for_map.set_index(["mrio", "model", "EXIO3_region","sector_type", "period", "semester"])
+    df_for_map = df_for_map.rename(index={"rebuild_prodloss (M€)":"Rebuilding",
+                            "non-rebuild_prodloss (M€)":"Non-rebuilding"
+                            })
+    return df_for_map
+
+
 parser = argparse.ArgumentParser(description="Interpolate results and produce aggregated results from all simulations")
 parser.add_argument('-i', "--input", type=str, help='The str path to the input experiment folder', required=True)
 #parser.add_argument('run_type', type=str, help='The type of runs to produce csv from ("raw", "int" or "all")')
@@ -423,8 +437,8 @@ if __name__ == '__main__':
 
         df_prod_all_events = pd.read_parquet(output/"prodloss_all.parquet")
         prodloss_from_local_events = pd.read_parquet(output/"prodloss_local.pkl")
-        df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
-        finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.pkl")
-        df_for_maps = prepare_for_maps(df_prod_all_events, prodloss_from_local_events, df_final_demand_all_events, finalloss_from_local_events)
+        #df_final_demand_all_events = pd.read_parquet(output/"fdloss_all.parquet")
+        #finalloss_from_local_events = pd.read_parquet(output/"fdloss_local.pkl")
+        df_for_maps = prepare_for_maps2(df_prod_all_events, prodloss_from_local_events)
         df_for_maps.to_parquet(output/"df_for_maps.parquet",index=False)
         scriptLogger.info("Everything finished !")
