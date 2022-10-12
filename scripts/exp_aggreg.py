@@ -421,8 +421,8 @@ if __name__ == '__main__':
         del prodloss_df
         del res_prodloss_df
 
-        res_finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
-        finaldemand_df = pd.read_parquet(output/"fdloss_full_index.parquet", index=False, split_row_groups=1000000)
+        res_finaldemand_df = dd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
+        finaldemand_df = dd.read_parquet(output/"fdloss_full_index.parquet", index=False, split_row_groups=1000000)
         res_finaldemand_df["indexer"] = res_finaldemand_df["mrio"] +"_"+ res_finaldemand_df["semester"] +"_"+ res_finaldemand_df["final_cluster"]
         res_finaldemand_df = res_finaldemand_df.set_index("indexer")
         res_finaldemand_df.compute()
