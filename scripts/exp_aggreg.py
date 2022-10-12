@@ -404,33 +404,33 @@ if __name__ == '__main__':
         res_prodloss_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 2:
-        res_prodloss_df = dd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
-        prodloss_df = dd.read_parquet(output/"prodloss_full_index.parquet", index=False, split_row_groups=1000000)
-        res_prodloss_df["indexer"] = res_prodloss_df["mrio"] +"_"+ res_prodloss_df["semester"] +"_"+ res_prodloss_df["final_cluster"]
-        res_prodloss_df = res_prodloss_df.set_index("indexer")
-        res_prodloss_df.compute()
-        res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
-        prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
-        prodloss_df = prodloss_df.set_index("indexer")
-        prodloss_df.compute()
-        prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
-        scriptLogger.info("Joining with metadata dataframe")
-        prodloss_df = prodloss_df.join(res_prodloss_df)
-        scriptLogger.info("Writing result to {}".format(output))
-        prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
-        del prodloss_df
-        del res_prodloss_df
+        # res_prodloss_df = dd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
+        # prodloss_df = dd.read_parquet(output/"prodloss_full_index.parquet", index=False, split_row_groups=1000000)
+        # res_prodloss_df["indexer"] = res_prodloss_df["mrio"] +"_"+ res_prodloss_df["semester"] +"_"+ res_prodloss_df["final_cluster"]
+        # res_prodloss_df = res_prodloss_df.set_index("indexer")
+        # res_prodloss_df.compute()
+        # res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
+        # prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
+        # prodloss_df = prodloss_df.set_index("indexer")
+        # prodloss_df.compute()
+        # prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
+        # scriptLogger.info("Joining with metadata dataframe")
+        # prodloss_df = prodloss_df.join(res_prodloss_df)
+        # scriptLogger.info("Writing result to {}".format(output))
+        # prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
+        # del prodloss_df
+        # del res_prodloss_df
 
         res_finaldemand_df = dd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
         finaldemand_df = dd.read_parquet(output/"fdloss_full_index.parquet", index=False, split_row_groups=1000000)
         res_finaldemand_df["indexer"] = res_finaldemand_df["mrio"] +"_"+ res_finaldemand_df["semester"] +"_"+ res_finaldemand_df["final_cluster"]
         res_finaldemand_df = res_finaldemand_df.set_index("indexer")
         res_finaldemand_df.compute()
-        res_finaldemand_df = res_finaldemand_df.drop(["mrio","semester","final_cluster"])
+        res_finaldemand_df = res_finaldemand_df.drop(["mrio","semester","final_cluster"],axis=1)
         finaldemand_df["indexer"] = finaldemand_df["mrio"] + finaldemand_df["semester"] + finaldemand_df["final_cluster"]
         finaldemand_df = finaldemand_df.set_index("indexer")
         finaldemand_df.compute()
-        finaldemand_df = finaldemand_df.drop(["mrio","semester","final_cluster"])
+        finaldemand_df = finaldemand_df.drop(["mrio","semester","final_cluster"], axis=1)
         finaldemand_df = finaldemand_df.join(res_finaldemand_df)
         scriptLogger.info("Writing result to {}".format(output))
         finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
