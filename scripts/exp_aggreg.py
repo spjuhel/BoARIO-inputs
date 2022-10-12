@@ -409,11 +409,11 @@ if __name__ == '__main__':
         res_prodloss_df["indexer"] = res_prodloss_df["mrio"] +"_"+ res_prodloss_df["semester"] +"_"+ res_prodloss_df["final_cluster"]
         res_prodloss_df = res_prodloss_df.set_index("indexer")
         res_prodloss_df.compute()
-        res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"])
+        res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
         prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
         prodloss_df = prodloss_df.set_index("indexer")
         prodloss_df.compute()
-        prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"])
+        prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
         scriptLogger.info("Joining with metadata dataframe")
         prodloss_df = prodloss_df.join(res_prodloss_df)
         scriptLogger.info("Writing result to {}".format(output))
