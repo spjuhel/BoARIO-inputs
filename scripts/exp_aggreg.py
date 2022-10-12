@@ -25,6 +25,7 @@ from tqdm.notebook import tqdm
 import pathlib
 import warnings
 from scipy.interpolate import interp1d
+import dask.dataframe as dd
 from datetime import date
 tqdm.pandas()
 
@@ -328,7 +329,7 @@ if __name__ == '__main__':
     output = pathlib.Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
 
-    if args.phase is None:
+    if args.phase is None or args.phase == 1 :
         if not folder.exists():
             raise ValueError("Directory {}, doesn't exist".format(folder))
         else:
@@ -403,25 +404,33 @@ if __name__ == '__main__':
         res_prodloss_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 2:
-        res_prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet")
-        prodloss_df = pd.read_parquet(output/"prodloss_full_index.parquet")
+        res_prodloss_df = dd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
+        prodloss_df = dd.read_parquet(output/"prodloss_full_index.parquet", index=False, split_row_groups=1000000)
+        res_prodloss_df["indexer"] = res_prodloss_df["mrio"] +"_"+ res_prodloss_df["semester"] +"_"+ res_prodloss_df["final_cluster"]
+        res_prodloss_df = res_prodloss_df.set_index("indexer")
+        res_prodloss_df.compute()
+        res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"])
+        prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
+        prodloss_df = prodloss_df.set_index("indexer")
+        prodloss_df.compute()
+        prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"])
         scriptLogger.info("Joining with metadata dataframe")
-        prodloss_df = prodloss_df.set_index("semester", append=True)
-        prodloss_df = prodloss_df.set_index("final_cluster", append=True)
-        res_prodloss_df.sort_index(inplace=True)
-        prodloss_df.sort_index(inplace=True)
-        #scriptLogger.info("Infos on dataframes : {}\n-----------\n{}".format(prodloss_df.info(),res_prodloss_df.info()))
         prodloss_df = prodloss_df.join(res_prodloss_df)
         scriptLogger.info("Writing result to {}".format(output))
         prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
         del prodloss_df
         del res_prodloss_df
 
-        res_finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
-        finaldemand_df = pd.read_parquet(output/"fdloss_full_index.parquet")
-        res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
-        scriptLogger.info("Joining with metadata dataframe")
-        finaldemand_df = finaldemand_df.set_index("final_cluster", append=True)
+        res_finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
+        finaldemand_df = pd.read_parquet(output/"fdloss_full_index.parquet", index=False, split_row_groups=1000000)
+        res_finaldemand_df["indexer"] = res_finaldemand_df["mrio"] +"_"+ res_finaldemand_df["semester"] +"_"+ res_finaldemand_df["final_cluster"]
+        res_finaldemand_df = res_finaldemand_df.set_index("indexer")
+        res_finaldemand_df.compute()
+        res_finaldemand_df = res_finaldemand_df.drop(["mrio","semester","final_cluster"])
+        finaldemand_df["indexer"] = finaldemand_df["mrio"] + finaldemand_df["semester"] + finaldemand_df["final_cluster"]
+        finaldemand_df = finaldemand_df.set_index("indexer")
+        finaldemand_df.compute()
+        finaldemand_df = finaldemand_df.drop(["mrio","semester","final_cluster"])
         finaldemand_df = finaldemand_df.join(res_finaldemand_df)
         scriptLogger.info("Writing result to {}".format(output))
         finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
