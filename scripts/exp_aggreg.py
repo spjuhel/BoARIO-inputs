@@ -437,10 +437,12 @@ if __name__ == '__main__':
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
         prodloss_df = pd.read_parquet(output/"prodloss_full_flood_base_results.parquet")
+        prodloss_df = prodloss_df.reset_index()
         prodloss_df[["mrio","semester","final_cluster"]] = prodloss_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
         preprepare_for_maps(prodloss_df,"prod",output)
     elif args.phase == 4:
         finaldemand_df = pd.read_parquet(output/"fdloss_full_flood_base_results.parquet")
+        finaldemand_df = finaldemand_df.reset_index()
         finaldemand_df[["mrio","semester","final_cluster"]] = finaldemand_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
         preprepare_for_maps(finaldemand_df,"final",output)
     elif args.phase == 5:
