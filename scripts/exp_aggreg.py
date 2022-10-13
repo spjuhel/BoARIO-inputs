@@ -47,13 +47,13 @@ def prepare_general_df(general_csv:pathlib.Path, period:str) -> pd.DataFrame:
                                                           12:"n8",
                                                           13:"n9",
                                                           14:"Inventory initial duration"}))
-    df_name = df_name.drop(list(df_name.filter(regex = r"n\d")), axis = 1)
+    df_name.drop(list(df_name.filter(regex = r"n\d")), axis = 1, inplace=True)
     df = pd.concat([df_name, df],axis=1)
-    df = df.drop(["region", "rebuild_durations", "inv_tau", "shortage_ind_mean"],axis=1)
-    df = df.drop(["top_5_sector_chg", "10_first_shortages_(step,region,sector,stock_of)"],axis=1)
+    df.drop(["region", "rebuild_durations", "inv_tau", "shortage_ind_mean"],axis=1, inplace=True)
+    df.drop(["top_5_sector_chg", "10_first_shortages_(step,region,sector,stock_of)"],axis=1, inplace=True)
     df["prod_lost_aff"] = df["prod_lost_tot"] - df["prod_lost_unaff"]
     df["unaff_fd_unmet"] = df["tot_fd_unmet"] - df["aff_fd_unmet"]
-    df = df.set_index(["period","mrio","run_name"])
+    df.set_index(["period","mrio","run_name"], inplace=True)
     return df
 
 def prepare_loss_df(df_csv:pathlib.Path, period:str) -> pd.DataFrame:
@@ -437,6 +437,7 @@ if __name__ == '__main__':
         scriptLogger.info("Running interpolation")
         res_finaldemand_df = run_interpolation(mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
         res_finaldemand_df = res_finaldemand_df.rename_axis(index=["mrio","semester","final_cluster"])
+        res_finaldemand_df.columns = ["_".join(a) for a in res_finaldemand_df.columns.to_flat_index()]
         scriptLogger.info("Writing temp result to {}".format(output))
         res_finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results_tmp.parquet")
         scriptLogger.info("#### DONE ####")
