@@ -63,18 +63,20 @@ def prepare_loss_df(df_csv:pathlib.Path, period:str) -> pd.DataFrame:
 
 def index_a_df(general_df:pd.DataFrame, df_to_index:pd.DataFrame) -> pd.DataFrame:
     res_df = general_df.join(df_to_index.stack(level=list(range(df_to_index.columns.nlevels-1))))
-    res_df = res_df.reset_index().set_index("run_name")
-    res_df = res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period","semester"])
+    res_df.reset_index(inplace=True)
+    res_df.set_index("run_name", inplace=True)
+    res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period","semester"], inplace=True)
     if res_df is not None:
-        res_df = res_df.dropna(how="any",axis=0)
+        res_df.dropna(how="any",axis=0, inplace=True)
         return res_df
     else:
         raise ValueError("Dataframe is empty after treatment")
 
 def remove_too_few_flood(df:pd.DataFrame) -> pd.DataFrame:
     mask = df.groupby(["mrio","Impacted EXIO3 region", "sector type","period"]).count()
-    df = df.set_index(["mrio","Impacted EXIO3 region", "sector type","period"]).drop((mask[mask["MRIO type"]==1].index))
-    df = df.reset_index()
+    df.set_index(["mrio","Impacted EXIO3 region", "sector type","period"],inplace=True)
+    df.drop((mask[mask["MRIO type"]==1].index), inplace=True)
+    df.reset_index(inplace=True)
     return df
 
 def filter_by_psi(df:pd.DataFrame, psi:float) -> pd.DataFrame:
@@ -124,11 +126,12 @@ def projected_loss_region(group, loss_dict:dict, region:str, sector_type:str, mr
 def prepare_flood_base(df_base:pd.DataFrame, period:str) -> pd.DataFrame:
     df_base['period'] = period
     df_base['year'] = df_base.date_start.dt.year
-    df_base = df_base.reset_index()
+    df_base.reset_index(inplace=True)
     mask = df_base.groupby(["EXIO3_region","period"]).count()
-    df_base = df_base.set_index(["EXIO3_region","period"]).drop((mask[mask["final_cluster"]<=5].index))
-    df_base = df_base.reset_index()
-    df_base = df_base.sort_values(by=["EXIO3_region","dmg_as_2015_gva_share"])
+    df_base.set_index(["EXIO3_region","period"],inplace=True)
+    df_base.drop((mask[mask["final_cluster"]<=5].index),inplace=True)
+    df_base.reset_index(inplace=True)
+    df_base.sort_values(by=["EXIO3_region","dmg_as_2015_gva_share"],inplace=True)
     return df_base
 
 def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame) -> pd.DataFrame:
@@ -141,8 +144,8 @@ def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame) -> pd.DataFrame:
 
 def run_interpolation2(df_prodloss:pd.DataFrame, df_fdloss:pd.DataFrame, mrios, semesters, flood_base:pd.DataFrame, region_list:list, prodloss_dict:dict, fdloss_dict:dict) -> tuple[pd.DataFrame, pd.DataFrame]:
     # TODO See how to do this with a pd.concat
-    flood_base = flood_base.reset_index()
-    flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"])
+    flood_base.reset_index(inplace=True)
+    flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"],inplace=True)
     flood_base_gr = flood_base.groupby("EXIO3_region")
     for mrio in mrios:
         print("Running interpolation for {}".format(mrio))
@@ -195,7 +198,6 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
         return (row.loc[:,[(row.name[2],"rebuild_fdloss (M€)"),(row.name[2],"non-rebuild_fdloss (M€)")]]).sum()
 
     if loss_type == "prod":
-
         df_loss = df_loss.rename(columns={
             "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
             "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
@@ -203,28 +205,28 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
             "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
             "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
         })
-
         str_rebuild = "rebuild"
         str_non_rebuild = "non-rebuild"
         str_fdloss = "fdloss"
         str_prodloss = "prodloss"
         str_unit = r"\(M€\)"
         re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
-        df_loss = df_loss.reset_index()
+        df_loss.reset_index(inplace=True)
         df_loss_all_events = df_loss.groupby(["mrio","model", "period"])[list(df_loss.filter(regex = re_all))].agg("sum")
         assert df_loss_all_events is not None
         df_loss_all_events.columns = df_loss_all_events.columns.str.split("_" ,n=1,expand=True)
         df_prod_by_region_impacted = df_loss.groupby(["mrio", "model", "EXIO3_region", "period","semester"])[list(df_loss.filter(regex = re_all))].agg("sum")
         assert df_prod_by_region_impacted is not None
         df_prod_by_region_impacted.columns = df_prod_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
-        df_prod_by_region_impacted = df_prod_by_region_impacted.reset_index()
+        df_prod_by_region_impacted.reset_index(inplace=True)
         prodloss_from_local_events = df_prod_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_prodloss)
         prodloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
         prodloss_from_local_events = prodloss_from_local_events.droplevel(5)
         prodloss_from_local_events.name = "Production change due to local events (M€)"
         total_direct_loss_df = df_loss.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
         df_loss_all_events = df_loss_all_events.melt(value_name="Projected total production change (M€)",var_name=["region","sector_type"], ignore_index=False)
-        df_loss_all_events = df_loss_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
+        df_loss_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+        df_loss_all_events.set_index(["EXIO3_region","sector_type"], append=True, inplace=True)
         df_loss_all_events = df_loss_all_events.join(total_direct_loss_df)
         total_direct_loss_df.to_parquet(save_path/"direct_loss.parquet")
         prodloss_from_local_events.to_pickle(save_path/"prodloss_local.pkl")
@@ -247,14 +249,14 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
         str_prodloss = "prodloss"
         str_unit = r"\(M€\)"
         re_all = "^[A-Z]{2}_("+str_rebuild+"|"+str_non_rebuild+")_("+str_prodloss+"|"+str_fdloss+") "+str_unit+"$"
-        df_final_demand = df_final_demand.reset_index()
+        df_final_demand.reset_index(inplace=True)
         df_final_demand_all_events = df_final_demand.groupby(["mrio","model", "period"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
         assert df_final_demand_all_events is not None
         df_final_demand_all_events.columns = df_final_demand_all_events.columns.str.split("_" ,n=1,expand=True)
         df_final_demand_by_region_impacted = df_final_demand.groupby(["mrio", "model", "EXIO3_region", "period", "semester"])[list(df_final_demand.filter(regex = re_all))].agg("sum")
         assert df_final_demand_by_region_impacted is not None
         df_final_demand_by_region_impacted.columns = df_final_demand_by_region_impacted.columns.str.split("_" ,n=1,expand=True)
-        df_final_demand_by_region_impacted = df_final_demand_by_region_impacted.reset_index()
+        df_final_demand_by_region_impacted.reset_index(inplace=True)
         #print(df_final_demand_by_region_impacted)
         finalloss_from_local_events = df_final_demand_by_region_impacted.groupby(["mrio", "model", "EXIO3_region","period", "semester"]).apply(get_impacted_fdloss)
         finalloss_from_local_events.index.names = ["mrio", "model", "EXIO3_region", "period", "semester", "affected region", "sector_type"]
@@ -262,7 +264,8 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path):
         finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
 
         df_final_demand_all_events = df_final_demand_all_events.melt(value_name="Projected total final consumption not met (M€)",var_name=["region","sector_type"], ignore_index=False)
-        df_final_demand_all_events = df_final_demand_all_events.rename(columns={"region":"EXIO3_region"}).set_index(["EXIO3_region","sector_type"], append=True)
+        df_final_demand_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+        df_final_demand_all_events.set_index(["EXIO3_region","sector_type"], append=True, inplace=True)
 
         finalloss_from_local_events.to_pickle(save_path/"fdloss_local.pkl")
         df_final_demand_all_events.to_parquet(save_path/"fdloss_all.parquet")
