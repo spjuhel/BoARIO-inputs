@@ -166,7 +166,7 @@ def run_interpolation(mrios, semesters, flood_base:pd.DataFrame, region_list:lis
     res_l = []
     for region in region_list:
         sect_l = []
-        print("Running indirect impacted region {}".format(region))
+        #print("Running indirect impacted region {}".format(region))
         for sector_type in ["rebuilding","non-rebuilding"]:
             mr_l = []
             for mrio in mrios:
@@ -182,7 +182,7 @@ def run_interpolation(mrios, semesters, flood_base:pd.DataFrame, region_list:lis
             sect_l.append(df_mr)
         df_sect = pd.concat(sect_l, axis=1, keys=["rebuild_"+loss_type_str+" (M€)","non-rebuild_"+loss_type_str+" (M€)"])
         res_l.append(df_sect)
-    print("Finished looping, doing last concatenation")
+    #print("Finished looping, doing last concatenation")
     df_res = pd.concat(res_l, axis=1, keys=region_list)
     return df_res
 
