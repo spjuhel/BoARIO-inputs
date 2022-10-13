@@ -420,8 +420,6 @@ if __name__ == '__main__':
         regions_list = list(prodloss_df.columns.get_level_values(2).unique())
         flooded_regions = list(flood_base_df["EXIO3_region"].unique())
 
-        mrios = prodloss_df.mrio.unique()
-        semesters = prodloss_df.semester.unique()
         scriptLogger.info("#### Doing finalloss result ####")
         scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
         finaldemand_df = index_a_df(general_df, finaldemand_df)
@@ -431,6 +429,8 @@ if __name__ == '__main__':
         scriptLogger.info("Computing regression coefficients")
         finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
         finaldemand_df = extend_df(flood_base_df, finaldemand_df)
+        mrios = finaldemand_df.mrio.unique()
+        semesters = finaldemand_df.semester.unique()
         finaldemand_df = finaldemand_df.set_index("mrio")
         scriptLogger.info("Writing temp result index to {}".format(output))
         finaldemand_df.to_parquet(output/"fdloss_full_index.parquet")
