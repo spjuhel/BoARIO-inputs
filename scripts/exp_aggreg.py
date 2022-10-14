@@ -62,23 +62,38 @@ def prepare_loss_df(df_csv:pathlib.Path, period:str) -> pd.DataFrame:
     df['period'] = period
     return df.reset_index().set_index(["mrio","run_name","period"])
 
-def index_a_df(general_df:pd.DataFrame, df_to_index:pd.DataFrame) -> pd.DataFrame:
-    res_df = general_df.join(df_to_index.stack(level=list(range(df_to_index.columns.nlevels-1))))
+def index_a_df(general_df:pd.DataFrame, df_to_index:pd.DataFrame, semester:bool) -> pd.DataFrame:
+    if not semester:
+        df_to_index = df_to_index.groupby(["sector type","region"],axis=1).sum()
+        res_df = general_df.join(df_to_index.stack(level=list(range(df_to_index.columns.nlevels-1))))
+    else:
+        res_df = general_df.join(df_to_index.stack(level=list(range(df_to_index.columns.nlevels-1))))
     res_df.reset_index(inplace=True)
     res_df.set_index("run_name", inplace=True)
-    res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period","semester"], inplace=True)
+    if semester:
+        res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period","semester"], inplace=True)
+    else:
+        res_df.drop_duplicates(subset=["mrio","Impacted EXIO3 region", "gdp_dmg_share", "sector type","psi","period"], inplace=True)
     if res_df is not None:
         res_df.dropna(how="any",axis=0, inplace=True)
         return res_df
     else:
         raise ValueError("Dataframe is empty after treatment")
 
-def remove_too_few_flood(df:pd.DataFrame) -> pd.DataFrame:
-    mask = df.groupby(["mrio","Impacted EXIO3 region", "sector type","period"]).count()
-    df.set_index(["mrio","Impacted EXIO3 region", "sector type","period"],inplace=True)
+def remove_too_few_flood(df:pd.DataFrame, semester:bool) -> pd.DataFrame:
+    if semester:
+        mask = df.groupby(["mrio","Impacted EXIO3 region", "sector type","period","semester"]).count()
+        df.set_index(["mrio","Impacted EXIO3 region", "sector type","period","semester"],inplace=True) # this could break ? (I added semester)
+    else:
+        mask = df.groupby(["mrio","Impacted EXIO3 region", "sector type","period"]).count()
+        df.set_index(["mrio","Impacted EXIO3 region", "sector type","period"],inplace=True)
     df.drop((mask[mask["MRIO type"]==1].index), inplace=True)
     df.reset_index(inplace=True)
     return df
+
+def remove_not_sim_region(flood_base:pd.DataFrame, general_df:pd.DataFrame) -> pd.DataFrame:
+    reg_sim = [reg for reg in flood_base["EXIO3_region"].unique() if reg in general_df["Impacted EXIO3 region"].unique()]
+    return flood_base[flood_base["EXIO3_region"].isin(reg_sim)]
 
 def filter_by_psi(df:pd.DataFrame, psi:float) -> pd.DataFrame:
     return df[df['psi']==psi]
@@ -397,13 +412,14 @@ if __name__ == '__main__':
             del df
 
         scriptLogger.info('Found all parquet files')
+        flood_base_df = remove_not_sim_region(flood_base_df,general_df)
         regions_list = list(prodloss_df.columns.get_level_values(2).unique())
         flooded_regions = list(flood_base_df["EXIO3_region"].unique())
 
         scriptLogger.info("#### Doing prodloss result ####")
         scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
-        prodloss_df = index_a_df(general_df, prodloss_df)
-        prodloss_df = remove_too_few_flood(prodloss_df)
+        prodloss_df = index_a_df(general_df, prodloss_df, args.semester)
+        prodloss_df = remove_too_few_flood(prodloss_df,args.semester)
         if args.psi :
             prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
         scriptLogger.info("Computing regression coefficients")
@@ -462,13 +478,14 @@ if __name__ == '__main__':
             del df
 
         scriptLogger.info('Found all parquet files')
+        flood_base_df = remove_not_sim_region(flood_base_df,general_df)
         regions_list = list(prodloss_df.columns.get_level_values(2).unique())
         flooded_regions = list(flood_base_df["EXIO3_region"].unique())
 
         scriptLogger.info("#### Doing finalloss result ####")
         scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
-        finaldemand_df = index_a_df(general_df, finaldemand_df)
-        finaldemand_df = remove_too_few_flood(finaldemand_df)
+        finaldemand_df = index_a_df(general_df, finaldemand_df, args.semester)
+        finaldemand_df = remove_too_few_flood(finaldemand_df, args.semester)
         if args.psi:
             finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
         scriptLogger.info("Computing regression coefficients")
