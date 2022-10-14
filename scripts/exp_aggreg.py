@@ -342,7 +342,7 @@ parser.add_argument('-B', "--flood-base", type=str, help='Path where the flood d
 parser.add_argument('-R', "--representative", type=str, help='Path where the representative events database is.', required=True)
 parser.add_argument('-N', "--period-name", type=str, help='Name of the period',required=True)
 parser.add_argument("--phase", type=int, help='Call for the second phase', default=None)
-parser.add_argument("--semester", type=bool, help='Call for the second phase', default=False, action="store_true")
+parser.add_argument("--semester", help='Call for the second phase', action="store_true")
 parser.add_argument('-P', "--period", type=int, help='Starting and ending year for a specific period to study', nargs=2)
 parser.add_argument('-o', "--output", type=str, help='Path where to save parquets files')
 parser.add_argument("--psi", type=float, help='Psi value to check (when multiple)', default=0.85)
