@@ -362,6 +362,9 @@ if __name__ == '__main__':
     output = pathlib.Path(args.output)
     output.mkdir(parents=True, exist_ok=True)
 
+    if args.semester:
+        scriptLogger.info("Results by semester")
+
     if args.phase is None or args.phase == 1 :
         scriptLogger.info("#### PHASE 1 ####")
         if not folder.exists():
