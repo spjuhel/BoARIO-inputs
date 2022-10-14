@@ -489,6 +489,7 @@ if __name__ == '__main__':
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
         scriptLogger.info("#### PHASE 3 ####")
+        scriptLogger.info("Reading parquets")
         res_prodloss_df = dd.read_parquet(output/"prodloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
         prodloss_df = dd.read_parquet(output/"prodloss_full_index.parquet", index=False, split_row_groups=1000000)
         if args.semester:
@@ -496,7 +497,9 @@ if __name__ == '__main__':
         else:
             res_prodloss_df["indexer"] = res_prodloss_df["mrio"] + res_prodloss_df["final_cluster"]
         res_prodloss_df = res_prodloss_df.set_index("indexer")
+        scriptLogger.info("Setting index 1 ")
         res_prodloss_df.compute()
+        scriptLogger.info("Dropping columns 1")
         if args.semester:
             res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
         else:
@@ -505,8 +508,10 @@ if __name__ == '__main__':
             prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
         else :
             prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["final_cluster"]
+        scriptLogger.info("Setting index 2")
         prodloss_df = prodloss_df.set_index("indexer")
         prodloss_df.compute()
+        scriptLogger.info("Dropping columns 2")
         if args.semester:
             prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
         else:
