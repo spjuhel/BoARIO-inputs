@@ -113,7 +113,7 @@ def interpolations_coefs(reg_df,x_values,ys, grouper):
 # First key level is the region for wich we want to know the indirect impact from the flood
 # Second key level is a tuple (region, sector_type); region is the region impacted by the flood,
 # sector_type is the type (rebuilding/non rebuilding) of sectors we want to know the indirect impact from the flood
-def reg_coef_dict_to_df_to_dict(df:pd.DataFrame, regions:list, values:str = "gdp_dmg_share", grouper:list = ["mrio", "Impacted EXIO3 region", "sector type", "semester"]) -> dict:
+def reg_coef_dict_to_df_to_dict(df:pd.DataFrame, regions:list, grouper, values:str = "gdp_dmg_share") -> dict:
     df_res = interpolations_coefs(df, values, regions, grouper)
     return df_res.to_dict()
 
@@ -407,7 +407,11 @@ if __name__ == '__main__':
         if args.psi :
             prodloss_df = prodloss_df[prodloss_df['psi']==args.psi]
         scriptLogger.info("Computing regression coefficients")
-        prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, values="gdp_dmg_share")
+        if args.semester:
+            grouper = ["mrio", "Impacted EXIO3 region", "sector type", "semester"]
+        else:
+            grouper = ["mrio", "Impacted EXIO3 region", "sector type"]
+        prodloss_dict = reg_coef_dict_to_df_to_dict(prodloss_df, regions=regions_list, grouper=grouper, values="gdp_dmg_share")
         prodloss_df = extend_df(flood_base_df, prodloss_df, args.semester)
         mrios = prodloss_df.mrio.unique()
         prodloss_df = prodloss_df.set_index("mrio")
@@ -468,7 +472,11 @@ if __name__ == '__main__':
         if args.psi:
             finaldemand_df = finaldemand_df[finaldemand_df['psi']==args.psi]
         scriptLogger.info("Computing regression coefficients")
-        finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, values="gdp_dmg_share")
+        if args.semester:
+            grouper = ["mrio", "Impacted EXIO3 region", "sector type", "semester"]
+        else:
+            grouper = ["mrio", "Impacted EXIO3 region", "sector type"]
+        finalloss_dict = reg_coef_dict_to_df_to_dict(finaldemand_df, regions=regions_list, grouper=grouper, values="gdp_dmg_share")
         finaldemand_df = extend_df(flood_base_df, finaldemand_df, args.semester)
         mrios = finaldemand_df.mrio.unique()
         if args.semester:
