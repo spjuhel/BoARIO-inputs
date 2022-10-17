@@ -67,7 +67,7 @@ ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=c
 
 ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
 
-MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2011_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
+MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
 
 RUNS = [runs(xp) for folder, xp in xps.items()]
 
