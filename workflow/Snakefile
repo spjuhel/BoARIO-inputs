@@ -57,7 +57,8 @@ to_move_files = [
     "treated_df_limiting.parquet",
     "treated_df_loss.parquet",
     "prod_df.parquet",
-    "c_demand_df.parquet",
+    "io_demand_df.parquet",
+    "final_demand_df.parquet",
     "prod_chg.json",
     "fd_loss.json"
 ]
@@ -122,7 +123,8 @@ rule indicators:
                    "treated_df_limiting.parquet",
                    "treated_df_loss.parquet",
                    "prod_df.parquet",
-                   "c_demand_df.parquet",
+                   "io_demand_df.parquet",
+                   "final_demand_df.parquet",
                    "prod_chg.json",
                    "fd_loss.json"])
     conda:
