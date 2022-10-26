@@ -27,7 +27,8 @@ test = {
 
 run_output_files = [
     "indexes.json",
-    "classic_demand_record",
+    "io_demand_record",
+    "final_demand_record",
     "final_demand_unmet_record",
     "iotable_X_max_record",
     "iotable_XVA_record",
