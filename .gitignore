@@ -1,4 +1,6 @@
 .snakemake/
+mrios/
+exps/
 aggregation-files/BAK_163_74_sector_aggregation_exiobase3.ods
 aggregation-files/BAK_163_7_sector_aggregation_exiobase3.ods
 aggregation-files/exiobase3_74_to_7_sectors.ods
@@ -18,5 +20,5 @@ builded-data/*
 snakejobs/*
 *.parquet
 snakejob.*
-slurm-*.out
+slurms-out/
 source-data/*
