@@ -585,6 +585,7 @@ if __name__ == '__main__':
             prodloss_df[["mrio","semester","final_cluster"]] = prodloss_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
         else:
             prodloss_df[["mrio","final_cluster"]] = prodloss_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<final_cluster>.+)',expand=True)
+        prodloss_df.to_parquet(output/"prodloss_full_flood_base_results.parquet")
         preprepare_for_maps(prodloss_df,"prod",output, args.semester)
     elif args.phase == 5:
         scriptLogger.info("#### PHASE 5 ####")
@@ -594,6 +595,7 @@ if __name__ == '__main__':
             finaldemand_df[["mrio","semester","final_cluster"]] = finaldemand_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
         else:
             finaldemand_df[["mrio","final_cluster"]] = finaldemand_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<final_cluster>.+)',expand=True)
+        finaldemand_df.to_parquet(output/"fdloss_full_flood_base_results.parquet")
         preprepare_for_maps(finaldemand_df,"final",output, args.semester)
     elif args.phase == 6:
         scriptLogger.info("#### PHASE 6 ####")
