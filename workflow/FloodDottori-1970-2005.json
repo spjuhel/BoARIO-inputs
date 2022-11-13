@@ -1,12 +1,12 @@
 {
-    "XP_NAME": "Experience-FloodDottori-Hist",
-    "FOLDER" : "experience-flood-dottori-hist",
+    "XP_NAME": "Experience-FloodDottori-1970-2005",
+    "FOLDER" : "experience-flood-dottori-1970-2005",
     "MRIOS" : [
         "exiobase3_1995_74_sectors",
         "exiobase3_2011_74_sectors",
         "exiobase3_2020_74_sectors"
               ],
-    "FLOOD_GDP_SHARE_FILE": "representative_events_hist.parquet",
+    "FLOOD_GDP_SHARE_FILE": "representative_events_1970_2005.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
@@ -17,14 +17,10 @@
         "min", "10%", "50%", "90%", "99%", "max"
     ],
     "GDP_SHARE": [],
-    "REGIONS": ["WE", "WL", "AT", "AU", "WA", "BE", "BG", "WF", "BR", "CA", "CH",
-       "CN", "CZ", "DE", "WM", "ES", "FI", "FR", "GB", "GR", "HR", "HU",
-       "ID", "IE", "IN", "IT", "JP", "KR", "LT", "LV", "MX", "NO", "PL",
-       "PT", "RO", "RU", "SE", "SI", "SK", "TR", "US", "ZA", "EE"
-    ],
     "PSI": [
         "0_85"
     ],
+    "REGIONS":[],
     "INV_TAU": [
         60
     ],
