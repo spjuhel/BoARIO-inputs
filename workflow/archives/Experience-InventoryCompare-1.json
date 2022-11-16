@@ -1,0 +1,29 @@
+{
+    "XP_NAME": "Experience-Inventory-Compare-1",
+    "FOLDER" : "experience-inventory-compare-1",
+    "MRIOS" : ["exiobase3_74_sectors", "exiobase3_7_sectors"],
+    "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
+    "EVENT_TEMPLATE": "event_template.json",
+    "PARAMS_TEMPLATE": "params_template_snakemake.json",
+    "MRIO_PARAMS": "mrio_params_snakemake.json",
+    "DMG_TYPE": "raw",
+    "TYPES": [
+        "Full"
+    ],
+    "FLOOD_INT": [
+        5000000000
+    ],
+    "GDP_SHARE": [],
+    "REGIONS": [
+        "FR","CN"
+    ],
+    "PSI": [
+        "1_0", "0_9999","0_90"
+    ],
+    "INV_TAU": [
+        60,6,30,60
+    ],
+    "INV_TIME": [
+        90,9,90,60
+    ]
+}

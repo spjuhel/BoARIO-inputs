@@ -99,7 +99,7 @@ def indicators_get_disk_mb(wildcards, input):
 
 def runs(xp):
     dmg_type = xp['DMG_TYPE']
-    xp_folder = xp['FOLDER']
+    xp_folder = xp['XP_NAME']
     inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
     ################################ SUBREGIONS RUNS ########################################
     if xp["MRIOTYPES"] == "Subregions":
@@ -162,7 +162,7 @@ def runs_from_parquet(xp):
     parquet_df_path = config['SOURCE_DATA_DIR']+"/"+xp['FLOOD_GDP_SHARE_FILE']
     df = pandas.read_parquet(parquet_df_path)
     dmg_type = xp['DMG_TYPE']
-    xp_folder = xp['FOLDER']
+    xp_folder = xp['XP_NAME']
     inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
     all_sims = list(map(list, zip(*list(df.groupby(['EXIO3_region', 'class']).groups))))
     tmp_1 = expand("{region}_type_Full_qdmg_int_{intensity}", zip, region=all_sims[0], intensity=all_sims[1])

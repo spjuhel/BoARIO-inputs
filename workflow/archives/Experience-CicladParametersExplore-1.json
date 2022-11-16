@@ -1,0 +1,29 @@
+{
+    "XP_NAME": "Experience-CicladParametersExplore-1",
+    "FOLDER" : "experience-ciclad-parameters-explore-1",
+    "MRIOS" : ["exiobase3_7_sectors", "exiobase3_74_sectors"],
+    "FLOOD_GDP_SHARE_FILE": "representative_events.parquet",
+    "EVENT_TEMPLATE": "event_template.json",
+    "PARAMS_TEMPLATE": "params_template_snakemake.json",
+    "MRIO_PARAMS": "mrio_params_snakemake.json",
+    "DMG_TYPE": "raw",
+    "TYPES": [
+        "Full"
+    ],
+    "FLOOD_INT": [
+        20000000000
+    ],
+    "GDP_SHARE": [],
+    "REGIONS": [
+        "FR", "CN", "US", "RU", "CA"
+    ],
+    "PSI": [
+        "0_99","1_0","0_90", "0_5", "0_0"
+    ],
+    "INV_TAU": [
+        60,30,10
+    ],
+    "INV_TIME": [
+        90,30,10
+    ]
+}

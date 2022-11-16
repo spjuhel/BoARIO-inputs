@@ -9,11 +9,12 @@ ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 xps_names = []
 xps = {}
 exps_jsons = pathlib.Path(config['EXPS_JSONS'])
+
 for xp in config['EXPS']:
-    with (exps_jsons/xp).open('r') as f:
+    with (exps_jsons/(xp+".json")).open('r') as f:
         dico = json.load(f)
-        xps[dico['FOLDER']] = dico
-        xps_names.append(dico['FOLDER'])
+        xps[dico['XP_NAME']] = dico
+        xps_names.append(dico['XP_NAME'])
 
 test = {
     "REGIONS" : "FR",
@@ -101,6 +102,27 @@ rule all_74_sect_exio:
 rule all_xp:
     input:
         RUNS
+
+def xp_from_name(expdir):
+    with (exps_jsons/(expdir+".json")).open('r') as f:
+        xp = json.load(f)
+    return xp
+
+#def donefile_from_name(wildcards):
+#    xp = xp_from_name(wildcards.xp_name+".json")
+#    return xp["FOLDER"]+"/"+wildcards.xp_name+".done"
+
+def runs_from_folder(wildcards):
+    xp = xp_from_name(wildcards.expdir)
+    return runs_from_parquet(xp)
+
+# fonction qui génére {xp_name.done} a partir de xp_name
+# donc fonction qui associe xp a xp_name
+rule xp_parquet:
+    input:
+        runs_from_folder
+    output:
+        done_sim = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
 
 rule all_xp_parquet:
     input:
@@ -343,7 +365,6 @@ def which_runs(wildcards):
     else:
         raise ValueError("Unrecognized run_type.")
 
-
 def csv_from_all_xp(xps):
     all_csv = []
     for xp, dico in xps.items():
@@ -358,14 +379,15 @@ rule generate_csv_from_all_xp:
 
 rule generate_csv_from_xp:
     input:
-        expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"])
+        xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
     output:
-        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
+        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
+        expand("{outputdir}/{{expdir}}/.{{run_type}}_experience_csv_done", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
     conda:
         "env/boario-use.yml"
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {input} {wildcards.run_type} -o {input}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {wildcards.expdir} {wildcards.run_type} -o {input}
         """
 
 rule generate_csv:

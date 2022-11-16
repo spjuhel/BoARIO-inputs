@@ -1,0 +1,28 @@
+{
+    "XP_NAME": "Experience-FloodDottori-2016-2035_cement_waste_modified",
+    "FOLDER" : "experience-flood-dottori-2016-2035_cement_waste_modified",
+    "MRIOS" : [
+        "exiobase3_2011_74_sectors"
+              ],
+    "FLOOD_GDP_SHARE_FILE": "representative_events_2016_2035.parquet",
+    "EVENT_TEMPLATE": "event_template.json",
+    "PARAMS_TEMPLATE": "params_template_snakemake.json",
+    "DMG_TYPE": "int",
+    "MRIOTYPES": [
+        "Full"
+    ],
+    "FLOOD_INT": [
+        "90%", "99%", "max"
+    ],
+    "GDP_SHARE": [],
+    "PSI": [
+        "0_95"
+    ],
+    "REGIONS":[],
+    "INV_TAU": [
+        60
+    ],
+    "INV_TIME": [
+        90
+    ]
+}
