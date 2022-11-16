@@ -2,7 +2,7 @@
     "XP_NAME": "Experience-FloodDottori-2016-2035",
     "FOLDER" : "experience-flood-dottori-2016-2035",
     "MRIOS" : [
-        "exiobase3_2011_74_sectors",
+        "exiobase3_2011_74_sectors"
               ],
     "FLOOD_GDP_SHARE_FILE": "representative_events_2016_2035.parquet",
     "EVENT_TEMPLATE": "event_template.json",
