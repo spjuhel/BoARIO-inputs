@@ -28,3 +28,5 @@ boario-use_2.yml
 config-files/params_template_snakemake.json.save
 config-files/params_template_snakemake.json.save.1
 workflow/env/boario-use_2.yml
+.mypy_cache
+backup/
