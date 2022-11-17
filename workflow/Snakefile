@@ -11,6 +11,7 @@ xps = {}
 exps_jsons = pathlib.Path(config['EXPS_JSONS'])
 
 for xp in config['EXPS']:
+    print(xp)
     with (exps_jsons/(xp+".json")).open('r') as f:
         dico = json.load(f)
         xps[dico['XP_NAME']] = dico
