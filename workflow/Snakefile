@@ -1,9 +1,9 @@
 import pathlib
 
+configfile: "workflow/config.json"
 include: "./rules/init.smk"
 include: "./rules/common.smk"
 include: "./rules/mrio_generation.smk"
-configfile: "workflow/config.json"
 
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
