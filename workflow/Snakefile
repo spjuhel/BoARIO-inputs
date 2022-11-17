@@ -18,6 +18,8 @@ wildcard_constraints:
 onstart:
      check_config(config)
 
+#TODO : integrate interpolation script
+
 rule generate_csv_from_all_xp:
     """
     Generate csv file aggregating results from all experiences stated in config.json
@@ -49,7 +51,7 @@ rule xp_parquet:
     input:
         runs_from_folder
     output:
-        done_sim = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
+        touch(expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"]))
 
 rule all_xp_parquet:
     """
