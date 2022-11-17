@@ -1,6 +1,5 @@
 {
-    "XP_NAME": "Experience-FloodDottori-1970-2005",
-    "FOLDER" : "experience-flood-dottori-1970-2005",
+    "XP_NAME" : "flood-dottori-1970-2005",
     "MRIOS" : [
         "exiobase3_2011_74_sectors"
               ],
