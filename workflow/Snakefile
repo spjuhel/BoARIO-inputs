@@ -1,139 +1,74 @@
 import pathlib
 
+include: "./rules/init.smk"
 include: "./rules/common.smk"
+include: "./rules/mrio_generation.smk"
 configfile: "workflow/config.json"
 
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
-xps_names = []
-xps = {}
-exps_jsons = pathlib.Path(config['EXPS_JSONS'])
-
-for xp in config['EXPS']:
-    print(xp)
-    with (exps_jsons/(xp+".json")).open('r') as f:
-        dico = json.load(f)
-        xps[dico['XP_NAME']] = dico
-        xps_names.append(dico['XP_NAME'])
-
-test = {
-    "REGIONS" : "FR",
-    "MRIOTYPES" : "Full",
-    "FLOOD_DMG" : 200000,
-    "FLOOD_INT" : 0,
-    "PSI" : "0_99",
-    "INV_TAU" : 60,
-    "INV_TIME": 90
-}
-
-run_output_files = [
-    "indexes.json",
-    "io_demand_record",
-    "final_demand_record",
-    "final_demand_unmet_record",
-    "iotable_X_max_record",
-    "iotable_XVA_record",
-    "limiting_stocks_record",
-    "overprodvector_record",
-    "rebuild_demand_record",
-    "rebuild_prod_record",
-    "simulated_events.json",
-    "simulated_params.json"
-    ]
-
-to_move_files = [
-    "indexes.json",
-    "classic_demand_record",
-    "final_demand_unmet_record",
-    "iotable_X_max_record",
-    "iotable_XVA_record",
-    "limiting_stocks_record",
-    "overprodvector_record",
-    "rebuild_demand_record",
-    "rebuild_prod_record",
-    "simulated_events.json",
-    "simulated_params.json",
-    "simulation.log",
-    "indicators.json",
-    "treated_df_limiting.parquet",
-    "treated_df_loss.parquet",
-    "prod_df.parquet",
-    "io_demand_df.parquet",
-    "final_demand_df.parquet",
-    "prod_chg.json",
-    "fd_loss.json"
-]
-
-ALL_YEARS_MRIO = glob_wildcards(config['SOURCE_DATA_DIR']+"/IOT_{year}_ixi.zip").year
-
-ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-
-ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-
-MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
-
 RUNS = [runs(xp) for folder, xp in xps.items()]
-
 RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
 
 wildcard_constraints:
     run_type="raw|int",
-    #region="[A−Z]{2,3}",
-    #subregion="^$|[A-Z]{2,3}\d{1,2}",
     stype="Full|Subregions|RoW"
 
 onstart:
      check_config(config)
 
-# print(RUNS_PARQUET)
-
-rule minimal_exio:
+rule generate_csv_from_all_xp:
+    """
+    Generate csv file aggregating results from all experiences stated in config.json
+    """
     input:
-        MINIMAL_7_EXIO
+        csv_from_all_xp(xps)
 
-rule all_full_exio:
+
+rule generate_csv_from_xp:
+    """
+    Generate csv files for a specific experience.
+    """
     input:
-        ALL_FULL_EXIO
+        xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
+    output:
+        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
+        expand("{outputdir}/{{expdir}}/.{{run_type}}_experience_csv_done", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
+    conda:
+        "env/boario-use.yml"
+    shell:
+        """
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {wildcards.expdir} {wildcards.run_type} -o {input}
+        """
 
-rule all_74_sect_exio:
-    input:
-        ALL_74_EXIO
-
-rule all_xp:
-    input:
-        RUNS
-
-def xp_from_name(expdir):
-    with (exps_jsons/(expdir+".json")).open('r') as f:
-        xp = json.load(f)
-    return xp
-
-#def donefile_from_name(wildcards):
-#    xp = xp_from_name(wildcards.xp_name+".json")
-#    return xp["FOLDER"]+"/"+wildcards.xp_name+".done"
-
-def runs_from_folder(wildcards):
-    xp = xp_from_name(wildcards.expdir)
-    return runs_from_parquet(xp)
-
-# fonction qui génére {xp_name.done} a partir de xp_name
-# donc fonction qui associe xp a xp_name
 rule xp_parquet:
+    """
+    Requires (invoke building rules for) all indicators files for an experience (specified by {expdir})
+    """
     input:
         runs_from_folder
     output:
         done_sim = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
 
 rule all_xp_parquet:
+    """
+    Same as xp_parquet, but for all experiences in config.json
+    """
     input:
         RUNS_PARQUET
 
-rule test_parquet:
+rule test_parquet_from_full:
+    """
+    Run only a few simulation from all required simulations by config.json for testing purpose
+    """
     input:
         RUNS_PARQUET[0][0:3]
 
 rule indicators:
+    """
+    Build indicators and parquet results files for a specific simulation.
+    """
     input:
         expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
@@ -162,15 +97,12 @@ rule indicators:
         nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/'
         """
 
-def run_inputs(wildcards):
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
-    }
-
 rule run_Full:
+    """
+    Run a "Full" simulation (no mrio region agregation or disagregation).
+
+    run_inputs(wildcards) is in common.smk
+    """
     input:
         unpack(run_inputs),
         event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.xp_folder),
@@ -201,6 +133,10 @@ rule run_Full:
         """
 
 rule run_subregions_mrio:
+    """
+    Run simulation where one region has been cut in subregions.
+    (Probably deprecated)
+    """
     input:
         unpack(run_inputs)
     output:
@@ -230,188 +166,10 @@ rule run_subregions_mrio:
         nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {params.event_template} {params.mrio_params} {wildcards.inv_t}
         """
 
-rule generate_subregions_mrio:
-    input:
-        in_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        #mrio_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    output:
-        out_mrio = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        #out_params = expand("{outputdir}/mrios/{{sector_aggreg_name}}_{{region_aggreg_name}}_{{subregions}}_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    conda:
-        "env/boario-use.yml"
-    wildcard_constraints:
-        sector_aggreg_name="exiobase3_(?:Full|\d+_sectors)",
-        region_aggreg_name="FullWorkd|[A-Z]{2}-RoW",
-#        subregions="[A−Z]{2}_sliced_in_\d*"
-    resources:
-        vmem_mb=6000,
-        mem_mb=5000,
-        disk_mb=2000
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/mrio_subregions.py {input.in_mrio} {wildcards.subregions} -o {output.out_mrio}
-        """
-
-rule generate_mrio_full_from_zip:
-    input:
-        mrio_file = expand("{inputdir}/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"])
-    #params:
-    #    full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    conda:
-        "env/boario-use.yml"
-    benchmark:
-        "mrios/exiobase3_{year}_full_bench.csv"
-    output:
-        mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
-    resources:
-        vmem_mb=8000,
-        mem_mb=7000,
-        disk_mb=2000
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -t "EXIO3" -o {output.mrioout} -i {input.mrio_file};
-        """
-
-rule mrio_params_build:
-    input:
-        ods = expand("{folder}/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
-    params:
-        monetary = 1000000,
-        main_inv_duration = 90
-    resources:
-        vmem_mb=1000,
-        mem_mb=1000,
-        disk_mb=1000
-    output:
-        mrio_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"]),
-        event_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_event_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/mrio_json_params_build.py {input.ods} {params.monetary} {params.main_inv_duration} -po {output.mrio_params_json} -eo {output.event_params_json}
-        """
-
-rule mrio_sector_aggreg:
-    input:
-        full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
-        sector_aggreg_file = expand("{folder}/exiobase3_{{sector_aggreg_name}}.ods",folder=config["AGGREG_FILES_DIR"])
-    params:
-        full_mrio_params = expand("{folder}/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
-    conda:
-        "env/boario-use.yml"
-    output:
-        out_mrio = expand("{folder}/mrios/exiobase3_{{year}}_{{sector_aggreg_name}}.pkl",folder=config["BUILDED_DATA_DIR"])
-    wildcard_constraints:
-        #sector_aggreg_name="(.(?!(full)))*"
-        sector_aggreg_name="\d+_sectors",
-        year="\d\d\d\d"
-    resources:
-        vmem_mb=6000,
-        mem_mb=5000,
-        disk_mb=2000
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_sectors.py {input.full_mrio_file} {input.sector_aggreg_file} -o {output.out_mrio}
-        """
-
-rule mrio_one_region_RoW_aggreg:
-    input:
-        mrio_file = expand("{outputdir}/mrios/{{mrio}}_FullWorld.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        region_aggreg_file = expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"]),
-        old_mrio_params = expand("{outputdir}/mrios/{{mrio}}_FullWorld_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    conda:
-         "env/boario-use.yml"
-    output:
-        out_mrio = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW.pkl",outputdir=config["BUILDED_DATA_DIR"]),
-        out_params = expand("{outputdir}/mrios/{{mrio}}_{{region}}-RoW_params.json",outputdir=config["BUILDED_DATA_DIR"])
-    resources:
-         vmem_mb=6000,
-         mem_mb=5000,
-         disk_mb=2000
-    wildcard_constraints:
-        region="[A-Z]{2}"
-    shell:
-         """
-         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/aggreg_exio3_region.py {input.mrio_file} {input.region_aggreg_file} {input.old_mrio_params} -o {output.out_mrio} -po {output.out_params}
-         """
-
-rule region_aggreg_dict:
-    output:
-        expand("{inputdir}/aggreg/{{region}}_aggreg.json",inputdir=config["BUILDED_DATA_DIR"])
-    run:
-        import json
-        dic = {"aggregates":{str(wildcards.region):str(wildcards.region)},
-            "missing":"RoW"}
-        with open(output[0],'w') as f:
-            json.dump(dic, f)
-
-rule csv_raw:
-    input:
-        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["raw_dmg_general", "raw_dmg_prodloss","raw_dmg_fdloss"])
-
-rule csv_int:
-    input:
-        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["int_dmg_general", "int_dmg_prodloss","int_dmg_fdloss"])
-
-rule all_csv:
-    input:
-        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["all_dmg_general", "all_dmg_prodloss","all_dmg_fdloss"])
-
-def which_runs(wildcards):
-    if wildcards.run_type=="raw":
-        return RAW_DMG_RUNS
-    elif wildcards.run_type=="int":
-        return RUNS
-    elif wildcards.run_type=="all":
-        return RAW_DMG_RUNS + RUNS
-    else:
-        raise ValueError("Unrecognized run_type.")
-
-def csv_from_all_xp(xps):
-    all_csv = []
-    for xp, dico in xps.items():
-        xp_type = dico["DMG_TYPE"]
-        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
-        all_csv.append(tmp)
-    return all_csv
-
-rule generate_csv_from_all_xp:
-    input:
-        csv_from_all_xp(xps)
-
-rule generate_csv_from_xp:
-    input:
-        xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
-    output:
-        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
-        expand("{outputdir}/{{expdir}}/.{{run_type}}_experience_csv_done", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
-    conda:
-        "env/boario-use.yml"
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {wildcards.expdir} {wildcards.run_type} -o {input}
-        """
-
-rule generate_csv:
-    input:
-        which_runs
-    output:
-        expand("{outputdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["{run_type}_dmg_general", "{run_type}_dmg_prodloss","{run_type}_dmg_fdloss"])
-    shell:
-        """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {config[OUTPUT_DIR]} {wildcards.run_type} -o {config[OUTPUT_DIR]}
-        """
-
-def run_RoW_inputs(wildcards):
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
-    }
-
 rule run_RoW:
+    """
+    Run 'Rest of the World' simulation, where all regions expect the chosen one are agregated into a RoW region. (For testing/sensitivity purpose, might be broken at the moment)
+    """
     input:
         unpack(run_RoW_inputs)
     output:

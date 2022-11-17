@@ -197,3 +197,52 @@ def get_mrio_params(mrio_used,xp_folder):
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
     return expand("{outputdir}/mrios/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
+
+def csv_from_all_xp(xps):
+    """
+    List all csv files corresponding to the dictionary of experiences in argument
+    """
+    all_csv = []
+    for xp, dico in xps.items():
+        xp_type = dico["DMG_TYPE"]
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        all_csv.append(tmp)
+    return all_csv
+
+
+def run_RoW_inputs(wildcards):
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
+        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
+    }
+
+def xp_from_name(expdir):
+    """
+    Get experience dict from its name/folder
+    """
+    with (exps_jsons/(expdir+".json")).open('r') as f:
+        xp = json.load(f)
+        return xp
+
+def runs_from_folder(wildcards):
+    """
+    Get simulations to run from xp name/folder
+    """
+    xp = xp_from_name(wildcards.expdir)
+    return runs_from_parquet(xp)
+
+
+def run_inputs(wildcards):
+    """
+    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
+    """
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
+    }
