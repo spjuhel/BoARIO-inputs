@@ -39,6 +39,10 @@ rule generate_csv_from_xp:
         expand("{outputdir}/{{expdir}}/.{{run_type}}_experience_csv_done", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"])
     conda:
         "env/boario-use.yml"
+    resources:
+        vmem_mb=500,
+        mem_mb=500,
+        disk_mb=500
     shell:
         """
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {wildcards.expdir} {wildcards.run_type} -o {input}
