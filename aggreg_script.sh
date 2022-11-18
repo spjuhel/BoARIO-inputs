@@ -87,7 +87,7 @@ fi
 
 if [[ $custom_run -eq 1 ]]
 then
-    exp_path="${exp_dir}${custom_dir}"
+    exp_path="${custom_dir}"
 fi
 
 if [[ $phase_run -eq 1 ]]
