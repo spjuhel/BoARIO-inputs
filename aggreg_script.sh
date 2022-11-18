@@ -138,7 +138,10 @@ fi
 
 
 rm aggreg_built.sh
+
 echo "#!/bin/bash
+#SBATCH --mail-type=END,FAIL                   # Mail events (NONE, BEGIN, END, FAIL, ALL)
+#SBATCH --mail-user=sjuhel@centre-cired.fr
 #SBATCH --job-name=Result_aggreg.job
 #SBATCH --output=/data/sjuhel/Runs/res_aggreg.out
 #SBATCH --error=/data/sjuhel/Runs/res_aggreg.err
