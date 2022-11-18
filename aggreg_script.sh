@@ -4,20 +4,21 @@ versa_python_path="/home/sjuhel/mambaforge/envs/versa/bin/python"
 script_path="/data/sjuhel/BoARIO-inputs/scripts/exp_aggreg.py"
 exp_dir="/data/sjuhel/Runs/BoARIO-runs/"
 showHelp() {
-# `cat << EOF` This means that cat should stop reading when EOF is detected
-cat << EOF
-Usage: $0 --type=<exp_type> --output=<output_dir> [ --phase=<phase> --psi=<psi> --semester ]
+    # `cat << EOF` This means that cat should stop reading when EOF is detected
+    cat << EOF
+Usage: $0 --type=<exp_type> --output=<output_dir> [ --phase=<phase> --psi=<psi> --custom-run=<dir> --semester ]
 
 -h,                    --help                       Display help
 -t [hist|proj],        --type [hist|proj]           Set the experience type
 -o <dir>,              --output <dir>               Set the output directory to <dir>
 -P [1-6],              --phase [1-6]                Run only phase <phase>
 -Y,                    --psi [0.0,1.0]              Run only for this psi parameter
+-C,                    --custom-run <dir>           Run for a non default simulation
 -S,                    --semester                   Run for semester disagregation
 
 
 EOF
-# EOF is found above and hence cat command stops reading. This is equivalent to echo but much neater when printing out.
+    # EOF is found above and hence cat command stops reading. This is equivalent to echo but much neater when printing out.
 }
 
 # $@ is all command line parameters passed to the script.
@@ -25,7 +26,7 @@ EOF
 # -l is for long options with double dash like --version
 # the comma separates different long options
 # -a is for long options with single dash like -version
-options=$(getopt -l "help,type:,output:,phase::,psi::,semester" -o "ht:o:P::Y::S" -a -- "$@")
+options=$(getopt -l "help,type:,output:,phase::,psi::,custom-run::,semester" -o "ht:o:P::Y::C::S" -a -- "$@")
 
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters
@@ -34,37 +35,42 @@ eval set -- "$options"
 
 while true
 do
-case "$1" in
--h|--help)
-    showHelp
-    exit 0
-    ;;
--t|--type)
+    case "$1" in
+        -h|--help)
+            showHelp
+            exit 0
+            ;;
+        -t|--type)
+            shift
+            export exp_type="$1"
+            ;;
+        -o|--output)
+            shift
+            export output_dir="$1"
+            ;;
+        -P|--phase)
+            export phase_run=1
+            shift
+            export phase_id="$1"
+            ;;
+        -S|--semester)
+            export semester=1
+            ;;
+        -Y|--psi)
+            export psi_set=1
+            shift
+            export psi_val="$1"
+            ;;
+        -C|--custom-run)
+            export custom_run=1
+            shift
+            export custom_dir="$1"
+            ;;
+        --)
+            shift
+            break;;
+    esac
     shift
-    export exp_type="$1"
-    ;;
--o|--output)
-    shift
-    export output_dir="$1"
-    ;;
--P|--phase)
-    export phase_run=1
-    shift
-    export phase_id="$1"
-    ;;
--S|--semester)
-    export semester=1
-    ;;
--Y|--psi)
-    export psi_set=1
-    shift
-    export psi_val="$1"
-    ;;
---)
-    shift
-    break;;
-esac
-shift
 done
 
 if [[ "$exp_type" == "hist" ]]
@@ -79,61 +85,66 @@ then
     rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2016_2035.parquet"
 fi
 
+if [[ $custom_run -eq 1 ]]
+then
+    exp_path="${exp_dir}${custom_dir}"
+fi
+
 if [[ $phase_run -eq 1 ]]
 then
-   if [[ $semester -eq 1 ]]
-   then
-       if [[ $psi_set -eq 1 ]]
-       then
+    if [[ $semester -eq 1 ]]
+    then
+        if [[ $psi_set -eq 1 ]]
+        then
             run=( "$versa_python_path $script_path --semester --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
-       else
+        else
             run=( "$versa_python_path $script_path --semester --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
-       fi
-   else
-       if [[ $psi_set -eq 1 ]]
-       then
-           run=( "$versa_python_path $script_path --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
-       else
-           run=( "$versa_python_path $script_path --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
-       fi
-   fi
+        fi
+    else
+        if [[ $psi_set -eq 1 ]]
+        then
+            run=( "$versa_python_path $script_path --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+        else
+            run=( "$versa_python_path $script_path --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+        fi
+    fi
 else
-   if [[ $semester -eq 1 ]]
-   then
-       if [[ $psi_set -eq 1 ]]
-       then
-           run=( "$versa_python_path $script_path --semester --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 2 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
-       else
-           run=( "$versa_python_path $script_path --semester --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --semester --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
-       fi
-  else
-       if [[ $psi_set -eq 1 ]]
-       then
-           run=( "$versa_python_path $script_path --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 2 -i --psi $psi_val  $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
-       else
-           run=( "$versa_python_path $script_path --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                 "$versa_python_path $script_path --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
-      fi
-  fi
+    if [[ $semester -eq 1 ]]
+    then
+        if [[ $psi_set -eq 1 ]]
+        then
+            run=( "$versa_python_path $script_path --semester --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 2 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+        else
+            run=( "$versa_python_path $script_path --semester --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+        fi
+    else
+        if [[ $psi_set -eq 1 ]]
+        then
+            run=( "$versa_python_path $script_path --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 2 -i --psi $psi_val  $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+        else
+            run=( "$versa_python_path $script_path --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+        fi
+    fi
 fi
 
 
@@ -151,5 +162,5 @@ echo "#!/bin/bash
 " >>  "aggreg_built.sh"
 
 for cmd in "${run[@]}"; do
-     echo "$cmd" >> "aggreg_built.sh"
+    echo "$cmd" >> "aggreg_built.sh"
 done
