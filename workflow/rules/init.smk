@@ -35,7 +35,7 @@ record_files = [
     "rebuild_prod_record"
 ]
 
-run_json_file = [
+run_json_files = [
     "indexes.json",
     "simulated_events.json",
     "simulated_params.json"
