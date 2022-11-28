@@ -117,14 +117,14 @@ else
         then
             run=( "$versa_python_path $script_path --semester $semester --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 2 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  #"$versa_python_path $script_path --semester $semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester $semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
         else
             run=( "$versa_python_path $script_path --semester $semester --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  #"$versa_python_path $script_path --semester $semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --semester $semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
                   "$versa_python_path $script_path --semester $semester --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
