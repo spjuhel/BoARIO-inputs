@@ -35,7 +35,6 @@ rule generate_csv_from_xp:
     Generate csv files for a specific experience.
     """
     input:
-        dirs = expand("{outputdir}/{{expdir}}/", outputdir=config["OUTPUT_DIR"]),
         xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
     output:
         expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
