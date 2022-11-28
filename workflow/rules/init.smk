@@ -23,6 +23,18 @@ test = {
     "INV_TIME": 90
 }
 
+record_files = [
+    "io_demand_record",
+    "final_demand_record",
+    "final_demand_unmet_record",
+    "iotable_X_max_record",
+    "iotable_XVA_record",
+    "limiting_stocks_record",
+    "overprodvector_record",
+    "rebuild_demand_record",
+    "rebuild_prod_record"
+]
+
 run_output_files = [
     "indexes.json",
     "io_demand_record",
