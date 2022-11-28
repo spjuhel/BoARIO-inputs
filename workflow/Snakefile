@@ -108,7 +108,6 @@ rule indicators:
         """
         cd {config[ARIO_DIR]};
         nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/';
-        rm '{params.records}'
         """
 
 rule run_Full:
@@ -122,9 +121,12 @@ rule run_Full:
         event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.xp_folder),
         mrio_params = lambda wildcards : get_mrio_params(wildcards.mrio_used,wildcards.xp_folder)
     output:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        record_files =  temp(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
-               files=run_output_files)
+               files=record_files)),
+        json_files = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+                            out=config["OUTPUT_DIR"],
+                            files=run_json_files)
     params:
         output_dir = config["OUTPUT_DIR"]
     threads:

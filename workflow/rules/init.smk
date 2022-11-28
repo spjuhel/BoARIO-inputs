@@ -35,6 +35,12 @@ record_files = [
     "rebuild_prod_record"
 ]
 
+run_json_file = [
+    "indexes.json",
+    "simulated_events.json",
+    "simulated_params.json"
+]
+
 run_output_files = [
     "indexes.json",
     "io_demand_record",
