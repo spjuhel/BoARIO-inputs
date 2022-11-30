@@ -99,7 +99,7 @@ rule indicators:
         records=expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=record_files)
-    group: "sim_run"
+    #group: "sim_run"
     conda:
         "env/boario-use.yml"
     resources:
@@ -129,7 +129,7 @@ rule run_Full:
         json_files = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                             out=config["OUTPUT_DIR"],
                             files=run_json_files)
-    group: "sim_run"
+    #group: "sim_run"
     params:
         output_dir = config["OUTPUT_DIR"]
     threads:
