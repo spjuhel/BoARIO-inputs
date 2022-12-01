@@ -5,9 +5,9 @@ xps_names = []
 xps = {}
 exps_jsons = pathlib.Path(config['EXPS_JSONS'])
 
-print("Experiences in config.json:")
+#print("Experiences in config.json:")
 for xp in config['EXPS']:
-    print(xp)
+    #print(xp)
     with (exps_jsons/(xp+".json")).open('r') as f:
         dico = json.load(f)
         xps[dico['XP_NAME']] = dico

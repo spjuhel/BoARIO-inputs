@@ -44,9 +44,9 @@ def check_config(config):
 
     config['OUTPUT_DIR'] = str(Path(config['OUTPUT_DIR']).resolve())
     config['LONG_TERM_DIR'] = str(Path(config['LONG_TERM_DIR']).resolve())
-    print("################# CHECKING DONE ###################")
-    print("Here are the configuration you are using :")
-    print(json.dumps(config, indent=4))
+    #print("################# CHECKING DONE ###################")
+    #print("Here are the configuration you are using :")
+    #print(json.dumps(config, indent=4))
 
 def run_Full_get_mem_mb(wildcards, input):
     run_config = Path(str(input.params_template))
