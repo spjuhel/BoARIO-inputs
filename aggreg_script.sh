@@ -14,7 +14,7 @@ Usage: $0 --type=<exp_type> --output=<output_dir> [ --phase=<phase> --psi=<psi> 
 -P [1-6],              --phase [1-6]                Run only phase <phase>
 -Y,                    --psi [0.0,1.0]              Run only for this psi parameter
 -C,                    --custom-run <dir>           Run for a non default simulation
--S [1-8],                    --semester <max_sem>         Run with semester disagregation
+-S [1-8],              --semester <max_sem>         Run with semester disagregation
 
 
 EOF
@@ -98,16 +98,16 @@ then
     then
         if [[ $psi_set -eq 1 ]]
         then
-            run=( "$versa_python_path $script_path --semester $semester --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
         else
-            run=( "$versa_python_path $script_path --semester $semester --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
         fi
     else
         if [[ $psi_set -eq 1 ]]
         then
-            run=( "$versa_python_path $script_path --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --phase $phase_id --psi $psi_val -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
         else
-            run=( "$versa_python_path $script_path --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --phase $phase_id -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events" )
         fi
     fi
 else
@@ -115,36 +115,36 @@ else
     then
         if [[ $psi_set -eq 1 ]]
         then
-            run=( "$versa_python_path $script_path --semester $semester --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 2 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 2 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
         else
-            run=( "$versa_python_path $script_path --semester $semester --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --semester $semester --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --semester $semester --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
         fi
     else
         if [[ $psi_set -eq 1 ]]
         then
-            run=( "$versa_python_path $script_path --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 2 -i --psi $psi_val  $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  #"$versa_python_path $script_path --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 1 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 2 -i --psi $psi_val  $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 3 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 4 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 5 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 6 -i --psi $psi_val $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
         else
-            run=( "$versa_python_path $script_path --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  #"$versa_python_path $script_path --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
-                  "$versa_python_path $script_path --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
+            run=( "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 1 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 2 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 3 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 4 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 5 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events"
+                  "$versa_python_path $script_path --protection-dataframe $flood_prot --phase 6 -i $exp_path -B $flood_base_path -N $exp_type -o $output_dir -R $rep_events")
         fi
     fi
 fi
