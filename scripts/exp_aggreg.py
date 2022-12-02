@@ -355,6 +355,8 @@ def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events
     else:
         indexer = ["mrio", "model", "EXIO3_region","sector type", "period"]
     prodloss_from_local_events.name = "Production change due to local events (M€)"
+    df_prod_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+    df_prod_all_events.set_index("EXIO3_region",append=True,inplace=True)
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
     df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
@@ -366,16 +368,18 @@ def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events
     #                        "non-rebuild_prodloss (M€)":"Non-rebuilding"
     #                        })
     finalloss_from_local_events.name = "Final consumption not met due to local events (M€)"
+    df_final_demand_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+    df_final_demand_all_events.set_index("EXIO3_region",append=True,inplace=True)
     tmp = df_final_demand_all_events.join(pd.DataFrame(finalloss_from_local_events))
     #tmp = tmp.rename(index={"rebuild_fdloss (M€)":"Rebuilding",
     #                        "non-rebuild_fdloss (M€)":"Non-rebuilding"
     #                        })
-    df_for_map = df_for_map.set_index("region",append=True)
-    tmp = tmp.set_index("region",append=True)
+    #df_for_map = df_for_map.set_index("region",append=True)
+    #tmp = tmp.set_index("region",append=True)
     df_for_map = df_for_map.join(tmp).reset_index()
     df_for_map["Final consumption not met due to local events (M€)"] = df_for_map["Final consumption not met due to local events (M€)"].fillna(0)
     df_for_map["Final consumption not met due to foreign events (M€)"] = df_for_map["Projected total final consumption not met (M€)"] - df_for_map["Final consumption not met due to local events (M€)"]
-    df_for_map.rename(columns={"EXIO3_region":"Flooded region"},inplace=True)
+    #df_for_map.rename(columns={"EXIO3_region":"Flooded region"},inplace=True)
     return df_for_map
 
 def prepare_for_maps2(df_prod_all_events:pd.DataFrame, prodloss_from_local_events:pd.DataFrame, semester:bool) -> pd.DataFrame:
