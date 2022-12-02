@@ -54,7 +54,7 @@ def run_Full_get_mem_mb(wildcards, input):
         params_template = json.load(f)
 
     n_2years = params_template["n_temporal_units_to_sim"] // 730
-    return 2000*n_2years
+    return max(2000*n_2years,4000)
 
 def run_Full_get_vmem_mb(wildcards, input):
     run_config = Path(str(input.params_template))
@@ -62,7 +62,7 @@ def run_Full_get_vmem_mb(wildcards, input):
         params_template = json.load(f)
 
     n_2years = params_template["n_temporal_units_to_sim"] // 730
-    return 3000*n_2years
+    return max(3000*n_2years,6000)
 
 def run_Full_get_disk_mb(wildcards, input):
     run_config = Path(str(input.params_template))
