@@ -26,9 +26,38 @@ from tqdm.notebook import tqdm
 import pathlib
 import warnings
 from scipy.interpolate import interp1d
-import dask.dataframe as dd
-from datetime import date
+import numpy as np
+import pandas as pd
+from tqdm.notebook import tqdm
+import pathlib
+import geopandas as geopd
+import logging
+import argparse
 tqdm.pandas()
+
+def check_df(df:pd.DataFrame):
+    if not isinstance(df, pd.DataFrame):
+        raise ValueError("Dataframe is not of type DataFrame")
+    if "return_period" not in df.columns:
+        raise ValueError("Dataframe has no 'return_period' column")
+    if ("lat" not in df.columns) or ("long" not in df.columns):
+        raise ValueError("Dataframe lacks either 'lat', 'long' or both column(s)")
+
+def check_flopros(flopros:geopd.GeoDataFrame):
+    if not isinstance(flopros, geopd.GeoDataFrame):
+        raise ValueError("Flopros dataframe is not of type GeoDataFrame")
+    if "MerL_Riv" not in flopros.columns:
+        raise ValueError("Dataframe has no 'MerL_Riv' column (ie merged river flood protection layer)")
+
+def gdfy_floods(df:pd.DataFrame, crs="epsg:4326"):
+    gdf = geopd.GeoDataFrame(df, geometry=geopd.points_from_xy(df.long, df.lat), crs = crs)
+    return gdf
+
+def join_flopros(gdf:geopd.GeoDataFrame,flopros:geopd.GeoDataFrame):
+    res = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
+    res.drop(["index_right","geometry"],axis=1,inplace=True)
+    res["protected"] = res["return_period"] < res["MerL_Riv"]
+    return pd.DataFrame(res)
 
 def prepare_general_df(general_csv:pathlib.Path, period:str, representative_path) -> pd.DataFrame:
     df = pd.read_csv(general_csv)
@@ -262,6 +291,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         return (row[row.name[2]]).sum()
         #return (row.loc[:,[(row.name[2],"rebuild_fdloss (M€)"),(row.name[2],"non-rebuild_fdloss (M€)")]]).sum()
 
+
     if semester:
         grouper1=["mrio", "model", "EXIO3_region", "period","semester","sector type"]
         grouper2=["mrio", "model", "period","semester","sector type"]
@@ -411,6 +441,7 @@ parser.add_argument("--semester", type=int, help='Separate by semester', default
 parser.add_argument('-P', "--period", type=int, help='Starting and ending year for a specific period to study', nargs=2)
 parser.add_argument('-o', "--output", type=str, help='Path where to save parquets files')
 parser.add_argument("--psi", type=float, help='Psi value to check (when multiple)')
+parser.add_argument("--protection-dataframe", type=str, help='Path where the protection database is.', required=True)
 
 if __name__ == '__main__':
     args = parser.parse_args()
@@ -617,89 +648,52 @@ if __name__ == '__main__':
         res_df.to_parquet(output/"2_fdloss_full_flood_base_results.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
-        scriptLogger.info("#### PHASE 3: Prodloss & FDloss : building full interpolated dataframe ####")
-        # scriptLogger.info("Reading parquets")
-        # res_prodloss_df = dd.read_parquet(output/"1_prodloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
-        # prodloss_df = dd.read_parquet(output/"1_prodloss_full_index.parquet", index=False, split_row_groups=1000000)
-        # if semester_run:
-        #     res_prodloss_df["indexer"] = res_prodloss_df["mrio"] + res_prodloss_df["semester"] + res_prodloss_df["final_cluster"]
-        # else:
-        #     res_prodloss_df["indexer"] = res_prodloss_df["mrio"] + res_prodloss_df["final_cluster"]
-        # res_prodloss_df = res_prodloss_df.set_index("indexer")
-        # scriptLogger.info("Setting index 1 ")
-        # res_prodloss_df.compute()
-        # scriptLogger.info("Dropping columns 1")
-        # if semester_run:
-        #     res_prodloss_df = res_prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
-        # else:
-        #     res_prodloss_df = res_prodloss_df.drop(["mrio","final_cluster"],axis=1)
-        # if semester_run:
-        #     prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["semester"] + prodloss_df["final_cluster"]
-        # else :
-        #     prodloss_df["indexer"] = prodloss_df["mrio"] + prodloss_df["final_cluster"]
-        # scriptLogger.info("Setting index 2")
-        # prodloss_df = prodloss_df.set_index("indexer")
-        # prodloss_df.compute()
-        # scriptLogger.info("Dropping columns 2")
-        # if semester_run:
-        #     prodloss_df = prodloss_df.drop(["mrio","semester","final_cluster"],axis=1)
-        # else:
-        #     prodloss_df = prodloss_df.drop(["mrio","final_cluster"],axis=1)
-        # scriptLogger.info("Joining with metadata dataframe")
-        # prodloss_df = prodloss_df.join(res_prodloss_df)
-        # scriptLogger.info("Writing result to {}".format(output))
-        # prodloss_df.to_parquet(output/"3_prodloss_full_flood_base_results.parquet")
-        # del prodloss_df
-        # del res_prodloss_df
-
-        # res_finaldemand_df = dd.read_parquet(output/"2_fdloss_full_flood_base_results_tmp.parquet", index=False, split_row_groups=1000000)
-        # finaldemand_df = dd.read_parquet(output/"2_fdloss_full_index.parquet", index=False, split_row_groups=1000000)
-        # if semester_run:
-        #     res_finaldemand_df["indexer"] = res_finaldemand_df["mrio"] + res_finaldemand_df["semester"] + res_finaldemand_df["final_cluster"]
-        # else:
-        #     res_finaldemand_df["indexer"] = res_finaldemand_df["mrio"] + res_finaldemand_df["final_cluster"]
-        # res_finaldemand_df = res_finaldemand_df.set_index("indexer")
-        # res_finaldemand_df.compute()
-        # if semester_run:
-        #     res_finaldemand_df = res_finaldemand_df.drop(["mrio","semester","final_cluster"],axis=1)
-        # else:
-        #     res_finaldemand_df = res_finaldemand_df.drop(["mrio","final_cluster"],axis=1)
-        # if semester_run:
-        #     finaldemand_df["indexer"] = finaldemand_df["mrio"] + finaldemand_df["semester"] + finaldemand_df["final_cluster"]
-        # else:
-        #     finaldemand_df["indexer"] = finaldemand_df["mrio"] + finaldemand_df["final_cluster"]
-        # finaldemand_df = finaldemand_df.set_index("indexer")
-        # finaldemand_df.compute()
-        # if semester_run:
-        #     finaldemand_df = finaldemand_df.drop(["mrio","semester","final_cluster"], axis=1)
-        # else:
-        #     finaldemand_df = finaldemand_df.drop(["mrio","final_cluster"], axis=1)
-        # finaldemand_df = finaldemand_df.join(res_finaldemand_df)
-        # scriptLogger.info("Writing result to {}".format(output))
-        # finaldemand_df.to_parquet(output/"3_fdloss_full_flood_base_results.parquet")
-        # scriptLogger.info("#### DONE ####")
+        scriptLogger.info("#### PHASE 3: adding flood protection ####")
+        scriptLogger.info("prodloss")
+        df_path = output/"1_prodloss_full_flood_base_results.parquet"
+        flopros_path = pathlib.Path(args.protection_dataframe).resolve()
+        output = output/"3_prodloss_full_flood_base_results_with_prot.parquet"
+        scriptLogger.info('Reading flood df from {}'.format(df_path))
+        df = pd.read_parquet(df_path)
+        check_df(df)
+        scriptLogger.info('Reading flopros df from {}'.format(flopros_path))
+        flopros = geopd.read_file(flopros_path)
+        check_flopros(flopros)
+        scriptLogger.info('geodf from df')
+        gdf = gdfy_floods(df)
+        scriptLogger.info('Joining with flopros and computing protected floods')
+        res = join_flopros(gdf,flopros)
+        scriptLogger.info('Writing to {}'.format(output))
+        res.to_parquet(output)
+        scriptLogger.info("fdloss")
+        df_path = output/"2_fdloss_full_flood_base_results.parquet"
+        flopros_path = pathlib.Path(args.protection_dataframe).resolve()
+        output = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
+        scriptLogger.info('Reading flood df from {}'.format(df_path))
+        df = pd.read_parquet(df_path)
+        check_df(df)
+        scriptLogger.info('Reading flopros df from {}'.format(flopros_path))
+        flopros = geopd.read_file(flopros_path)
+        check_flopros(flopros)
+        scriptLogger.info('geodf from df')
+        gdf = gdfy_floods(df)
+        scriptLogger.info('Joining with flopros and computing protected floods')
+        res = join_flopros(gdf,flopros)
+        scriptLogger.info('Writing to {}'.format(output))
+        res.to_parquet(output)
     elif args.phase == 4:
         scriptLogger.info("#### PHASE 4 ####")
-        prodloss_df = pd.read_parquet(output/"1_prodloss_full_flood_base_results.parquet")
-        # prodloss_df = prodloss_df.reset_index()
-        # if semester_run:
-        #     prodloss_df[["mrio","semester","final_cluster"]] = prodloss_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
-        # else:
-        #     prodloss_df[["mrio","final_cluster"]] = prodloss_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<final_cluster>.+)',expand=True)
-        # prodloss_df.to_parquet(output/"4_prodloss_full_flood_base_results_with_index.parquet")
-        # TODO : FIX THIS HARD CODED VALUE AT SOME POINT
-        regions_list = ['AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CN', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT', 'JP', 'KR', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SE', 'SI', 'SK', 'TR', 'TW', 'US', 'WA', 'WE', 'WF', 'WL', 'WM', 'ZA']
+        prodloss_df = pd.read_parquet(output/"3_prodloss_full_flood_base_results_with_prot.parquet")
+        # n_prot = len(prodloss_df.loc[prodloss_df["protected"]])
+        prodloss_df = prodloss_df[~prodloss_df["protected"]]
+        regions_list = prodloss_df.filter(regex="^[A-Z]{2}$").columns
+        # a regions_list = ['AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CN', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT', 'JP', 'KR', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SE', 'SI', 'SK', 'TR', 'TW', 'US', 'WA', 'WE', 'WF', 'WL', 'WM', 'ZA']
         preprepare_for_maps(prodloss_df,"prod",output,regions_list, semester_run)
     elif args.phase == 5:
         scriptLogger.info("#### PHASE 5 ####")
-        finaldemand_df = pd.read_parquet(output/"2_fdloss_full_flood_base_results.parquet")
-        #finaldemand_df = finaldemand_df.reset_index()
-        #if semester_run:
-        #    finaldemand_df[["mrio","semester","final_cluster"]] = finaldemand_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<semester>semester \d)(?P<final_cluster>.+)',expand=True)
-        #else:
-        #    finaldemand_df[["mrio","final_cluster"]] = finaldemand_df["indexer"].str.extract(r'(?P<mrio>exiobase3_\d\d\d\d_74_sectors)(?P<final_cluster>.+)',expand=True)
-        #finaldemand_df.to_parquet(output/"5_fdloss_full_flood_base_results_with_index.parquet")
-        regions_list = ['AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CN', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT', 'JP', 'KR', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SE', 'SI', 'SK', 'TR', 'TW', 'US', 'WA', 'WE', 'WF', 'WL', 'WM', 'ZA']
+        finaldemand_df = pd.read_parquet(output/"3_fdloss_full_flood_base_results_with_prot.parquet")
+        regions_list = finaldemand_df.filter(regex="^[A-Z]{2}$").columns
+        finaldemand_df = finaldemand_df[~finaldemand_df["protected"]]
         preprepare_for_maps(finaldemand_df,"final",output, regions_list, semester_run)
     elif args.phase == 6:
         scriptLogger.info("#### PHASE 6 ####")
