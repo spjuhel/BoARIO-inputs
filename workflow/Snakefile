@@ -49,7 +49,7 @@ rule generate_csv_from_xp:
         disk_mb=500
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} {wildcards.run_type} -o {input.dirs}
+        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} {wildcards.run_type} -o {params.dirs}
         """
 
 rule xp_parquet:
