@@ -84,19 +84,18 @@ def prepare_general_df(general_csv:pathlib.Path, period:str, representative_path
     df["prod_lost_aff"] = df["prod_lost_tot"] - df["prod_lost_unaff"]
     df["unaff_fd_unmet"] = df["tot_fd_unmet"] - df["aff_fd_unmet"]
     df.set_index(["period","mrio","run_name"], inplace=True)
+    repevents_df = pd.read_parquet(representative_path)
+    repevents_df = repevents_df.reset_index().set_index(["EXIO3_region","class"])
+    repevents_df = repevents_df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
+    df = df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
+    df = df.join(repevents_df)
+    df = df.reset_index()
 
     if (df["gdp_dmg_share"]==-1).any():
-            repevents_df = pd.read_parquet(representative_path)
-            repevents_df = repevents_df.reset_index().set_index(["EXIO3_region","class"])
-            repevents_df = repevents_df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
-            df = df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
-            df = df.join(repevents_df)
-            df = df.reset_index()
             df["gdp_dmg_share"] = df['share of GVA used as ARIO input']
-            df = df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type", "final_cluster"]]
-            df = df.set_index(["period","mrio","run_name"])
-            del repevents_df
-
+    df = df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type", "final_cluster"]]
+    df = df.set_index(["period","mrio","run_name"])
+    del repevents_df
     return df
 
 def get_final_clusters(general_df:pd.DataFrame, rep_events:pd.DataFrame) -> pd.DataFrame:
