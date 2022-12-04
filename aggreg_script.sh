@@ -3,7 +3,7 @@
 versa_python_path="/home/sjuhel/mambaforge/envs/versa/bin/python"
 script_path="/data/sjuhel/BoARIO-inputs/scripts/exp_aggreg.py"
 exp_dir="/data/sjuhel/Runs/BoARIO-runs/"
-flood_prot="data/sjuhel/BoARIO-inputs/source-data/FLOPROS_shp_V1/"
+flood_prot="/data/sjuhel/BoARIO-inputs/source-data/FLOPROS_shp_V1/"
 
 showHelp() {
     # `cat << EOF` This means that cat should stop reading when EOF is detected
