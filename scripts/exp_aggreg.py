@@ -651,7 +651,7 @@ if __name__ == '__main__':
         scriptLogger.info("prodloss")
         df_path = output/"1_prodloss_full_flood_base_results.parquet"
         flopros_path = pathlib.Path(args.protection_dataframe).resolve()
-        output = output/"3_prodloss_full_flood_base_results_with_prot.parquet"
+        outdf = output/"3_prodloss_full_flood_base_results_with_prot.parquet"
         scriptLogger.info('Reading flood df from {}'.format(df_path))
         df = pd.read_parquet(df_path)
         check_df(df)
@@ -662,12 +662,12 @@ if __name__ == '__main__':
         gdf = gdfy_floods(df)
         scriptLogger.info('Joining with flopros and computing protected floods')
         res = join_flopros(gdf,flopros)
-        scriptLogger.info('Writing to {}'.format(output))
-        res.to_parquet(output)
+        scriptLogger.info('Writing to {}'.format(outdf))
+        res.to_parquet(outdf)
         scriptLogger.info("fdloss")
         df_path = output/"2_fdloss_full_flood_base_results.parquet"
         flopros_path = pathlib.Path(args.protection_dataframe).resolve()
-        output = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
+        outdf = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
         scriptLogger.info('Reading flood df from {}'.format(df_path))
         df = pd.read_parquet(df_path)
         check_df(df)
@@ -678,8 +678,8 @@ if __name__ == '__main__':
         gdf = gdfy_floods(df)
         scriptLogger.info('Joining with flopros and computing protected floods')
         res = join_flopros(gdf,flopros)
-        scriptLogger.info('Writing to {}'.format(output))
-        res.to_parquet(output)
+        scriptLogger.info('Writing to {}'.format(outdf))
+        res.to_parquet(outdf)
     elif args.phase == 4:
         scriptLogger.info("#### PHASE 4 ####")
         prodloss_df = pd.read_parquet(output/"3_prodloss_full_flood_base_results_with_prot.parquet")
