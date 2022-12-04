@@ -1,6 +1,6 @@
 {
     "register_stocks": false,
-    "psi_param": 0.85,
+    "psi_param": 0.90,
     "order_type": "alt",
     "model_type": "ARIOPsi",
     "temporal_units_by_step": 4,
@@ -10,8 +10,8 @@
     "alpha_max": 1.25,
     "alpha_tau": 365,
     "rebuild_tau": 60,
-    "n_temporal_units_to_sim": 1460,
-    "min_duration": 1460,
+    "n_temporal_units_to_sim": 730,
+    "min_duration": 730,
     "impacted_region_base_production_toward_rebuilding": 0.0,
     "row_base_production_toward_rebuilding": 0.0
 }
