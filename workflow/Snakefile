@@ -15,12 +15,9 @@ wildcard_constraints:
     run_type="raw|int",
     stype="Full|Subregions|RoW"
 
-onstart:
-     check_config(config)
+check_config(config)
 
 #TODO : integrate interpolation script
-
-#TODO : add cleaning script for record files
 
 rule generate_csv_from_all_xp:
     """

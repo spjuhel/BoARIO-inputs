@@ -6,7 +6,7 @@ from pathlib import Path
 required_scripts = ['aggreg_exio3.py', 'flood_country_aggreg.py']
 
 def check_config(config):
-    print("########### CHECKING CONFIG FILE ###############")
+    #print("########### CHECKING CONFIG FILE ###############")
     ario_dir = Path(config['ARIO_DIR'])
     if not ario_dir.exists() and ario_dir.is_dir():
         raise FileNotFoundError("Given ARIO directory doesn't exist - {}".format(ario_dir))
@@ -43,7 +43,7 @@ def check_config(config):
         config['BUILDED_DATA_DIR'] = str(builded_data_dir.resolve())
 
     config['OUTPUT_DIR'] = str(Path(config['OUTPUT_DIR']).resolve())
-    config['LONG_TERM_DIR'] = str(Path(config['LONG_TERM_DIR']).resolve())
+    #config['LONG_TERM_DIR'] = str(Path(config['LONG_TERM_DIR']).resolve())
     #print("################# CHECKING DONE ###################")
     #print("Here are the configuration you are using :")
     #print(json.dumps(config, indent=4))
