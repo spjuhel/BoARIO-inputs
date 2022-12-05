@@ -553,7 +553,7 @@ if __name__ == '__main__':
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period"])
+        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
@@ -650,7 +650,7 @@ if __name__ == '__main__':
         res_df.update(res_finaldemand_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period"])
+        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
