@@ -552,6 +552,12 @@ if __name__ == '__main__':
         res_df.update(res_prodloss_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
+        col1 = res_df.filter(regex="^[A-Z]{2}$").columns
+        col2 = pd.Index(["period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input"])
+        cols = col2.union(col1,sort=False)
+        res_df.reset_index(inplace=True)
+        res_df = res_df[cols]
+        res_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
         res_df.to_parquet(output/"1_prodloss_full_flood_base_results.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 2 :
@@ -565,7 +571,7 @@ if __name__ == '__main__':
 
         floodbase_path = pathlib.Path(args.flood_base)
         if not floodbase_path.exists():
-            raise ValueError("File {}, doesn't exist".format(floodbase_path))
+            raise ValueError("File {}, doesqn't exist".format(floodbase_path))
         else:
             flood_base_df = pd.read_parquet(floodbase_path)
 
@@ -643,6 +649,12 @@ if __name__ == '__main__':
             sim_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
         res_df.update(res_finaldemand_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
+        col1 = res_df.filter(regex="^[A-Z]{2}$").columns
+        col2 = pd.Index(["period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input"])
+        cols = col2.union(col1,sort=False)
+        res_df.reset_index(inplace=True)
+        res_df = res_df[cols]
+        res_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
         scriptLogger.info("Writing temp result to {}".format(output))
         res_df.to_parquet(output/"2_fdloss_full_flood_base_results.parquet")
         scriptLogger.info("#### DONE ####")
@@ -661,25 +673,29 @@ if __name__ == '__main__':
         scriptLogger.info('geodf from df')
         gdf = gdfy_floods(df)
         scriptLogger.info('Joining with flopros and computing protected floods')
-        res = join_flopros(gdf,flopros)
+        gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
+        gdf.drop(["index_right","geometry"],axis=1,inplace=True)
+        gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
+        #res = join_flopros(gdf,flopros)
         scriptLogger.info('Writing to {}'.format(outdf))
-        res.to_parquet(outdf)
+        gdf.to_parquet(outdf)
         scriptLogger.info("fdloss")
         df_path = output/"2_fdloss_full_flood_base_results.parquet"
-        flopros_path = pathlib.Path(args.protection_dataframe).resolve()
         outdf = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
         scriptLogger.info('Reading flood df from {}'.format(df_path))
         df = pd.read_parquet(df_path)
         check_df(df)
-        scriptLogger.info('Reading flopros df from {}'.format(flopros_path))
-        flopros = geopd.read_file(flopros_path)
-        check_flopros(flopros)
         scriptLogger.info('geodf from df')
         gdf = gdfy_floods(df)
         scriptLogger.info('Joining with flopros and computing protected floods')
-        res = join_flopros(gdf,flopros)
+        gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
+        gdf.drop(["index_right","geometry"],axis=1,inplace=True)
+        gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
+        #res = join_flopros(gdf,flopros)
         scriptLogger.info('Writing to {}'.format(outdf))
-        res.to_parquet(outdf)
+        gdf.to_parquet(outdf)
+        scriptLogger.info('Writing to {}'.format(outdf))
+        gdf.to_parquet(outdf)
     elif args.phase == 4:
         scriptLogger.info("#### PHASE 4 ####")
         prodloss_df = pd.read_parquet(output/"3_prodloss_full_flood_base_results_with_prot.parquet")
