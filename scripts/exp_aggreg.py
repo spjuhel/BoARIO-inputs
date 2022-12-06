@@ -329,9 +329,11 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         #prodloss_from_local_events.index.names = index_name
         #prodloss_from_local_events = prodloss_from_local_events.droplevel(droplevel)
         #prodloss_from_local_events.name = "Production change due to local events (M€)"
-        total_direct_loss_df = df_loss.groupby(grouper2)[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
+        total_direct_loss_df = df_loss.groupby(["mrio", "model", "EXIO3_region", "period"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
         df_loss_all_events = df_loss_all_events.melt(value_name="Projected total production change (M€)",var_name=["region"], ignore_index=False)
-        #df_loss_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+        df_loss_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
+        df_loss_all_events.reset_index(inplace=True)
+        df_loss_all_events.set_index(["mrio", "model", "EXIO3_region", "period"],inplace=True)
         #df_loss_all_events.set_index(["EXIO3_region","sector_type"], append=True, inplace=True)
         df_loss_all_events = df_loss_all_events.join(total_direct_loss_df)
         total_direct_loss_df.to_parquet(save_path/"4_direct_loss.parquet")
