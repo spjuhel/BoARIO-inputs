@@ -388,8 +388,8 @@ def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events
         indexer = ["mrio", "model", "EXIO3_region","sector type", "period"]
     prodloss_from_local_events.name = "Production change due to local events (M€)"
     df_prod_all_events.reset_index(inplace=True)
-    #df_prod_all_events.set_index(indexer,inplace=True)
-    prodloss_from_local_events.set_index(indexer,inplace=True)
+    df_prod_all_events.set_index(indexer,inplace=True)
+    #prodloss_from_local_events.set_index(indexer,inplace=True)
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
     df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
