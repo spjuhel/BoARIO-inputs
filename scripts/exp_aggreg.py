@@ -87,7 +87,7 @@ def prepare_general_df(general_csv:pathlib.Path, period:str, representative_path
     repevents_df = pd.read_parquet(representative_path)
     repevents_df = repevents_df.reset_index().set_index(["EXIO3_region","class"])
     repevents_df = repevents_df.rename_axis(["Impacted EXIO3 region","Impacting flood percentile"])
-    df = df.reset_index().set_index(["mrio","Impacted EXIO3 region","Impacting flood percentile"])
+    df = df.reset_index().set_index(["Impacted EXIO3 region","Impacting flood percentile"])
     df = df.join(repevents_df)
     df = df.reset_index()
 
