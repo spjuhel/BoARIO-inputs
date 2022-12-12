@@ -80,12 +80,12 @@ done
 if [[ "$exp_type" == "hist" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-1970-2005";
-    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/dottori_clustered_hist_flood_withdmg.parquet"
+    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_1970_2005.parquet"
     rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_1970_2005.parquet"
 elif [[ "$exp_type" == "proj" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-2016-2035"
-    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/dottori_clustered_proj_flood_withdmg.parquet"
+    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_2016_2035.parquet"
     rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2016_2035.parquet"
 fi
 
