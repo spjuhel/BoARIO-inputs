@@ -87,7 +87,6 @@ then
     exp_path="${exp_dir}experience-flood-dottori-2016-2035"
     flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_2016_2035.parquet"
     rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2016_2035.parquet"
-fi
 elif [[ "$exp_type" == "proj2" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-2035-2050"
