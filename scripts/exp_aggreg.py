@@ -200,7 +200,7 @@ def projected_loss(loss_dict:dict, impacted_region:str, dmg:float, sector_type:s
 
 def projected_loss_region(group, loss_dict:dict, region:str, sector_type:str, mrio:str, semester:Optional[str]):
 
-    return pd.Series(projected_loss(loss_dict=loss_dict,impacted_region=group.head(1)["EXIO3_region"].values[0],dmg=group["dmg_as_2015_gva_share"], sector_type=sector_type, mrio=mrio, semester=semester)(region), name=region)
+    return pd.Series(projected_loss(loss_dict=loss_dict,impacted_region=group.head(1)["EXIO3_region"].values[0],dmg=group["share of GVA used as ARIO input"], sector_type=sector_type, mrio=mrio, semester=semester)(region), name=region)
 
 def prepare_flood_base(df_base:pd.DataFrame, period:str) -> pd.DataFrame:
     df_base['period'] = period
@@ -210,7 +210,7 @@ def prepare_flood_base(df_base:pd.DataFrame, period:str) -> pd.DataFrame:
     #df_base.set_index(["EXIO3_region","period"],inplace=True)
     #df_base.drop((mask[mask["final_cluster"]<=5].index),inplace=True)
     #df_base.reset_index(inplace=True)
-    df_base.sort_values(by=["EXIO3_region","dmg_as_2015_gva_share"],inplace=True)
+    df_base.sort_values(by=["EXIO3_region","share of GVA used as ARIO input"],inplace=True)
     return df_base
 
 def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame, semester:bool) -> pd.DataFrame:
@@ -227,7 +227,7 @@ def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame, semester:bool) -> pd.D
 def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
     # TODO See how to do this with a pd.concat
     flood_base = flood_base.reset_index()
-    flood_base = flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"])
+    flood_base = flood_base.sort_values(by=["EXIO3_region", "share of GVA used as ARIO input"])
     flood_base_gr = flood_base.groupby("EXIO3_region")
     res_l = []
     # list of ALL regions
@@ -256,7 +256,7 @@ def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region
 def run_interpolation_simple(mrios, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
     # TODO See how to do this with a pd.concat
     flood_base.reset_index(inplace=True)
-    flood_base.sort_values(by=["EXIO3_region", "dmg_as_2015_gva_share"], inplace=True)
+    flood_base.sort_values(by=["EXIO3_region", "share of GVA used as ARIO input"], inplace=True)
     flood_base_gr = flood_base.groupby("EXIO3_region")
     res_l = []
     for region in region_list:
@@ -303,7 +303,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         droplevel=4
     if loss_type == "prod":
         df_loss = df_loss.rename(columns={
-            "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
+            "share of GVA used as ARIO input":"Direct damage to capital (2015GVA share)",
             "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
             "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
             "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
@@ -345,7 +345,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
     elif loss_type == "final":
 
         df_loss = df_loss.rename(columns={
-        "dmg_as_2015_gva_share":"Direct damage to capital (2015GVA share)",
+        "share of GVA used as ARIO input":"Direct damage to capital (2015GVA share)",
         "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
         "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
         "direct_prodloss_as_gva_share":"Direct production loss (2015GVA share)",
