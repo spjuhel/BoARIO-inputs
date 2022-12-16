@@ -100,9 +100,9 @@ rule indicators:
     conda:
         "env/boario-use.yml"
     resources:
-        vmem_mb=indicators_get_vmem_mb,
-        mem_mb=indicators_get_mem_mb,
-        disk_mb=indicators_get_disk_mb
+        vmem_mb=8000, #indicators_get_vmem_mb,
+        mem_mb=8000, #indicators_get_mem_mb,
+        disk_mb=500 #indicators_get_disk_mb
     shell:
         """
         cd {config[ARIO_DIR]};
