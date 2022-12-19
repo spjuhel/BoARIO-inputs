@@ -303,10 +303,10 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         droplevel=4
     if loss_type == "prod":
         df_loss = df_loss.rename(columns={
-            "share of GVA used as ARIO input":"Direct damage to capital (2015GVA share)",
+            "share of GVA used as ARIO input":"Direct damage to capital (2010GVA share)",
             "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
             "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-            "direct_prodloss_as_2015gva_share":"Direct production loss (2015GVA share)",
+            "direct_prodloss_as_2010gva_share":"Direct production loss (2010GVA share)",
             "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
         })
         # str_rebuild = "rebuild"
@@ -329,7 +329,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         #prodloss_from_local_events.index.names = index_name
         #prodloss_from_local_events = prodloss_from_local_events.droplevel(droplevel)
         #prodloss_from_local_events.name = "Production change due to local events (M€)"
-        total_direct_loss_df = df_loss.groupby(["mrio", "model", "EXIO3_region", "period"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2015GVA share)", "Direct production loss (M€)"]].sum()
+        total_direct_loss_df = df_loss.groupby(["mrio", "model", "EXIO3_region", "period"])[["Total direct damage to capital (2010€PPP)","Direct production loss (2010GVA share)", "Direct production loss (M€)"]].sum()
         df_loss_all_events = df_loss_all_events.melt(value_name="Projected total production change (M€)",var_name=["region"], ignore_index=False)
         df_loss_all_events.rename(columns={"region":"EXIO3_region"},inplace=True)
         df_loss_all_events.reset_index(inplace=True)
@@ -345,10 +345,10 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
     elif loss_type == "final":
 
         df_loss = df_loss.rename(columns={
-        "share of GVA used as ARIO input":"Direct damage to capital (2015GVA share)",
+        "share of GVA used as ARIO input":"Direct damage to capital (2010GVA share)",
         "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
         "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
-        "direct_prodloss_as_gva_share":"Direct production loss (2015GVA share)",
+        "direct_prodloss_as_gva_share":"Direct production loss (2010GVA share)",
         "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
         })
 
@@ -393,7 +393,7 @@ def prepare_for_maps(df_prod_all_events:pd.DataFrame, prodloss_from_local_events
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
     df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
-    df_for_map["Direct production loss (2015GVA share)"] = df_for_map["Direct production loss (2015GVA share)"].fillna(0)
+    df_for_map["Direct production loss (2010GVA share)"] = df_for_map["Direct production loss (2010GVA share)"].fillna(0)
     df_for_map["Direct production loss (M€)"] = df_for_map["Direct production loss (M€)"].fillna(0)
     df_for_map["Production change due to foreign events (M€)"] = df_for_map["Projected total production change (M€)"] - df_for_map["Production change due to local events (M€)"]
     df_for_map = df_for_map.set_index(indexer)
@@ -423,7 +423,7 @@ def prepare_for_maps2(df_prod_all_events:pd.DataFrame, prodloss_from_local_event
     df_for_map = df_prod_all_events.join(pd.DataFrame(prodloss_from_local_events)).reset_index()
     df_for_map["Production change due to local events (M€)"] = df_for_map["Production change due to local events (M€)"].fillna(0)
     df_for_map["Total direct damage to capital (2010€PPP)"] = df_for_map["Total direct damage to capital (2010€PPP)"].fillna(0)
-    df_for_map["Direct production loss (2015GVA share)"] = df_for_map["Direct production loss (2015GVA share)"].fillna(0)
+    df_for_map["Direct production loss (2010GVA share)"] = df_for_map["Direct production loss (2010GVA share)"].fillna(0)
     df_for_map["Direct production loss (M€)"] = df_for_map["Direct production loss (M€)"].fillna(0)
     df_for_map["Production change due to foreign events (M€)"] = df_for_map["Projected total production change (M€)"] - df_for_map["Production change due to local events (M€)"]
     df_for_map = df_for_map.set_index(indexer)
@@ -557,7 +557,7 @@ if __name__ == '__main__':
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
+        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2010 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
@@ -654,7 +654,7 @@ if __name__ == '__main__':
         res_df.update(res_finaldemand_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2015gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
+        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2010 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
