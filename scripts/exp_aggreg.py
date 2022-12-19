@@ -553,6 +553,8 @@ if __name__ == '__main__':
             #sim_df.reset_index(inplace=True)
             res_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
             sim_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
+        res_df.to_parquet(output/"1_1_prodloss_full_index.parquet")
+        res_prodloss_df.to_parquet(output/"1_2_prodloss_full_index.parquet")
         res_df.update(res_prodloss_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
