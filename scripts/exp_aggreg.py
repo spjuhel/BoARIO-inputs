@@ -503,7 +503,7 @@ if __name__ == '__main__':
             res_df.set_index(["final_cluster", "mrio", "period", "EXIO3_region", "sector type", "semester"],inplace=True)
             prodloss_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type", "semester"],inplace=True)
         else:
-            res_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
+            res_df.set_index(["final_cluster", "mrio", "period", "EXIO3_region", "sector type"],inplace=True)
             prodloss_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
         res_df = res_df.merge(prodloss_df, how="outer", left_index=True, right_index=True, indicator=True, copy=False)
         sim_df = res_df.loc[res_df._merge=="both"].copy()
@@ -553,8 +553,8 @@ if __name__ == '__main__':
             #sim_df.reset_index(inplace=True)
             res_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
             sim_df.set_index(["final_cluster", "mrio", "sector type"],inplace=True)
-        res_df.to_parquet(output/"1_1_prodloss_full_index.parquet")
-        res_prodloss_df.to_parquet(output/"1_2_prodloss_full_index.parquet")
+        sim_df.to_parquet(output/"1_1_sim_df.parquet")
+        res_prodloss_df.to_parquet(output/"1_2_res_df.parquet")
         res_df.update(res_prodloss_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
@@ -603,7 +603,7 @@ if __name__ == '__main__':
             res_df.set_index(["final_cluster", "mrio", "period", "EXIO3_region", "sector type", "semester"],inplace=True)
             finaldemand_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type", "semester"],inplace=True)
         else:
-            res_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
+            res_df.set_index(["final_cluster", "mrio", "period", "EXIO3_region", "sector type"],inplace=True)
             finaldemand_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
         res_df = res_df.merge(finaldemand_df, how="outer", left_index=True, right_index=True, indicator=True, copy=False)
         sim_df = res_df.loc[res_df._merge=="both"].copy()
