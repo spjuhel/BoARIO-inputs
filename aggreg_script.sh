@@ -79,9 +79,9 @@ done
 
 if [[ "$exp_type" == "hist" ]]
 then
-    exp_path="${exp_dir}experience-flood-dottori-1970-2005";
-    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_1970_2005.parquet"
-    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_1970_2005.parquet"
+    exp_path="${exp_dir}experience-flood-dottori-1970-2015";
+    flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_1970_2015.parquet"
+    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_1970_2015.parquet"
 elif [[ "$exp_type" == "proj1" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-2016-2035"

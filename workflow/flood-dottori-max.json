@@ -1,11 +1,9 @@
 {
-    "XP_NAME": "flood-dottori-1970-2005_cement_waste_modified",
+    "XP_NAME": "flood-dottori-max",
     "MRIOS": [
-        "exiobase3_1995_74_sectors",
-        "exiobase3_2011_74_sectors",
-        "exiobase3_2020_74_sectors"
+        "exiobase3_1995_74_sectors"
     ],
-    "FLOOD_GDP_SHARE_FILE": "representative_events_1970_2005.parquet",
+    "FLOOD_GDP_SHARE_FILE": "representative_events_max.parquet",
     "EVENT_TEMPLATE": "event_template.json",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
@@ -14,15 +12,15 @@
     ],
     "FLOOD_INT": [
         "min",
-        "10%",
-        "60%",
+	"10%",
+	"60%",
         "90%",
         "99%",
         "max"
     ],
     "GDP_SHARE": [],
     "PSI": [
-        "0_95"
+        "0_90", "0_95"
     ],
     "REGIONS": [],
     "INV_TAU": [
