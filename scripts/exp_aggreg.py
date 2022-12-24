@@ -667,6 +667,7 @@ if __name__ == '__main__':
         res_df.to_parquet(output/"2_fdloss_full_flood_base_results.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
+        pass
         # scriptLogger.info("#### PHASE 3: adding flood protection ####")
         # scriptLogger.info("prodloss")
         # df_path = output/"1_prodloss_full_flood_base_results.parquet"
