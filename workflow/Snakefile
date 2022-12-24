@@ -26,7 +26,6 @@ rule generate_csv_from_all_xp:
     input:
         csv_from_all_xp(xps)
 
-
 rule generate_csv_from_xp:
     """
     Generate csv files for a specific experience.

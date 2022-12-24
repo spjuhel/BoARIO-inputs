@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import os
+os.environ['USE_PYGEOS'] = '0'
 from typing import Optional
 import pandas as pd
 import pathlib
@@ -93,7 +95,7 @@ def prepare_general_df(general_csv:pathlib.Path, period:str, representative_path
 
     if (df["gdp_dmg_share"]==-1).any():
             df["gdp_dmg_share"] = df['share of GVA used as ARIO input']
-    df = df[["period","mrio","run_name","gdp_dmg_share","Total direct damage (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type", "final_cluster"]]
+    df = df[["period","mrio","run_name","gdp_dmg_share","Total direct damage to capital (2010€PPP)", "year", "psi", "Impacted EXIO3 region", "MRIO type", "final_cluster"]]
     df = df.set_index(["period","mrio","run_name"])
     del repevents_df
     return df
@@ -307,7 +309,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
             "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
             "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
             "direct_prodloss_as_2010gva_share":"Direct production loss (2010GVA share)",
-            "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
+            "Total direct damage to capital (2010€PPP)": "Total direct damage to capital (2010€PPP)"
         })
         # str_rebuild = "rebuild"
         # str_non_rebuild = "non-rebuild"
@@ -349,7 +351,7 @@ def preprepare_for_maps(df_loss:pd.DataFrame, loss_type:str, save_path, regions_
         "dmg_as_direct_prodloss (M€)":"Direct production loss (M€)",
         "dmg_as_direct_prodloss (€)":"Direct production loss (€)",
         "direct_prodloss_as_gva_share":"Direct production loss (2010GVA share)",
-        "Total direct damage (2010€PPP)": "Total direct damage to capital (2010€PPP)"
+        "Total direct damage to capital (2010€PPP)": "Total direct damage to capital (2010€PPP)"
         })
 
         # str_rebuild = "rebuild"
@@ -507,12 +509,12 @@ if __name__ == '__main__':
             prodloss_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
         res_df = res_df.merge(prodloss_df, how="outer", left_index=True, right_index=True, indicator=True, copy=False)
         sim_df = res_df.loc[res_df._merge=="both"].copy()
-        sim_df.rename(columns={"Total direct damage (2010€PPP)_x":"Total direct damage (2010€PPP)", "year_x":"year"}, inplace=True)
+        sim_df.rename(columns={"Total direct damage to capital (2010€PPP)_x":"Total direct damage to capital (2010€PPP)", "year_x":"year"}, inplace=True)
         sim_df.reset_index(inplace=True)
-        sim_df.drop(["Impacted EXIO3 region","Total direct damage (2010€PPP)_y","year_y"],axis=1,inplace=True)
-        res_df.rename(columns={"Total direct damage (2010€PPP)_x":"Total direct damage (2010€PPP)", "year_x":"year"}, inplace=True)
+        sim_df.drop(["Impacted EXIO3 region","Total direct damage to capital (2010€PPP)_y","year_y"],axis=1,inplace=True)
+        res_df.rename(columns={"Total direct damage to capital (2010€PPP)_x":"Total direct damage to capital (2010€PPP)", "year_x":"year"}, inplace=True)
         res_df.reset_index(inplace=True)
-        res_df.drop(["Impacted EXIO3 region","Total direct damage (2010€PPP)_y","year_y"],axis=1,inplace=True)
+        res_df.drop(["Impacted EXIO3 region","Total direct damage to capital (2010€PPP)_y","year_y"],axis=1,inplace=True)
         res_df.drop(res_df.loc[res_df._merge=="both"].index, inplace=True)
 
         # Remove simulated floods from flood base (we will merge those later)
@@ -559,7 +561,7 @@ if __name__ == '__main__':
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
+        col2 = pd.Index(["final_cluster", "period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage to capital (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
@@ -607,12 +609,12 @@ if __name__ == '__main__':
             finaldemand_df.set_index(["final_cluster", "mrio", "period", "Impacted EXIO3 region", "sector type"],inplace=True)
         res_df = res_df.merge(finaldemand_df, how="outer", left_index=True, right_index=True, indicator=True, copy=False)
         sim_df = res_df.loc[res_df._merge=="both"].copy()
-        sim_df.rename(columns={"Total direct damage (2010€PPP)_x":"Total direct damage (2010€PPP)", "year_x":"year"}, inplace=True)
+        sim_df.rename(columns={"Total direct damage to capital (2010€PPP)_x":"Total direct damage to capital (2010€PPP)", "year_x":"year"}, inplace=True)
         sim_df.reset_index(inplace=True)
-        sim_df.drop(["Impacted EXIO3 region","Total direct damage (2010€PPP)_y","year_y"],axis=1,inplace=True)
-        res_df.rename(columns={"Total direct damage (2010€PPP)_x":"Total direct damage (2010€PPP)", "year_x":"year"}, inplace=True)
+        sim_df.drop(["Impacted EXIO3 region","Total direct damage to capital (2010€PPP)_y","year_y"],axis=1,inplace=True)
+        res_df.rename(columns={"Total direct damage to capital (2010€PPP)_x":"Total direct damage to capital (2010€PPP)", "year_x":"year"}, inplace=True)
         res_df.reset_index(inplace=True)
-        res_df.drop(["Impacted EXIO3 region","Total direct damage (2010€PPP)_y","year_y"],axis=1,inplace=True)
+        res_df.drop(["Impacted EXIO3 region","Total direct damage to capital (2010€PPP)_y","year_y"],axis=1,inplace=True)
         res_df.drop(res_df.loc[res_df._merge=="both"].index, inplace=True)
 
         # Remove simulated floods from flood base (we will merge those later)
@@ -656,7 +658,7 @@ if __name__ == '__main__':
         res_df.update(res_finaldemand_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         col1 = res_df.filter(regex="^[A-Z]{2}$").columns
-        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
+        col2 = pd.Index(["final_cluster","period","model","EXIO3_region","mrio", "sector type", "semester", "Total direct damage to capital (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
         res_df = res_df[cols]
@@ -665,56 +667,56 @@ if __name__ == '__main__':
         res_df.to_parquet(output/"2_fdloss_full_flood_base_results.parquet")
         scriptLogger.info("#### DONE ####")
     elif args.phase == 3:
-        scriptLogger.info("#### PHASE 3: adding flood protection ####")
-        scriptLogger.info("prodloss")
-        df_path = output/"1_prodloss_full_flood_base_results.parquet"
-        flopros_path = pathlib.Path(args.protection_dataframe).resolve()
-        outdf = output/"3_prodloss_full_flood_base_results_with_prot.parquet"
-        scriptLogger.info('Reading flood df from {}'.format(df_path))
-        df = pd.read_parquet(df_path)
-        check_df(df)
-        scriptLogger.info('Reading flopros df from {}'.format(flopros_path))
-        flopros = geopd.read_file(flopros_path)
-        check_flopros(flopros)
-        scriptLogger.info('geodf from df')
-        gdf = gdfy_floods(df)
-        scriptLogger.info('Joining with flopros and computing protected floods')
-        gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
-        gdf.drop(["index_right","geometry"],axis=1,inplace=True)
-        gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
-        #res = join_flopros(gdf,flopros)
-        scriptLogger.info('Writing to {}'.format(outdf))
-        gdf.to_parquet(outdf)
-        scriptLogger.info("fdloss")
-        df_path = output/"2_fdloss_full_flood_base_results.parquet"
-        outdf = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
-        scriptLogger.info('Reading flood df from {}'.format(df_path))
-        df = pd.read_parquet(df_path)
-        check_df(df)
-        scriptLogger.info('geodf from df')
-        gdf = gdfy_floods(df)
-        scriptLogger.info('Joining with flopros and computing protected floods')
-        gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
-        gdf.drop(["index_right","geometry"],axis=1,inplace=True)
-        gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
-        #res = join_flopros(gdf,flopros)
-        scriptLogger.info('Writing to {}'.format(outdf))
-        gdf.to_parquet(outdf)
-        scriptLogger.info('Writing to {}'.format(outdf))
-        gdf.to_parquet(outdf)
+        # scriptLogger.info("#### PHASE 3: adding flood protection ####")
+        # scriptLogger.info("prodloss")
+        # df_path = output/"1_prodloss_full_flood_base_results.parquet"
+        # flopros_path = pathlib.Path(args.protection_dataframe).resolve()
+        # outdf = output/"3_prodloss_full_flood_base_results_with_prot.parquet"
+        # scriptLogger.info('Reading flood df from {}'.format(df_path))
+        # df = pd.read_parquet(df_path)
+        # check_df(df)
+        # scriptLogger.info('Reading flopros df from {}'.format(flopros_path))
+        # flopros = geopd.read_file(flopros_path)
+        # check_flopros(flopros)
+        # scriptLogger.info('geodf from df')
+        # gdf = gdfy_floods(df)
+        # scriptLogger.info('Joining with flopros and computing protected floods')
+        # gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
+        # gdf.drop(["index_right","geometry"],axis=1,inplace=True)
+        # gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
+        # #res = join_flopros(gdf,flopros)
+        # scriptLogger.info('Writing to {}'.format(outdf))
+        # gdf.to_parquet(outdf)
+        # scriptLogger.info("fdloss")
+        # df_path = output/"2_fdloss_full_flood_base_results.parquet"
+        # outdf = output/"3_fdloss_full_flood_base_results_with_prot.parquet"
+        # scriptLogger.info('Reading flood df from {}'.format(df_path))
+        # df = pd.read_parquet(df_path)
+        # check_df(df)
+        # scriptLogger.info('geodf from df')
+        # gdf = gdfy_floods(df)
+        # scriptLogger.info('Joining with flopros and computing protected floods')
+        # gdf = geopd.sjoin(gdf,flopros[["MerL_Riv","geometry"]], how="left",predicate="within")
+        # gdf.drop(["index_right","geometry"],axis=1,inplace=True)
+        # gdf["protected"] = gdf["return_period"] < gdf["MerL_Riv"]
+        # #res = join_flopros(gdf,flopros)
+        # scriptLogger.info('Writing to {}'.format(outdf))
+        # gdf.to_parquet(outdf)
+        # scriptLogger.info('Writing to {}'.format(outdf))
+        # gdf.to_parquet(outdf)
     elif args.phase == 4:
         scriptLogger.info("#### PHASE 4 ####")
-        prodloss_df = pd.read_parquet(output/"3_prodloss_full_flood_base_results_with_prot.parquet")
+        prodloss_df = pd.read_parquet(output/"1_prodloss_full_flood_base_results.parquet")
         # n_prot = len(prodloss_df.loc[prodloss_df["protected"]])
-        prodloss_df = prodloss_df[~prodloss_df["protected"]]
+        #prodloss_df = prodloss_df[~prodloss_df["protected"]]
         regions_list = prodloss_df.filter(regex="^[A-Z]{2}$").columns
         # a regions_list = ['AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CN', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT', 'JP', 'KR', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SE', 'SI', 'SK', 'TR', 'TW', 'US', 'WA', 'WE', 'WF', 'WL', 'WM', 'ZA']
         preprepare_for_maps(prodloss_df,"prod",output,regions_list, semester_run)
     elif args.phase == 5:
         scriptLogger.info("#### PHASE 5 ####")
-        finaldemand_df = pd.read_parquet(output/"3_fdloss_full_flood_base_results_with_prot.parquet")
+        finaldemand_df = pd.read_parquet(output/"2_fdloss_full_flood_base_results.parquet")
         regions_list = finaldemand_df.filter(regex="^[A-Z]{2}$").columns
-        finaldemand_df = finaldemand_df[~finaldemand_df["protected"]]
+        #finaldemand_df = finaldemand_df[~finaldemand_df["protected"]]
         preprepare_for_maps(finaldemand_df,"final",output, regions_list, semester_run)
     elif args.phase == 6:
         scriptLogger.info("#### PHASE 6 ####")
