@@ -1,13 +1,13 @@
 {
-    "XP_NAME" : "flood-dottori-2035-2050",
-    "MRIOS" : [
+    "XP_NAME": "flood-dottori-1970-2015-recover",
+    "MRIOS": [
         "exiobase3_1995_74_sectors",
+	      "exiobase3_2002_74_sectors",
         "exiobase3_2011_74_sectors",
-	      "exiobase3_2020_74_sectors",
-	      "exiobase3_1995_74_sectors"
-              ],
-    "REP_EVENTS_FILE": "representative_events_2035_2050.parquet",
-    "EVENT_KIND": "rebuilding",
+        "exiobase3_2020_74_sectors"
+    ],
+    "REP_EVENTS_FILE": "representative_events_1970_2015.parquet",
+    "EVENT_KIND": "recover",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
     "PSI": [
