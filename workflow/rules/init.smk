@@ -15,7 +15,6 @@ for xp in config['EXPS']:
 
 test = {
     "REGIONS" : "FR",
-    "MRIOTYPES" : "Full",
     "FLOOD_DMG" : 200000,
     "FLOOD_INT" : 0,
     "PSI" : "0_99",

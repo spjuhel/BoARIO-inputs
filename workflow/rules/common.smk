@@ -104,7 +104,7 @@ def runs(xp):
     ################################ SUBREGIONS RUNS ########################################
     if xp["MRIOTYPES"] == "Subregions":
         if "SUBREGIONS" not in xp.keys():
-            raise ValueError("Run is a subregions run but SUBREGIONS key is not present in the experience dictionnary")
+            raise ValueError("Run is a subregions run but SUBREGIONS key is not present in the experience dictionary")
         if "MAINMRIO" not in xp.keys():
             raise ValueError(
                 """Run is a subregions run but MAINMRIO key is not present in the experience dictionary.
@@ -151,7 +151,7 @@ def runs(xp):
         tmp = expand(xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
                          mrio_used=xp['MRIOS'],
                          region=xp["REGIONS"],
-                         stype=xp["MRIOTYPES"],
+                         stype=xp["EVENT_KIND"],
                          flood=xp["FLOOD_INT"],
                          psi=xp["PSI"])
         inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
@@ -159,22 +159,25 @@ def runs(xp):
     return expand("{out}/{runs}", out=config['OUTPUT_DIR'], runs=runs)
 
 def runs_from_parquet(xp):
-    parquet_df_path = config['SOURCE_DATA_DIR']+"/"+xp['FLOOD_GDP_SHARE_FILE']
+    parquet_df_path = config['SOURCE_DATA_DIR']+"/"+xp['REP_EVENTS_FILE']
     df = pandas.read_parquet(parquet_df_path)
     dmg_type = xp['DMG_TYPE']
     xp_folder = xp['XP_NAME']
     inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
     all_sims = list(map(list, zip(*list(df.groupby(['EXIO3_region', 'class']).groups))))
-    tmp_1 = expand("{region}_type_Full_qdmg_int_{intensity}", zip, region=all_sims[0], intensity=all_sims[1])
+    tmp_1 = expand("{region}_type_REPLACE_qdmg_int_{intensity}", zip, region=all_sims[0], intensity=all_sims[1])
+    tmp_2 = [sub.replace("REPLACE","{kind}") for sub in tmp_1]
+    tmp_3 = [expand(sub, kind=xp["EVENT_KIND"]) for sub in tmp_2]
+    tmp_4 = [item for sublist in tmp_3 for item in sublist]
     tmp = expand(xp_folder+"/{mrio_used}/{region_int}_Psi_{psi}",
                  mrio_used=xp['MRIOS'],
-                 region_int=tmp_1,
+                 region_int=tmp_4,
                  psi=xp["PSI"])
     inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
     runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     return expand("{out}/{runs}", out=config['OUTPUT_DIR'], runs=runs)
 
-def get_event_template(mrio_used,xp_folder):
+def get_event_template(mrio_used,shock_type):
     mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
     if match:
@@ -184,7 +187,7 @@ def get_event_template(mrio_used,xp_folder):
             event_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-    return expand("{maindir}/mrios/{tmpl}_event_params.json",maindir=config["BUILDED_DATA_DIR"], expfolder=xp_folder, tmpl=event_tmpl)
+    return expand("{maindir}/params/{tmpl}_event_params_{kind}.json",maindir=config["BUILDED_DATA_DIR"], kind=shock_type, tmpl=event_tmpl)
 
 def get_mrio_params(mrio_used,xp_folder):
     mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
@@ -196,7 +199,7 @@ def get_mrio_params(mrio_used,xp_folder):
             params_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-    return expand("{outputdir}/mrios/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
+    return expand("{outputdir}/params/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
 
 def csv_from_all_xp(xps):
     """
@@ -217,7 +220,7 @@ def run_RoW_inputs(wildcards):
         "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
         "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
         "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
     }
 
 def xp_from_name(expdir):
@@ -244,5 +247,5 @@ def run_inputs(wildcards):
     return {
         "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
         "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["FLOOD_GDP_SHARE_FILE"])
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
     }

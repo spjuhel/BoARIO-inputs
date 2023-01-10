@@ -35,13 +35,13 @@ def params_from_ods(ods_file,monetary,main_inv_dur):
 def event_tmpl_from_ods(ods_file):
     event_params = {}
     event_params["aff_regions"] = ["Undefined"]
-    event_params["dmg_distrib_regions"] = [1]
-    event_params["dmg_distrib_sectors_type"] = "gdp"
-    event_params["dmg_distrib_sectors"] = []
+    event_params["dmg_regional_distrib"] = [1]
+    event_params["dmg_sectoral_distrib_type"] = "gdp"
     event_params["duration"] = -1
     event_params["name"] = "Undefined"
     event_params["occur"] = 7
-    event_params["q_dmg"] = -1
+    event_params["kapital_damage"] = -1
+    event_params["shock_type"] = "kapital_destroyed_rebuild"
     df = pd.read_excel(ods_file)
     event_params["aff_sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
     event_params["rebuilding_sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
@@ -53,5 +53,12 @@ if __name__ == '__main__':
     event_params = event_tmpl_from_ods(args.spreadsheet_path)
     with pathlib.Path(args.mrio_params_output).open("w") as f:
         json.dump(mrio_params, f, indent=4)
-    with pathlib.Path(args.events_params_output).open("w") as f:
+    savepath = pathlib.Path(args.events_params_output)
+    with savepath.with_stem("{}{}".format(savepath.stem,"_rebuilding")).open("w") as f:
         json.dump(event_params, f, indent=4)
+
+    event_params_recover = event_params.copy()
+    event_params_recover["shock_type"] = "kapital_destroyed_recover"
+    del event_params_recover["rebuilding_sectors"]
+    with savepath.with_stem("{}{}".format(savepath.stem,"_recover")) .open("w") as f:
+        json.dump(event_params_recover, f, indent=4)

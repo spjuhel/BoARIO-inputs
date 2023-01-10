@@ -8,12 +8,12 @@ include: "./rules/mrio_generation.smk"
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
-RUNS = [runs(xp) for folder, xp in xps.items()]
+#RUNS = [runs(xp) for folder, xp in xps.items()]
 RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
 
 wildcard_constraints:
     run_type="raw|int",
-    stype="Full|Subregions|RoW"
+    shock_type="rebuilding|recover"
 
 check_config(config)
 
@@ -76,11 +76,11 @@ rule indicators:
     Build indicators and parquet results files for a specific simulation.
     """
     input:
-        expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=run_output_files)
     output:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
                    "indicators.json",
@@ -92,7 +92,7 @@ rule indicators:
                    "prod_chg.json",
                    "fd_loss.json"])
     params:
-        records=expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{stype}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        records=expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=record_files)
     #group: "sim_run"
@@ -105,7 +105,7 @@ rule indicators:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.stype}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/';
+        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.shock_type}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/';
         """
 
 rule run_Full:
@@ -116,13 +116,13 @@ rule run_Full:
     """
     input:
         unpack(run_inputs),
-        event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.xp_folder),
+        event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.shock_type),
         mrio_params = lambda wildcards : get_mrio_params(wildcards.mrio_used,wildcards.xp_folder)
     output:
-        record_files =  temp(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        record_files =  temp(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                out=config["OUTPUT_DIR"],
                files=record_files)),
-        json_files = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        json_files = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
                             out=config["OUTPUT_DIR"],
                             files=run_json_files)
     #group: "sim_run"
@@ -131,7 +131,7 @@ rule run_Full:
     threads:
         4
     log:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_Full_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/simulation.log",
+        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/simulation.log",
                out=config["OUTPUT_DIR"])
     resources:
         vmem_mb=run_Full_get_vmem_mb,
@@ -144,7 +144,7 @@ rule run_Full:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} Full {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
+        nice -n 10 python ./scripts/mono_run.py {wildcards.region} {input.params_template} {wildcards.psi} {wildcards.inv} {wildcards.shock_type} {wildcards.run_type} {wildcards.flood} {input.mrio} {params.output_dir}/{wildcards.xp_folder}/{wildcards.mrio_used} {input.flood_gdp} {input.event_template} {input.mrio_params} {wildcards.inv_t}
         """
 
 rule run_subregions_mrio:

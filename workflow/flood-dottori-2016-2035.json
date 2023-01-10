@@ -5,26 +5,10 @@
         "exiobase3_2011_74_sectors",
         "exiobase3_2020_74_sectors"
     ],
-    "FLOOD_GDP_SHARE_FILE": "representative_events_2016_2035.parquet",
-    "EVENT_TEMPLATE": "event_template.json",
+    "REP_EVENTS_FILE": "representative_events_2016_2035.parquet",
+    "EVENT_KIND": "rebuilding",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
-    "MRIOTYPES": [
-        "Full"
-    ],
-    "FLOOD_INT": [
-        "min",
-        "10%",
-        "50%",
-        "90%",
-        "99%",
-        "max"
-    ],
-    "GDP_SHARE": [],
-    "REGIONS": [
-        "WE",
-        "EE"
-    ],
     "PSI": [
         "0_90"
     ],
