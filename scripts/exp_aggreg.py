@@ -226,7 +226,7 @@ def extend_df(df_base:pd.DataFrame, df_loss:pd.DataFrame, semester:bool) -> pd.D
         flood_base_loss = flood_base_loss.merge(df_semester, how="cross")
     return flood_base_loss
 
-def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
+def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str, sector_types:list) -> pd.DataFrame:
     # TODO See how to do this with a pd.concat
     flood_base = flood_base.reset_index()
     flood_base = flood_base.sort_values(by=["EXIO3_region", "share of GVA used as ARIO input"])
@@ -236,7 +236,7 @@ def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region
     for region in region_list:
         sect_l = []
         #print("Running indirect impacted region {}".format(region))
-        for sector_type in ["rebuilding","non-rebuilding"]:
+        for sector_type in sector_types:
             mr_l = []
             for mrio in mrios:
                 #print("Running interpolation for {}".format(mrio))
@@ -255,7 +255,7 @@ def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region
     df_res = pd.concat(res_l, axis=1, keys=region_list)
     return df_res
 
-def run_interpolation_simple(mrios, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str) -> pd.DataFrame:
+def run_interpolation_simple(mrios, flood_base:pd.DataFrame, region_list:list, loss_dict:dict, loss_type_str:str, sector_types:list) -> pd.DataFrame:
     # TODO See how to do this with a pd.concat
     flood_base.reset_index(inplace=True)
     flood_base.sort_values(by=["EXIO3_region", "share of GVA used as ARIO input"], inplace=True)
@@ -264,7 +264,7 @@ def run_interpolation_simple(mrios, flood_base:pd.DataFrame, region_list:list, l
     for region in region_list:
         sect_l = []
         #print("Running indirect impacted region {}".format(region))
-        for sector_type in ["rebuilding","non-rebuilding"]:
+        for sector_type in sector_types:
             mr_l = []
             for mrio in mrios:
                 #print("Running interpolation for {}".format(mrio))
@@ -493,6 +493,7 @@ if __name__ == '__main__':
         flood_base_df = remove_not_sim_region(flood_base_df,general_df)
         regions_list = list(prodloss_df.columns.get_level_values(2).unique())
         flooded_regions = list(flood_base_df["EXIO3_region"].unique())
+        sectors_list = list(prodloss_df.columns.get_level_values(1).unique())
 
         scriptLogger.info("#### Doing prodloss result ####")
         scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
@@ -537,10 +538,10 @@ if __name__ == '__main__':
         if semester_run:
             indexer = ["mrio","semester","final_cluster"]
             semesters = prodloss_df.semester.unique()
-            res_prodloss_df = run_interpolation_semester(mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
+            res_prodloss_df = run_interpolation_semester(mrios, semesters, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss", sector_types=sectors_list)
         else:
             indexer = ["mrio", "final_cluster"]
-            res_prodloss_df = run_interpolation_simple(mrios, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss")
+            res_prodloss_df = run_interpolation_simple(mrios, flood_base_df, regions_list, prodloss_dict, loss_type_str="prodloss", sector_types=sectors_list)
         res_prodloss_df = res_prodloss_df.stack(level=1).reset_index()#rename_axis(index=indexer)
         #res_prodloss_df.columns = ["_".join(a) for a in res_prodloss_df.columns.to_flat_index()]
         if semester_run:
@@ -592,6 +593,7 @@ if __name__ == '__main__':
         flood_base_df = remove_not_sim_region(flood_base_df,general_df)
         regions_list = list(prodloss_df.columns.get_level_values(2).unique())
         flooded_regions = list(flood_base_df["EXIO3_region"].unique())
+        sectors_list = list(prodloss_df.columns.get_level_values(1).unique())
 
         scriptLogger.info("#### Doing finalloss result ####")
         scriptLogger.info("Indexing properly, removing too rare to extrapolate floods")
@@ -637,10 +639,10 @@ if __name__ == '__main__':
         if semester_run:
             indexer = ["mrio","semester","final_cluster"]
             semesters = finaldemand_df.semester.unique()
-            res_finaldemand_df = run_interpolation_semester(mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
+            res_finaldemand_df = run_interpolation_semester(mrios, semesters, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss", sector_types=sectors_list)
         else:
             indexer = ["mrio","final_cluster"]
-            res_finaldemand_df = run_interpolation_simple(mrios, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss")
+            res_finaldemand_df = run_interpolation_simple(mrios, flood_base_df, regions_list, finalloss_dict, loss_type_str="fdloss", sector_types=sectors_list)
         res_finaldemand_df = res_finaldemand_df.stack(level=1).reset_index()
         #res_finaldemand_df.columns = ["_".join(a) for a in res_finaldemand_df.columns.to_flat_index()]
         if semester_run:
