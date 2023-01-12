@@ -59,6 +59,7 @@ if __name__ == '__main__':
 
     event_params_recover = event_params.copy()
     event_params_recover["shock_type"] = "kapital_destroyed_recover"
+    event_params_recover["recover_function"] = "convexe"
     del event_params_recover["rebuilding_sectors"]
     with savepath.with_stem("{}{}".format(savepath.stem,"_recover")) .open("w") as f:
         json.dump(event_params_recover, f, indent=4)
