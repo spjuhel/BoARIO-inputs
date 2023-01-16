@@ -100,7 +100,7 @@ def event_params_from_xp_mrio(xp,mrio_used):
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
 
-    event_suffix = xp.get("event_template_suffix","")
+    event_suffix = xp["EVENT_KIND"]
     if event_suffix != "":
         event_suffix = "_"+event_suffix
 
