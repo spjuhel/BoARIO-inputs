@@ -176,19 +176,19 @@ def sim_df_from_xp(xp):
             if not (param_group_path/"event_params.json").exists():
                 (param_group_path/"event_params.json").symlink_to(event_params_file)
 
-            sim_df = rep_events[["EXIO3_region","share of GVA used as ARIO input","class"]].copy()
-            sim_df["psi"] = psi
-            sim_df["order_type"] = order
-            sim_df["inv_tau"] = inv_tau
-            sim_df["rebuild_tau"] = reb_tau
-            sim_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
-            sim_df["event_template_file"] = event_params_from_xp_mrio(xp,mrio)
+            sim_group_df = rep_events[["EXIO3_region","share of GVA used as ARIO input","class"]].copy()
+            sim_group_df["xp_name"] = xp_name
+            sim_group_df["rep_events_file"] = rep_events_file
+            sim_group_df["mrio"] = mrio
+            sim_group_df["psi"] = psi
+            sim_group_df["order_type"] = order
+            sim_group_df["inv_tau"] = inv_tau
+            sim_group_df["rebuild_tau"] = reb_tau
+            sim_group_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
+            sim_group_df["event_template_file"] = event_params_from_xp_mrio(xp,mrio)
 
-            sim_mrio_df = pd.concat([sim_mrio_df,sim_df],axis=0)
+            sim_mrio_df = pd.concat([sim_mrio_df,sim_group_df],axis=0)
 
-        sim_mrio_df["mrio"] = mrio
-        sim_mrio_df["xp_name"] = xp_name
-        sim_mrio_df["rep_events_file"] = rep_events_file
         sim_df = pd.concat([sim_df,sim_mrio_df],axis=0)
     return sim_df
 
