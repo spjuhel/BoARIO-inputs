@@ -132,7 +132,7 @@ def sim_df_from_xp(xp):
     mrios = xp["MRIOS"]
     rep_events_file = xp["REP_EVENTS_FILE"]
     Path(xp_path/rep_events_file).symlink_to(Path(config["SOURCE_DATA_DIR"]+"/"+rep_events_file))
-    rep_events = pd.read_parquet(rep_events_file)
+    rep_events = pd.read_parquet(xp_path/rep_events_file)
     sim_df = pd.DataFrame()
     for mrio in mrios:
         sim_mrio_df = pd.DataFrame()
