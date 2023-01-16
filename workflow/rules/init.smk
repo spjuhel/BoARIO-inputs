@@ -166,14 +166,14 @@ def sim_df_from_xp(xp):
             sim_params["rebuild_tau"] = reb_tau
             sim_params["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
             sim_params["event_template_file"] = event_params_from_xp_mrio(xp,mrio)
-            with param_group_path/"simulation_params.json".open("w") as f:
+            with (param_group_path/"simulation_params.json").open("w") as f:
                 json.dump(sim_params,f,indent=4)
             mrio_params_file = Path(config["BUILDED_DATA"]+"/params/"+sim_params["mrio_template_file"])
             event_params_file = Path(config["BUILDED_DATA"]+"/params/"+sim_params["event_template_file"])
             if not (param_group_path/"mrio_params.json").exists():
-                param_group_path/"mrio_params.json".symlink_to(mrio_params_file)
+                (param_group_path/"mrio_params.json").symlink_to(mrio_params_file)
             if not (param_group_path/"event_params.json").exists():
-                param_group_path/"event_params.json".symlink_to(event_params_file)
+                (param_group_path/"event_params.json").symlink_to(event_params_file)
 
             sim_df = rep_events[["EXIO3_region","share of GVA used as ARIO input","class"]].copy()
             sim_df["psi"] = psi
