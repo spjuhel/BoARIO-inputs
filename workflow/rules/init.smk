@@ -157,7 +157,8 @@ def sim_df_from_xp(xp):
         product = itertools.product(psis,orders,inv_taus,reb_taus)
 
         for psi,order,inv_tau,reb_tau in product:
-            param_group_n = f"psi~{psi}_order~{order}_inv~{inv_tau}_reb~{reb_tau}"
+            param_group_n = f"psi_{psi}_order_{order}_inv_{inv_tau}_reb_{reb_tau}"
+            print(param_group_n)
             param_group_path = mrio_path/param_group_n
             param_group_path.mkdir(exist_ok=True)
             sim_params["psi_param"] = psi
