@@ -1,7 +1,7 @@
 {
     "XP_NAME": "flood-dottori-1970-2015",
     "MRIOS": [
-	"exiobase3_2002_74_sectors",
+        "exiobase3_2002_74_sectors",
         "exiobase3_2011_74_sectors",
         "exiobase3_2020_74_sectors"
     ],
@@ -10,6 +10,7 @@
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
     "ORDER_TYPE": "alt",
+    "REB_TAU": 60,
     "PSI": [
         "0_90"
     ],
