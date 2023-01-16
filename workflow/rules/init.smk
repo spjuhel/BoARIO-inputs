@@ -139,7 +139,7 @@ def sim_df_from_xp(xp):
         sim_mrio_df = pd.DataFrame()
         mrio_path = xp_path/mrio
         mrio_path.mkdir(exist_ok=True)
-        with Path(xp['PARAMS_TEMPLATE']).open("r") as f:
+        with Path(config["CONFIG_DIR"]+"/"+xp['PARAMS_TEMPLATE']).open("r") as f:
             sim_params = json.load(f)
 
         psis = xp["PSI"]
