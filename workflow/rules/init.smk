@@ -137,7 +137,7 @@ def sim_df_from_xp(xp):
     sim_df = pd.DataFrame()
     for mrio in mrios:
         sim_mrio_df = pd.DataFrame()
-        mrio_path = xp_path/mrio
+        mrio_path = output_dir/mrio
         mrio_path.mkdir(exist_ok=True)
         with Path(config["CONFIG_DIR"]+"/"+xp['PARAMS_TEMPLATE']).open("r") as f:
             sim_params = json.load(f)
@@ -154,11 +154,12 @@ def sim_df_from_xp(xp):
         reb_taus = xp["REB_TAU"]
         if not isinstance(reb_taus,list):
             reb_taus = [reb_taus]
-        product = itertools.product(psis,orders,inv_taus,reb_taus)
-
-        for psi,order,inv_tau,reb_tau in product:
-            param_group_n = f"psi_{psi}_order_{order}_inv_{inv_tau}_reb_{reb_tau}"
-            print(param_group_n)
+        event_kind = xp["EVENT_KIND"]
+        if not isinstance(event_kind,list):
+            event_kind = [event_kind]
+        product = itertools.product(psis,orders,inv_taus,reb_taus,event_kind)
+        for psi,order,inv_tau,reb_tau,ev_kind in product:
+            param_group_n = f"psi_{psi}_order_{order}_inv_{inv_tau}_reb_{reb_tau}_evtype_{event_kind}"
             param_group_path = mrio_path/param_group_n
             param_group_path.mkdir(exist_ok=True)
             sim_params["psi_param"] = psi
@@ -177,8 +178,6 @@ def sim_df_from_xp(xp):
                 (param_group_path/"event_params.json").symlink_to(event_params_file)
 
             sim_group_df = rep_events[["EXIO3_region","share of GVA used as ARIO input","class"]].copy()
-            sim_group_df["xp_name"] = xp_name
-            sim_group_df["rep_events_file"] = rep_events_file
             sim_group_df["mrio"] = mrio
             sim_group_df["psi"] = psi
             sim_group_df["order_type"] = order
@@ -198,5 +197,3 @@ def all_simulations_df(xps):
         xp_df = sim_df_from_xp(xp)
         meta_df = pd.concat([meta_df, xp_df],axis=0)
     return meta_df
-
-all_simulations_df(xps).to_parquet(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet")

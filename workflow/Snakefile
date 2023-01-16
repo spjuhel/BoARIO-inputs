@@ -20,6 +20,13 @@ check_config(config)
 
 #TODO : integrate interpolation script
 
+rule generate_all_sim_dataframe:
+    output:
+        config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet"
+    run:
+        all_simulations_df(xps).to_parquet(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet")
+
+
 rule generate_csv_from_all_xp:
     """
     Generate csv file aggregating results from all experiences stated in config.json
