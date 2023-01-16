@@ -147,13 +147,13 @@ def sim_df_from_xp(xp):
             psis = [psis]
         orders = xp["ORDER_TYPE"]
         if not isinstance(orders,list):
-            psis = [orders]
+            orders = [orders]
         inv_taus = xp["INV_TAU"]
         if not isinstance(inv_taus,list):
-            psis = [inv_taus]
+            inv_taus = [inv_taus]
         reb_taus = xp["REB_TAU"]
         if not isinstance(reb_taus,list):
-            psis = [reb_taus]
+            reb_taus = [reb_taus]
         product = itertools.product(psis,orders,inv_taus,reb_taus)
 
         for psi,order,inv_tau,reb_tau in product:
