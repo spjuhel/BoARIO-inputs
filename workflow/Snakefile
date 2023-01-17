@@ -11,6 +11,8 @@ ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
 #RUNS = [runs(xp) for folder, xp in xps.items()]
 RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
+RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
+
 
 wildcard_constraints:
     run_type="raw|int",
@@ -20,12 +22,9 @@ check_config(config)
 
 #TODO : integrate interpolation script
 
-rule generate_all_sim_dataframe:
-    output:
-        config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet"
-    run:
-        all_simulations_df(xps).to_parquet(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet")
-
+rule run_all_required_sim:
+    input:
+         RUNS_ALL_SIMS
 
 rule generate_csv_from_all_xp:
     """
@@ -72,23 +71,42 @@ rule all_xp_parquet:
     input:
         RUNS_PARQUET
 
-rule test_parquet_from_full:
+rule indicators:
     """
-    Run only a few simulation from all required simulations by config.json for testing purpose
+    Build symlinks to indicators and parquet results files for a specific simulation.
     """
     input:
-        RUNS_PARQUET[0][0:3]
+        indicators_for_xp_run
+    output:
+        a = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{files}", out=config["OUTPUT_DIR"], files=["indicators.json",
+                   "treated_df_limiting.parquet",
+                   "treated_df_loss.parquet",
+                   "prod_df.parquet",
+                   "io_demand_df.parquet",
+                   "final_demand_df.parquet",
+                   "prod_chg.json",
+                   "fd_loss.json"]),
+        b = touch(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{{xp_folder}}~{{mrio_used}}~{{params_group}}~{{region}}~{{ev_class}}.name",
+                            out=config["OUTPUT_DIR"]))
+    run:
+        dir_dest = Path(output.a[0]).parent
+        for f in input:
+            origin = Path(f)
+            dest = dir_dest/origin.name
+            if not dest.exists():
+                dest.symlink_to(origin)
 
-rule indicators:
+
+rule indicators_generic:
     """
     Build indicators and parquet results files for a specific simulation.
     """
     input:
-        expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=run_output_files)
     output:
-        expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
                out=config["OUTPUT_DIR"],
                files=[
                    "indicators.json",
@@ -100,7 +118,7 @@ rule indicators:
                    "prod_chg.json",
                    "fd_loss.json"])
     params:
-        records=expand("{inp}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
+        records=expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
                inp=config["OUTPUT_DIR"],
                files=record_files)
     #group: "sim_run"
@@ -113,7 +131,40 @@ rule indicators:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.xp_folder}/{wildcards.mrio_used}/{wildcards.region}_type_{wildcards.shock_type}_qdmg_{wildcards.run_type}_{wildcards.flood}_Psi_{wildcards.psi}_inv_tau_{wildcards.inv}_inv_time_{wildcards.inv_t}/';
+        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.mrio_used}/{wildcards.params_group}/{wildcards.region}/{wildcards.dmg_as_pct}_{wildcards.duration}';
+        """
+rule run_generic:
+    """
+    Generic run
+    """
+    input:
+        unpack(run_inputs2)
+    output:
+        record_files =  temp(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
+               out=config["OUTPUT_DIR"],
+               files=record_files)),
+        json_files = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
+                            out=config["OUTPUT_DIR"],
+                            files=run_json_files)
+    #group: "sim_run"
+    params:
+        output_dir = config["OUTPUT_DIR"]
+    threads:
+        4
+    log:
+        expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/simulation.log", out=config["OUTPUT_DIR"])
+    resources:
+        vmem_mb=4000,
+        mem_mb=4000,
+        disk_mb=500
+    wildcard_constraints:
+        region="[A-Z]{2}"
+    conda:
+        "env/boario-use.yml"
+    shell:
+        """
+        cd {config[ARIO_DIR]};
+        nice -n 10 python ./scripts/mono_run_2.py {wildcards.mrio_used} {wildcards.region} {wildcards.dmg_as_pct} {wildcards.duration} {wildcards.params_group} {input.mrio} {params.output_dir}
         """
 
 rule run_Full:

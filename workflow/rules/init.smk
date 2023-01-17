@@ -89,7 +89,7 @@ ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputd
 MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
 
 
-def event_params_from_xp_mrio(xp,mrio_used):
+def event_params_from_xp_mrio(ev_kind,mrio_used):
     mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio|eora)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
     if match:
@@ -99,10 +99,7 @@ def event_params_from_xp_mrio(xp,mrio_used):
             tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-
-    event_suffix = xp["EVENT_KIND"]
-    if event_suffix != "":
-        event_suffix = "_"+event_suffix
+    event_suffix = "_"+ev_kind
 
     return f"{tmpl}_event_params{event_suffix}.json"
 
@@ -159,33 +156,37 @@ def sim_df_from_xp(xp):
             event_kind = [event_kind]
         product = itertools.product(psis,orders,inv_taus,reb_taus,event_kind)
         for psi,order,inv_tau,reb_tau,ev_kind in product:
-            param_group_n = f"psi_{psi}_order_{order}_inv_{inv_tau}_reb_{reb_tau}_evtype_{ev_kind}"
-            param_group_path = mrio_path/param_group_n
-            param_group_path.mkdir(exist_ok=True)
+            params_group_n = f"psi_{psi}_order_{order}_inv_{inv_tau}_reb_{reb_tau}_evtype_{ev_kind}"
+            params_group_path = mrio_path/params_group_n
+            params_group_path.mkdir(exist_ok=True)
             sim_params["psi_param"] = psi
             sim_params["order_type"] = order
             sim_params["inventory_restoration_tau"] = inv_tau
             sim_params["rebuild_tau"] = reb_tau
             sim_params["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
-            sim_params["event_template_file"] = event_params_from_xp_mrio(xp,mrio)
-            with (param_group_path/"simulation_params.json").open("w") as f:
+            sim_params["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio,)
+            with (params_group_path/"simulation_params.json").open("w") as f:
                 json.dump(sim_params,f,indent=4)
             mrio_params_file = Path(config["BUILDED_DATA_DIR"]+"/params/"+sim_params["mrio_template_file"])
             event_params_file = Path(config["BUILDED_DATA_DIR"]+"/params/"+sim_params["event_template_file"])
-            if not (param_group_path/"mrio_params.json").exists():
-                (param_group_path/"mrio_params.json").symlink_to(mrio_params_file)
-            if not (param_group_path/"event_params.json").exists():
-                (param_group_path/"event_params.json").symlink_to(event_params_file)
+            if not (params_group_path/"mrio_params.json").exists():
+                (params_group_path/"mrio_params.json").symlink_to(mrio_params_file)
+            if not (params_group_path/"event_params.json").exists():
+                (params_group_path/"event_params.json").symlink_to(event_params_file)
 
-            sim_group_df = rep_events[["EXIO3_region","share of GVA used as ARIO input","class"]].copy()
+            sim_group_df = rep_events[["mrio_region","share of GVA used as ARIO input","duration","class"]].copy()
+            sim_group_df["mrio_region"] = sim_group_df["mrio_region"]
+            sim_group_df["ario_dmg_input"] = sim_group_df["share of GVA used as ARIO input"].astype(str)
+            sim_group_df["params_group"] = params_group_n
+            sim_group_df["event_type"] = ev_kind
             sim_group_df["mrio"] = mrio
             sim_group_df["psi"] = psi
             sim_group_df["order_type"] = order
             sim_group_df["inv_tau"] = inv_tau
             sim_group_df["rebuild_tau"] = reb_tau
             sim_group_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
-            sim_group_df["event_template_file"] = event_params_from_xp_mrio(xp,mrio)
-
+            sim_group_df["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio)
+            sim_group_df['run'] = sim_group_df.mrio+"/"+sim_group_df.params_group+"/"+sim_group_df.mrio_region+"/"+sim_group_df['ario_dmg_input']+"_"+sim_group_df["duration"].astype(str)+"/"
             sim_mrio_df = pd.concat([sim_mrio_df,sim_group_df],axis=0)
 
         sim_df = pd.concat([sim_df,sim_mrio_df],axis=0)
@@ -197,3 +198,10 @@ def all_simulations_df(xps):
         xp_df = sim_df_from_xp(xp)
         meta_df = pd.concat([meta_df, xp_df],axis=0)
     return meta_df
+
+def runs_from_all_simulation_parquet(xps):
+    path = pathlib.Path(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet")
+    all_simulations_df(xps).to_parquet(path)
+    df = pd.read_parquet(path)
+    l = list(df["run"])
+    return [config["OUTPUT_DIR"] +"/"+ e + "indicators.json" for e in l]

@@ -6,7 +6,7 @@
         "exiobase3_2011_74_sectors",
         "exiobase3_2020_74_sectors"
     ],
-    "REP_EVENTS_FILE": "representative_events_1970_2015.parquet",
+    "REP_EVENTS_FILE": "representative_events_1970_2015_nofilter.parquet",
     "EVENT_KIND": "recover",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",

@@ -15,6 +15,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import json
+import re
 from typing import Iterable
 import pandas as pd
 import pathlib
@@ -44,64 +45,72 @@ def deserialize_multiindex_dataframe(dataframe_json: dict) -> pd.DataFrame:
     dataframe = pd.DataFrame(json_dict["data"], index, columns)
     return dataframe
 
-def produce_general_csv(folder,run_type,save_path):
+def produce_general_csv(folder,save_path):
     future_df = []
-    files = list(folder.glob('**/*'+run_type+'*/indicators.json'))
+    files = list(folder.glob('**/*/indicators.json'))
+    names =list(folder.glob('**/*/*.name'))
     if len(files) == 0:
         raise ValueError(
             """No indicators file found. Perhaps folder is mistyped ? :
-            Looked in {} for runtype {}
-            """.format(folder,run_type))
+            Looked in {}
+            """.format(folder))
     scriptLogger.info('Found {} indicators files to regroup'.format(len(files)))
-    for ind in files:
+    for ind,name in zip(files,names):
+        # flood-dottori-test_exiobase3_2011_74_sectors_psi_0_90_order_alt_inv_60_reb_60_evtype_recover_AU_1%.name
+        name_re = re.compile("(?P<xp_name>[a-zA-Z\-]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z]+)~(?P<class>(?:\d+%)|max|min).name")
+        match = name_re.match(name.name)
+        if match is None:
+            raise ValueError("Simulation name error : {}".format(name.name))
         with ind.open('r') as f:
             dico = json.load(f)
 
-        dico['run_name'] = ind.parent.name
-        dico['mrio'] = ind.parent.parent.name
+        dico["Experience"] = match["xp_name"]
+        dico["MRIO"] = match["mrio_name"]
+        dico['Impacting flood percentile'] = match["class"]
+        dico['mrio_region'] = match["region"]
+        dico['Run Parameters'] = match["params"]
+        dico['psi'] = match['psi']
+        dico['order type'] = match['order']
+        dico['inv tau'] = match['inv']
+        dico['reb tau'] = match['reb']
+        dico["run_id"] = match["mrio_name"] + "_" + match["params"] + "_" + match["region"] + "_" + match["class"]
         if isinstance(dico['region'],list) and len(dico['region'])==1:
             dico['region'] = dico['region'][0]
-        ##################################
-        # for k,v in dico.items():       #
-        #     if isinstance(v,Iterable): #
-        #         dico[k]=str(v)         #
-        # print(dico)                    #
-        # df = pd.DataFrame(dico)        #
-        # print(df)                      #
-        # if future_df is None:          #
-        #     future_df= df.copy()       #
-        # else:                          #
-        ##################################
         future_df.append(dico)
     future_df = pd.DataFrame(future_df)
-    future_df=future_df.set_index("run_name")
+    future_df=future_df.set_index("run_id")
     future_df.to_csv(save_path)
 
-def produce_region_loss_csv(folder,run_type,save_path, jsontype):
+def produce_region_loss_csv(folder,save_path, jsontype):
     future_df = None
-    for ind in folder.glob('**/*'+run_type+'*/'+jsontype+'.json'):
-        if "RoW" in ind.parent.name:
-            pass
-        else:
-            with ind.open('r') as f:
-                js = json.load(f)
+    files = list(folder.glob('**/*/'+jsontype+'.json'))
+    names =list(folder.glob('**/*/*.name'))
+    for ind,name in zip(files,names) :
+        name_re = re.compile("(?P<xp_name>[a-zA-Z\-]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z]+)~(?P<class>(?:\d+%)|max|min).name")
+        match = name_re.match(name.name)
+        if match is None:
+            raise ValueError("Simulation name error : {}".format(name.name))
 
-            #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
-            df = deserialize_multiindex_dataframe(js)
-            df.rename_axis(["mrio","run_name"],axis=0, inplace=True)
-            if df.columns.nlevels == 2:
-                df.rename_axis(["sector type","region"],axis=1, inplace=True)
-            elif df.columns.nlevels ==3:
-                df.rename_axis(["semester", "sector type","region"],axis=1, inplace=True)
-            else:
-                raise ValueError("Dataframe columns have {} levels (2 or 3 expected)".format(df.columns.nlevels))
-            if future_df is None:
-                future_df = df.copy()
-            else:
-                future_df = pd.concat([future_df,df])
+        with ind.open('r') as f:
+            js = json.load(f)
+
+        #js["index"] = [[ind.parent.parent.name,js["index"][0]]]
+        df = deserialize_multiindex_dataframe(js)
+        df["run_id"] = match["mrio_name"] + "_" + match["params"] + "_" + match["region"] + "_" + match["class"]
+        df.rename_axis(["affected region"],axis=0, inplace=True)
+        if df.columns.nlevels == 2:
+            df.rename_axis(["sector type","impacted region"],axis=1, inplace=True)
+        elif df.columns.nlevels ==3:
+            df.rename_axis(["semester", "sector type","impacted region"],axis=1, inplace=True)
+        else:
+            raise ValueError("Dataframe columns have {} levels (2 or 3 expected)".format(df.columns.nlevels))
+        if future_df is None:
+            future_df = df.copy()
+        else:
+            future_df = pd.concat([future_df,df])
 
     #print(future_df.reset_index())
-    #future_df=future_df.set_index("run_name")
+    future_df=future_df.set_index("run_id")
     future_df.to_csv(save_path)
 
 if __name__ == '__main__':
@@ -128,6 +137,6 @@ if __name__ == '__main__':
     scriptLogger.propagate = False
     scriptLogger.info('Starting Script')
     scriptLogger.info('Will produce regrouped indicators for folder {}'.format(folder))
-    produce_general_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"general.csv")
-    produce_region_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"prodloss.csv",jsontype="prod_chg")
-    produce_region_loss_csv(folder,args.run_type,save_path=args.output+"/"+runtype+"fdloss.csv", jsontype="fd_loss")
+    produce_general_csv(folder,save_path=args.output+"/"+runtype+"general.csv")
+    produce_region_loss_csv(folder,save_path=args.output+"/"+runtype+"prodloss.csv",jsontype="prod_chg")
+    produce_region_loss_csv(folder,save_path=args.output+"/"+runtype+"fdloss.csv", jsontype="fd_loss")

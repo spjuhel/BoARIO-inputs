@@ -6,7 +6,7 @@
         "exiobase3_2011_74_sectors",
         "exiobase3_2020_74_sectors"
     ],
-    "REP_EVENTS_FILE": "representative_events_2016_2035.parquet",
+    "REP_EVENTS_FILE": "representative_events_2016_2035_nofilter.parquet",
     "EVENT_KIND": "rebuilding",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "ORDER_TYPE": "alt",

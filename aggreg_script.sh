@@ -81,17 +81,17 @@ if [[ "$exp_type" == "hist" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-1970-2015";
     flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_1970_2015.parquet"
-    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_1970_2015.parquet"
+    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_1970_2015_nofilter.parquet"
 elif [[ "$exp_type" == "proj1" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-2016-2035"
     flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_2016_2035.parquet"
-    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2016_2035.parquet"
+    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2016_2035_nofilter.parquet"
 elif [[ "$exp_type" == "proj2" ]]
 then
     exp_path="${exp_dir}experience-flood-dottori-2035-2050"
     flood_base_path="/data/sjuhel/BoARIO-inputs/source-data/full_floodbase_2035_2050.parquet"
-    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2035_2050.parquet"
+    rep_events="/data/sjuhel/BoARIO-inputs/source-data/representative_events_2035_2050_nofilter.parquet"
 fi
 
 if [[ $custom_run -eq 1 ]]
