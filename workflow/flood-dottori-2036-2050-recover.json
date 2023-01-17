@@ -9,7 +9,7 @@
     "REP_EVENTS_FILE": "representative_events_2036_2050_nofilter.parquet",
     "EVENT_KIND": "recover",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
-    "ORDER_TYPE": "alt",
+    "ORDER_TYPE": ["alt","noalt"],
     "REB_TAU": 60,
     "DMG_TYPE": "int",
     "PSI": [
