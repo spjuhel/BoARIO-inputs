@@ -253,6 +253,7 @@ def indicators_for_xp_run(wildcards):
     # xp_folder ; mrio ; region ; params_group ; ev_class
     xp = xp_from_name(wildcards.xp_folder)
     sim_df = sim_df_from_xp(xp)
+    sim_df = sim_df.drop_duplicates()
     sim_df.set_index(["mrio","params_group","mrio_region","class"],inplace=True)
     mrio = wildcards.mrio_used
     params_group = wildcards.params_group
