@@ -130,7 +130,7 @@ def sim_df_from_xp(xp):
     rep_events_file = xp["REP_EVENTS_FILE"]
     if not Path(xp_path/rep_events_file).exists():
         Path(xp_path/rep_events_file).symlink_to(Path(config["SOURCE_DATA_DIR"]+"/"+rep_events_file))
-    rep_events = pd.read_parquet(xp_path/rep_events_file)
+    rep_events = pd.read_parquet((xp_path/rep_events_file).resolve())
     sim_df = pd.DataFrame()
     for mrio in mrios:
         sim_mrio_df = pd.DataFrame()
@@ -200,7 +200,7 @@ def all_simulations_df(xps):
     return meta_df
 
 def runs_from_all_simulation_parquet(xps):
-    path = pathlib.Path(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet")
+    path = pathlib.Path(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet").resolve()
     all_simulations_df(xps).to_parquet(path)
     df = pd.read_parquet(path)
     l = list(df["run"])
