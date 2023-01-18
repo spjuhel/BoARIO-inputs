@@ -9,9 +9,9 @@ include: "./rules/mrio_generation.smk"
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
-#RUNS = [runs(xp) for folder, xp in xps.items()]
-RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
-RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
+onstart:
+    RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
+    RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
 
 
 wildcard_constraints:
