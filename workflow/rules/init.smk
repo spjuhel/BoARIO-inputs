@@ -3,7 +3,8 @@ from pathlib import Path
 import pandas as pd
 import itertools
 
-include: "./rules/common.smk"
+include: "./common.smk"
+include: "./mrio_generation.smk"
 
 xps_names = []
 xps = {}
