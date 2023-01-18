@@ -4,7 +4,6 @@ import pandas as pd
 import itertools
 
 include: "./common.smk"
-include: "./mrio_generation.smk"
 
 xps_names = []
 xps = {}
@@ -207,3 +206,5 @@ def runs_from_all_simulation_parquet(xps):
 
 RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
 RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
+
+include: "./mrio_generation.smk"
