@@ -88,6 +88,9 @@ ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputd
 
 MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
 
+RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
+RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
+
 
 def event_params_from_xp_mrio(ev_kind,mrio_used):
     mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio|eora)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
