@@ -158,14 +158,101 @@ def runs(xp):
         runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
     return expand("{out}/{runs}", out=config['OUTPUT_DIR'], runs=runs)
 
-def runs_from_parquet(xp):
+def runs_from_expdir(wildcards):
+    xp = xpjson_from_name(wildcards.expdir)
+    with open(xp,'r') as f:
+        xp_dic = json.load(f)
     sim_df = sim_df_from_xp(xp)
     l = sim_df[["mrio","params_group","mrio_region","class"]].values
     runs = [f"{mrio}/{params}/{region}/{ev_class}/indicators.json" for mrio,params,region,ev_class in l]
-    xp_folder = xp["XP_NAME"]
+    xp_folder = xp_dic["XP_NAME"]
     out = config["OUTPUT_DIR"]
     runs = [f"{out}/{xp_folder}/{run}" for run in runs]
     return runs
+
+def xpjson_from_name(expdir):
+    """
+    Get experience dict from its name/folder
+    """
+    return config["EXPS_JSONS"]+"/"+expdir+".json"
+
+def xp_from_name(expdir):
+    """
+    Get experience dict from its name/folder
+    """
+    with (exps_jsons/(expdir+".json")).open('r') as f:
+        xp = json.load(f)
+        return xp
+
+
+def csv_from_all_xp(xps):
+    """
+    List all csv files corresponding to the dictionary of experiences in argument
+    """
+    all_csv = []
+    for xp in xps:
+        with open(xp,"r") as f:
+            xp_dic = json.load(f)
+
+        xp_type = xp_dic["DMG_TYPE"]
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp_dic["XP_NAME"], files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        all_csv.append(tmp)
+    return all_csv
+
+
+def run_RoW_inputs(wildcards):
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
+        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
+    }
+
+
+def run_inputs(wildcards):
+    """
+    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
+    """
+    xp_config = xps[wildcards.xp_folder]
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
+        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
+        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
+    }
+
+def run_inputs2(wildcards):
+    """
+    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
+    """
+    return {
+        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"])
+    }
+
+
+def input_for_indicators_symlinks(wildcards):
+    # xp_folder ; mrio ; region ; params_group ; ev_class
+    xp = xpjson_from_name(wildcards.xp_folder)
+    sim_df = sim_df_from_xp(xp)
+    sim_df = sim_df.drop_duplicates()
+    sim_df.set_index(["mrio","params_group","mrio_region","class"],inplace=True)
+    mrio = wildcards.mrio_used
+    params_group = wildcards.params_group
+    region  = wildcards.region
+    ev_class = wildcards.ev_class
+    run = sim_df.loc[(mrio,params_group,region,ev_class)]
+    inpt = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/{files}",out=config["OUTPUT_DIR"], pct_dur=str(run.ario_dmg_input)+"_"+str(run.duration),
+                  files=[
+                      "indicators.json",
+                      "treated_df_limiting.parquet",
+                      "treated_df_loss.parquet",
+                      "prod_df.parquet",
+                      "io_demand_df.parquet",
+                      "final_demand_df.parquet",
+                      "prod_chg.json",
+                      "fd_loss.json"])
+    return inpt
 
 def get_event_template(mrio_used,shock_type):
     mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
@@ -190,84 +277,3 @@ def get_mrio_params(mrio_used,xp_folder):
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
     return expand("{outputdir}/params/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
-
-def csv_from_all_xp(xps):
-    """
-    List all csv files corresponding to the dictionary of experiences in argument
-    """
-    all_csv = []
-    for xp, dico in xps.items():
-        xp_type = dico["DMG_TYPE"]
-        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp, files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
-        all_csv.append(tmp)
-    return all_csv
-
-
-def run_RoW_inputs(wildcards):
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
-    }
-
-def xp_from_name(expdir):
-    """
-    Get experience dict from its name/folder
-    """
-    with (exps_jsons/(expdir+".json")).open('r') as f:
-        xp = json.load(f)
-        return xp
-
-def runs_from_folder(wildcards):
-    """
-    Get simulations to run from xp name/folder
-    """
-    xp = xp_from_name(wildcards.expdir)
-    return runs_from_parquet(xp)
-
-
-def run_inputs(wildcards):
-    """
-    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
-    """
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
-    }
-
-def run_inputs2(wildcards):
-    """
-    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
-    """
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"])
-    }
-
-
-def indicators_for_xp_run(wildcards):
-    # xp_folder ; mrio ; region ; params_group ; ev_class
-    xp = xp_from_name(wildcards.xp_folder)
-    sim_df = sim_df_from_xp(xp)
-    sim_df = sim_df.drop_duplicates()
-    sim_df.set_index(["mrio","params_group","mrio_region","class"],inplace=True)
-    mrio = wildcards.mrio_used
-    params_group = wildcards.params_group
-    region  = wildcards.region
-    ev_class = wildcards.ev_class
-    run = sim_df.loc[(mrio,params_group,region,ev_class)]
-    inpt = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/{files}",out=config["OUTPUT_DIR"], pct_dur=str(run.ario_dmg_input)+"_"+str(run.duration),
-                  files=[
-                      "indicators.json",
-                      "treated_df_limiting.parquet",
-                      "treated_df_loss.parquet",
-                      "prod_df.parquet",
-                      "io_demand_df.parquet",
-                      "final_demand_df.parquet",
-                      "prod_chg.json",
-                      "fd_loss.json"])
-    return inpt

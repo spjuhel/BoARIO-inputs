@@ -3,19 +3,15 @@ from pathlib import Path
 import pandas as pd
 import itertools
 
-include: "./common.smk"
-
-xps_names = []
-xps = {}
 exps_jsons = Path(config['EXPS_JSONS'])
 
 #print("Experiences in config.json:")
-for xp in config['EXPS']:
-    #print(xp)
-    with (exps_jsons/(xp+".json")).open('r') as f:
-        dico = json.load(f)
-        xps[dico['XP_NAME']] = dico
-        xps_names.append(dico['XP_NAME'])
+#for xp in config['EXPS']:
+#    #print(xp)
+#    with (exps_jsons/(xp+".json")).open('r') as f:
+#        dico = json.load(f)
+#        xps[dico['XP_NAME']] = dico
+#        xps_names.append(dico['XP_NAME'])
 
 test = {
     "REGIONS" : "FR",
@@ -118,14 +114,15 @@ def mrio_params_from_xp_mrio(xp,mrio_used):
 
     return f"{tmpl}_params{mrio_suffix}.json"
 
-
 def sim_df_from_xp(xp):
+    with open(xp,'r') as f:
+        xp_dic = json.load(f)
     output_dir = Path(config["OUTPUT_DIR"]).resolve()
-    xp_name = xp["XP_NAME"]
+    xp_name = xp_dic["XP_NAME"]
     xp_path = (output_dir/xp_name)
     xp_path.mkdir(exist_ok=True)
-    mrios = xp["MRIOS"]
-    rep_events_file = xp["REP_EVENTS_FILE"]
+    mrios = xp_dic["MRIOS"]
+    rep_events_file = xp_dic["REP_EVENTS_FILE"]
     if not Path(xp_path/rep_events_file).exists():
         Path(xp_path/rep_events_file).symlink_to(Path(config["SOURCE_DATA_DIR"]+"/"+rep_events_file))
     rep_events = pd.read_parquet((xp_path/rep_events_file).resolve())
@@ -134,22 +131,22 @@ def sim_df_from_xp(xp):
         sim_mrio_df = pd.DataFrame()
         mrio_path = output_dir/mrio
         mrio_path.mkdir(exist_ok=True)
-        with Path(config["CONFIG_DIR"]+"/"+xp['PARAMS_TEMPLATE']).open("r") as f:
+        with Path(config["CONFIG_DIR"]+"/"+xp_dic['PARAMS_TEMPLATE']).open("r") as f:
             sim_params = json.load(f)
 
-        psis = xp["PSI"]
+        psis = xp_dic["PSI"]
         if not isinstance(psis,list):
             psis = [psis]
-        orders = xp["ORDER_TYPE"]
+        orders = xp_dic["ORDER_TYPE"]
         if not isinstance(orders,list):
             orders = [orders]
-        inv_taus = xp["INV_TAU"]
+        inv_taus = xp_dic["INV_TAU"]
         if not isinstance(inv_taus,list):
             inv_taus = [inv_taus]
-        reb_taus = xp["REB_TAU"]
+        reb_taus = xp_dic["REB_TAU"]
         if not isinstance(reb_taus,list):
             reb_taus = [reb_taus]
-        event_kind = xp["EVENT_KIND"]
+        event_kind = xp_dic["EVENT_KIND"]
         if not isinstance(event_kind,list):
             event_kind = [event_kind]
         product = itertools.product(psis,orders,inv_taus,reb_taus,event_kind)
@@ -161,7 +158,7 @@ def sim_df_from_xp(xp):
             sim_params["order_type"] = order
             sim_params["inventory_restoration_tau"] = inv_tau
             sim_params["rebuild_tau"] = reb_tau
-            sim_params["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
+            sim_params["mrio_template_file"] = mrio_params_from_xp_mrio(xp_dic,mrio)
             sim_params["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio,)
             with (params_group_path/"simulation_params.json").open("w") as f:
                 json.dump(sim_params,f,indent=4)
@@ -182,30 +179,10 @@ def sim_df_from_xp(xp):
             sim_group_df["order_type"] = order
             sim_group_df["inv_tau"] = inv_tau
             sim_group_df["rebuild_tau"] = reb_tau
-            sim_group_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp,mrio)
+            sim_group_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp_dic,mrio)
             sim_group_df["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio)
             sim_group_df['run'] = sim_group_df.mrio+"/"+sim_group_df.params_group+"/"+sim_group_df.mrio_region+"/"+sim_group_df['ario_dmg_input']+"_"+sim_group_df["duration"].astype(str)+"/"
             sim_mrio_df = pd.concat([sim_mrio_df,sim_group_df],axis=0)
 
         sim_df = pd.concat([sim_df,sim_mrio_df],axis=0)
     return sim_df
-
-def all_simulations_df(xps):
-    meta_df = pd.DataFrame()
-    for xp in xps.values():
-        xp_df = sim_df_from_xp(xp)
-        meta_df = pd.concat([meta_df, xp_df],axis=0)
-    return meta_df
-
-def runs_from_all_simulation_parquet(xps):
-    path = pathlib.Path(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet").resolve()
-    print(path)
-    all_simulations_df(xps).to_parquet(path)
-    df = pd.read_parquet(path)
-    l = list(df["run"])
-    return [config["OUTPUT_DIR"] +"/"+ e + "indicators.json" for e in l]
-
-RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
-RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
-
-include: "./mrio_generation.smk"

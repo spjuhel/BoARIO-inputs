@@ -3,6 +3,8 @@ import pathlib
 
 configfile: "workflow/config.json"
 include: "./rules/init.smk"
+include: "./rules/common.smk"
+include: "./rules/mrio_generation.smk"
 
 ruleorder: generate_mrio_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
@@ -15,22 +17,33 @@ check_config(config)
 
 #TODO : integrate interpolation script
 
-rule run_all_required_sim:
-    input:
-         RUNS_ALL_SIMS
-
 rule generate_csv_from_all_xp:
     """
     Generate csv file aggregating results from all experiences stated in config.json
     """
     input:
-        csv_from_all_xp(xps)
+        all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"]),
+        csv = csv_from_all_xp(expand("{exp_dir}/{exp_jsons}.json",exp_dir=config["EXPS_JSONS"],exp_jsons=config["EXPS"]))
+
+rule init_all_sim_parquet:
+    input:
+        config = expand("{exp_dir}/config.json",exp_dir=config["EXPS_JSONS"]),
+        xps = expand("{exp_dir}/{exp_jsons}.json",exp_dir=config["EXPS_JSONS"],exp_jsons=config["EXPS"])
+    output:
+        all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
+    run:
+        meta_df = pd.DataFrame()
+        for xp in input.xps:
+            xp_df = sim_df_from_xp(xp)
+            meta_df = pd.concat([meta_df, xp_df],axis=0)
+        meta_df.to_parquet(output.all_sim)
 
 rule generate_csv_from_xp:
     """
     Generate csv files for a specific experience.
     """
     input:
+        xp_json = expand("{exp_dir}/{{expdir}}.json",exp_dir=config["EXPS_JSONS"]),
         xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
     output:
         expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
@@ -53,23 +66,17 @@ rule xp_parquet:
     Requires (invoke building rules for) all indicators files for an experience (specified by {expdir})
     """
     input:
-        runs_from_folder
+        runs_from_expdir
     output:
         touch(expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"]))
 
-rule all_xp_parquet:
-    """
-    Same as xp_parquet, but for all experiences in config.json
-    """
-    input:
-        RUNS_PARQUET
 
 rule indicators:
     """
     Build symlinks to indicators and parquet results files for a specific simulation.
     """
     input:
-        indicators_for_xp_run
+        input_for_indicators_symlinks
     output:
         a = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{files}", out=config["OUTPUT_DIR"], files=["indicators.json",
                    "treated_df_limiting.parquet",
