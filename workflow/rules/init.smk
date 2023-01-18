@@ -199,6 +199,7 @@ def all_simulations_df(xps):
 
 def runs_from_all_simulation_parquet(xps):
     path = pathlib.Path(config["BUILDED_DATA_DIR"]+"/"+"all_simulations.parquet").resolve()
+    print(path)
     all_simulations_df(xps).to_parquet(path)
     df = pd.read_parquet(path)
     l = list(df["run"])
