@@ -3,6 +3,8 @@ from pathlib import Path
 import pandas as pd
 import itertools
 
+include: "./rules/common.smk"
+
 xps_names = []
 xps = {}
 exps_jsons = Path(config['EXPS_JSONS'])
