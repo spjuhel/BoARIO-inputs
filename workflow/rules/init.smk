@@ -83,18 +83,6 @@ to_move_files = [
     "fd_loss.json"
 ]
 
-ALL_YEARS_MRIO = glob_wildcards(config['SOURCE_DATA_DIR']+"/IOT_{year}_ixi.zip").year
-
-ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-
-ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-
-MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
-
-RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
-RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
-
-
 def event_params_from_xp_mrio(ev_kind,mrio_used):
     mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio|eora)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
@@ -211,3 +199,11 @@ def runs_from_all_simulation_parquet(xps):
     df = pd.read_parquet(path)
     l = list(df["run"])
     return [config["OUTPUT_DIR"] +"/"+ e + "indicators.json" for e in l]
+
+ALL_YEARS_MRIO = glob_wildcards(config['SOURCE_DATA_DIR']+"/IOT_{year}_ixi.zip").year
+ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
+ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
+MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
+
+RUNS_PARQUET = [runs_from_parquet(xp) for folder, xp in xps.items()]
+RUNS_ALL_SIMS = runs_from_all_simulation_parquet(xps)
