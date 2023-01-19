@@ -23,7 +23,16 @@ test = {
 }
 
 record_files = [
-    "iotable_XVA_record"
+    "io_demand_record",
+    "iotable_XVA_record",
+    "final_demand_record",
+    "rebuild_prod_record",
+    "iotable_X_max_record",
+    "overprodvector_record",
+    "rebuild_demand_record",
+    "limiting_stocks_record",
+    "final_demand_unmet_record",
+    "iotable_kapital_destroyed_record"
 ]
 
 run_json_files = [
@@ -34,7 +43,6 @@ run_json_files = [
 
 run_output_files = [
     "indexes.json",
-    "iotable_XVA_record",
     "simulated_events.json",
     "simulated_params.json"
     ]
