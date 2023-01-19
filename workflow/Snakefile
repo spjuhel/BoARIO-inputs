@@ -78,12 +78,10 @@ rule indicators:
     input:
         input_for_indicators_symlinks
     output:
-        a = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{files}", out=config["OUTPUT_DIR"], files=["indicators.json",
-                   "treated_df_limiting.parquet",
-                   "treated_df_loss.parquet",
+        a = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{files}", out=config["OUTPUT_DIR"],
+                   files=[
+                   "indicators.json",
                    "prod_df.parquet",
-                   "io_demand_df.parquet",
-                   "final_demand_df.parquet",
                    "prod_chg.json",
                    "fd_loss.json"]),
         b = touch(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{{xp_folder}}~{{mrio_used}}~{{params_group}}~{{region}}~{{ev_class}}.name",
@@ -110,11 +108,7 @@ rule indicators_generic:
                out=config["OUTPUT_DIR"],
                files=[
                    "indicators.json",
-                   "treated_df_limiting.parquet",
-                   "treated_df_loss.parquet",
                    "prod_df.parquet",
-                   "io_demand_df.parquet",
-                   "final_demand_df.parquet",
                    "prod_chg.json",
                    "fd_loss.json"])
     params:
