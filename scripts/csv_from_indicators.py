@@ -57,7 +57,7 @@ def produce_general_csv(folder,save_path):
     scriptLogger.info('Found {} indicators files to regroup'.format(len(files)))
     for ind,name in zip(files,names):
         # flood-dottori-test_exiobase3_2011_74_sectors_psi_0_90_order_alt_inv_60_reb_60_evtype_recover_AU_1%.name
-        name_re = re.compile("(?P<xp_name>[a-zA-Z\-]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z]+)~(?P<class>(?:\d+%)|max|min).name")
+        name_re = re.compile("(?P<xp_name>[a-zA-Z\-\d]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z]+)~(?P<class>(?:\d+%)|max|min).name")
         match = name_re.match(name.name)
         if match is None:
             raise ValueError("Simulation name error : {}".format(name.name))
