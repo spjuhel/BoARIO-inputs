@@ -245,11 +245,7 @@ def input_for_indicators_symlinks(wildcards):
     inpt = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/{files}",out=config["OUTPUT_DIR"], pct_dur=str(run.ario_dmg_input)+"_"+str(run.duration),
                   files=[
                       "indicators.json",
-                      "treated_df_limiting.parquet",
-                      "treated_df_loss.parquet",
                       "prod_df.parquet",
-                      "io_demand_df.parquet",
-                      "final_demand_df.parquet",
                       "prod_chg.json",
                       "fd_loss.json"])
     return inpt
