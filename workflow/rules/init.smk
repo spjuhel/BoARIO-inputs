@@ -42,6 +42,16 @@ run_json_files = [
 ]
 
 run_output_files = [
+    "io_demand_record",
+    "iotable_XVA_record",
+    "final_demand_record",
+    "rebuild_prod_record",
+    "iotable_X_max_record",
+    "overprodvector_record",
+    "rebuild_demand_record",
+    "limiting_stocks_record",
+    "final_demand_unmet_record",
+    "iotable_kapital_destroyed_record",
     "indexes.json",
     "simulated_events.json",
     "simulated_params.json"
