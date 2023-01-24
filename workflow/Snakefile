@@ -76,14 +76,9 @@ rule indicators:
     Build symlinks to indicators and parquet results files for a specific simulation.
     """
     input:
-        input_for_indicators_symlinks
+        unpack(input_for_indicators_symlinks)
     output:
-        a = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{files}", out=config["OUTPUT_DIR"],
-                   files=[
-                   "indicators.json",
-                   "prod_df.parquet",
-                   "prod_chg.json",
-                   "fd_loss.json"]),
+        a = directory(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/indicators", out=config["OUTPUT_DIR"])),
         b = touch(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{{xp_folder}}~{{mrio_used}}~{{params_group}}~{{region}}~{{ev_class}}.name",
                             out=config["OUTPUT_DIR"]))
     run:
@@ -100,21 +95,16 @@ rule indicators_generic:
     Build indicators and parquet results files for a specific simulation.
     """
     input:
-        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
-               inp=config["OUTPUT_DIR"],
-               files=run_output_files)
+        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
+               inp=config["OUTPUT_DIR"])
     output:
-        expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
-               out=config["OUTPUT_DIR"],
-               files=[
-                   "indicators.json",
-                   "prod_df.parquet",
-                   "prod_chg.json",
-                   "fd_loss.json"])
+        inds = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/indicators",
+               out=config["OUTPUT_DIR"])),
+        parquets =directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/parquets",
+                                   out=config["OUTPUT_DIR"]))
     params:
-        records=expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
-               inp=config["OUTPUT_DIR"],
-               files=record_files)
+        records=directory(expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
+               inp=config["OUTPUT_DIR"]))
     #group: "sim_run"
     conda:
         "env/boario-use.yml"
@@ -134,12 +124,10 @@ rule run_generic:
     input:
         unpack(run_inputs2)
     output:
-        record_files =  temp(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
-               out=config["OUTPUT_DIR"],
-               files=record_files)),
-        json_files = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/{files}",
-                            out=config["OUTPUT_DIR"],
-                            files=run_json_files)
+        record_files =  temp(directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
+               out=config["OUTPUT_DIR"]))),
+        json_files = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/jsons",
+                            out=config["OUTPUT_DIR"]))
     #group: "sim_run"
     params:
         output_dir = config["OUTPUT_DIR"]
@@ -172,12 +160,8 @@ rule run_Full:
         event_template = lambda wildcards : get_event_template(wildcards.mrio_used,wildcards.shock_type),
         mrio_params = lambda wildcards : get_mrio_params(wildcards.mrio_used,wildcards.xp_folder)
     output:
-        record_files =  temp(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-               out=config["OUTPUT_DIR"],
-               files=record_files)),
-        json_files = expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/{files}",
-                            out=config["OUTPUT_DIR"],
-                            files=run_json_files)
+        record_files =  temp(directory(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/records", out=config["OUTPUT_DIR"]))),
+        json_files = directory(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{region}}_type_{{shock_type}}_qdmg_{{run_type}}_{{flood}}_Psi_{{psi}}_inv_tau_{{inv}}_inv_time_{{inv_t}}/jsons", out=config["OUTPUT_DIR"]))
     #group: "sim_run"
     params:
         output_dir = config["OUTPUT_DIR"]

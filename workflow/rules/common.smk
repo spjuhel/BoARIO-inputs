@@ -164,7 +164,7 @@ def runs_from_expdir(wildcards):
         xp_dic = json.load(f)
     sim_df = sim_df_from_xp(xp)
     l = sim_df[["mrio","params_group","mrio_region","class"]].values
-    runs = [f"{mrio}/{params}/{region}/{ev_class}/indicators.json" for mrio,params,region,ev_class in l]
+    runs = [f"{mrio}/{params}/{region}/{ev_class}/indicators" for mrio,params,region,ev_class in l]
     xp_folder = xp_dic["XP_NAME"]
     out = config["OUTPUT_DIR"]
     runs = [f"{out}/{xp_folder}/{run}" for run in runs]
@@ -242,13 +242,11 @@ def input_for_indicators_symlinks(wildcards):
     region  = wildcards.region
     ev_class = wildcards.ev_class
     run = sim_df.loc[(mrio,params_group,region,ev_class)]
-    inpt = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/{files}",out=config["OUTPUT_DIR"], pct_dur=str(run.ario_dmg_input)+"_"+str(run.duration),
-                  files=[
-                      "indicators.json",
-                      "prod_df.parquet",
-                      "prod_chg.json",
-                      "fd_loss.json"])
-    return inpt
+    out=config["OUTPUT_DIR"]
+    pct_dur=str(run.ario_dmg_input)+"_"+str(run.duration)
+    inds = f"{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/indicators"
+    parquets = f"{out}/{{mrio_used}}/{{params_group}}/{{region}}/{pct_dur}/parquets"
+    return [inds,parquets]
 
 def get_event_template(mrio_used,shock_type):
     mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
