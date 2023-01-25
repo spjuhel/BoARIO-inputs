@@ -17,7 +17,7 @@ check_config(config)
 
 #TODO : integrate interpolation script
 
-localrules:generate_csv_from_all_xp, init_all_sim_parquet, generate_csv_from_xp, xp_parquet, indicators,
+localrules:generate_csv_from_all_xp, init_all_sim_parquet, generate_csv_from_xp, xp_parquet, indicators
 
 rule generate_csv_from_all_xp:
     """
