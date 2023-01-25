@@ -17,6 +17,8 @@ check_config(config)
 
 #TODO : integrate interpolation script
 
+localrules:generate_csv_from_all_xp, init_all_sim_parquet, generate_csv_from_xp, xp_parquet, indicators,
+
 rule generate_csv_from_all_xp:
     """
     Generate csv file aggregating results from all experiences stated in config.json
@@ -58,7 +60,7 @@ rule generate_csv_from_xp:
         disk_mb=500
     shell:
         """
-        nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} {wildcards.run_type} -o {params.dirs}
+        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} {wildcards.run_type} -o {params.dirs}
         """
 
 rule xp_parquet:
@@ -115,7 +117,7 @@ rule indicators_generic:
     shell:
         """
         cd {config[ARIO_DIR]};
-        nice -n 10 python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.mrio_used}/{wildcards.params_group}/{wildcards.region}/{wildcards.dmg_as_pct}_{wildcards.duration}';
+        python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.mrio_used}/{wildcards.params_group}/{wildcards.region}/{wildcards.dmg_as_pct}_{wildcards.duration}';
         """
 rule run_generic:
     """
