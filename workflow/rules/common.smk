@@ -276,7 +276,7 @@ def find_floodbase(wildcards):
     period_re = re.compile(r"\d{4}-\d{4}")
     match = re.search(period_re, wildcards.expdir)
     if match:
-        period = match.group(0)
+        period = match.group(0).replace("-","_")
         floodbase_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"full_floodbase_{}.parquet".format(period)
     else:
         raise ValueError("No period found in exp name, cannot find corresponding floodbase")
@@ -290,7 +290,7 @@ def find_repevents(wildcards):
     period_re = re.compile(r"\d{4}-\d{4}")
     match = re.search(period_re, wildcards.expdir)
     if match:
-        period = match.group(0)
+        period = match.group(0).replace("-","_")
         repevents_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"representative_events_{}_nofilter.parquet".format(period)
     else:
         raise ValueError("No period found in exp name, cannot find corresponding repevents")
