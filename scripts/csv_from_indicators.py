@@ -129,4 +129,4 @@ if __name__ == '__main__':
     scriptLogger.info('Will produce regrouped indicators for folder {}'.format(folder))
     produce_general_csv(folder,save_path=args.output+"/general.csv")
     produce_region_loss_csv(folder,save_path=args.output+"/prodloss.csv",jsontype="prod_chg")
-    produce_region_loss_csv(folder,save_path=args.output+"/fdloss.csv", jsontype="fd_loss")
+    produce_region_loss_csv(folder,save_path=args.output+"/finalloss.csv", jsontype="fd_loss")
