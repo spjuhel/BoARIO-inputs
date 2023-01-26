@@ -431,9 +431,9 @@ if __name__ == '__main__':
         if not folder.exists():
             raise ValueError("Directory {}, doesn't exist".format(folder))
         else:
-            general_df = prepare_general_df(general_csv=folder/"int_general.csv", period=args.period_name, representative_path=args.representative)
-            prodloss_df = prepare_loss_df(df_csv=folder/"int_prodloss.csv", period=args.period_name)
-            finaldemand_df = prepare_loss_df(df_csv=folder/"int_fdloss.csv", period=args.period_name)
+            general_df = prepare_general_df(general_csv=folder/"general.csv", period=args.period_name, representative_path=args.representative)
+            prodloss_df = prepare_loss_df(df_csv=folder/"prodloss.csv", period=args.period_name)
+            finaldemand_df = prepare_loss_df(df_csv=folder/"fdloss.csv", period=args.period_name)
 
         floodbase_path = pathlib.Path(args.flood_base)
         if not floodbase_path.exists():
@@ -531,9 +531,9 @@ if __name__ == '__main__':
         if not folder.exists():
             raise ValueError("Directory {}, doesn't exist".format(folder))
         else:
-            general_df = prepare_general_df(general_csv=folder/"int_general.csv", period=args.period_name, representative_path=args.representative)
-            prodloss_df = prepare_loss_df(df_csv=folder/"int_prodloss.csv", period=args.period_name)
-            finaldemand_df = prepare_loss_df(df_csv=folder/"int_fdloss.csv", period=args.period_name)
+            general_df = prepare_general_df(general_csv=folder/"general.csv", period=args.period_name, representative_path=args.representative)
+            prodloss_df = prepare_loss_df(df_csv=folder/"prodloss.csv", period=args.period_name)
+            finaldemand_df = prepare_loss_df(df_csv=folder/"fdloss.csv", period=args.period_name)
 
         floodbase_path = pathlib.Path(args.flood_base)
         if not floodbase_path.exists():

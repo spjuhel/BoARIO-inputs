@@ -26,7 +26,6 @@ NAME_RE = r"(?P<xp_name>[a-zA-Z\-\d]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>
 
 parser = argparse.ArgumentParser(description="Produce csv from json indicators")
 parser.add_argument('folder', type=str, help='The str path to the main folder')
-parser.add_argument('run_type', type=str, help='The type of runs to produce csv from ("raw", "int" or "all")')
 parser.add_argument('-o', "--output", type=str, help='Path where to save csv')
 
 def deserialize_multiindex_dataframe(dataframe_json: dict) -> pd.DataFrame:
@@ -123,22 +122,11 @@ if __name__ == '__main__':
     consoleHandler = logging.StreamHandler()
     consoleHandler.setFormatter(logFormatter)
 
-    if args.run_type == "raw":
-        runtype = "raw_"
-    elif args.run_type == "int":
-        runtype = "int_"
-    elif args.run_type == "all":
-        runtype="all_"
-    else:
-        scriptLogger.warning('Unrecognized run type.')
-        parser.print_usage()
-        exit()
-
     scriptLogger.addHandler(consoleHandler)
     scriptLogger.setLevel(logging.INFO)
     scriptLogger.propagate = False
     scriptLogger.info('Starting Script')
     scriptLogger.info('Will produce regrouped indicators for folder {}'.format(folder))
-    produce_general_csv(folder,save_path=args.output+"/"+runtype+"general.csv")
-    produce_region_loss_csv(folder,save_path=args.output+"/"+runtype+"prodloss.csv",jsontype="prod_chg")
-    produce_region_loss_csv(folder,save_path=args.output+"/"+runtype+"fdloss.csv", jsontype="fd_loss")
+    produce_general_csv(folder,save_path=args.output+"/general.csv")
+    produce_region_loss_csv(folder,save_path=args.output+"/prodloss.csv",jsontype="prod_chg")
+    produce_region_loss_csv(folder,save_path=args.output+"/fdloss.csv", jsontype="fd_loss")

@@ -19,6 +19,35 @@ check_config(config)
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, generate_csv_from_xp, xp_parquet, indicators
 
+rule aggreg_xp:
+    """
+    Aggregate and interpolate xp results with flood db.
+    """
+    input:
+        generalcsv = expand("{outputdir}/{{expdir}}/general.csv", outputdir=config["OUTPUT_DIR"]),
+        prodlosscsv = expand("{outputdir}/{{expdir}}/prodloss.csv", outputdir=config["OUTPUT_DIR"]),
+        finallosscsv = expand("{outputdir}/{{expdir}}/finalloss.csv", outputdir=config["OUTPUT_DIR"]),
+        floodbase = find_floodbase,
+        rep_events = find_repevents
+    params:
+        period = find_period
+    resources:
+        vmem_mb=64000,
+        mem_mb=64000,
+        disk_mb=1000,
+        partition="zen16",
+        time=120
+    threads:
+        4
+    output:
+        donefile=touch(expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"])),
+        outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
+    run:
+        """
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir};
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir}
+        """
+
 rule generate_csv_from_all_xp:
     """
     Generate csv file aggregating results from all experiences stated in config.json
@@ -48,8 +77,7 @@ rule generate_csv_from_xp:
         xp_json = expand("{exp_dir}/{{expdir}}.json",exp_dir=config["EXPS_JSONS"]),
         xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
     output:
-        expand("{outputdir}/{{expdir}}/{{run_type}}_{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","fdloss"]),
-        touch(expand("{outputdir}/{{expdir}}/.{{run_type}}_experience_csv_done", outputdir=config["OUTPUT_DIR"]))
+        expand("{outputdir}/{{expdir}}/{files}.csv", outputdir=config["OUTPUT_DIR"], files=["general", "prodloss","finalloss"])
     conda:
         "env/boario-use.yml"
     params:
@@ -60,7 +88,7 @@ rule generate_csv_from_xp:
         disk_mb=500
     shell:
         """
-        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} {wildcards.run_type} -o {params.dirs}
+        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/csv_from_indicators.py {params.dirs} -o {params.dirs}
         """
 
 rule xp_parquet:
