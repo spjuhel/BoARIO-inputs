@@ -40,12 +40,13 @@ rule aggreg_xp:
     threads:
         4
     output:
-        donefile=touch(expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"])),
+        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"]),
         outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
     run:
         """
         /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir};
         /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir}
+        touch {output.donefile}
         """
 
 rule generate_csv_from_all_xp:
