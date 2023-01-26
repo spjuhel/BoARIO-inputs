@@ -271,3 +271,40 @@ def get_mrio_params(mrio_used,xp_folder):
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
     return expand("{outputdir}/params/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
+
+def find_floodbase(wildcards):
+    period_re = re.compile(r"\d{4}-\d{4}")
+    match = re.search(period_re, wildcards.expdir)
+    if match:
+        period = match.group(0)
+        floodbase_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"full_floodbase_{}.parquet".format(period)
+    else:
+        raise ValueError("No period found in exp name, cannot find corresponding floodbase")
+
+    if floodbase_p.exists():
+        return floodbase_p
+    else:
+        raise FileNotFoundError("Floodbase {} cannot be found".format(floodbase_p))
+
+def find_repevents(wildcards):
+    period_re = re.compile(r"\d{4}-\d{4}")
+    match = re.search(period_re, wildcards.expdir)
+    if match:
+        period = match.group(0)
+        repevents_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"representative_events_{}_nofilter.parquet".format(period)
+    else:
+        raise ValueError("No period found in exp name, cannot find corresponding repevents")
+
+    if repevents_p.exists():
+        return repevents_p
+    else:
+        raise FileNotFoundError("Floodbase {} cannot be found".format(repevents_p))
+
+def find_periodname(wildcards):
+    period_re = re.compile(r"\d{4}-\d{4}")
+    match = re.search(period_re, wildcards.expdir)
+    if match:
+        period = match.group(0)
+        return period
+    else:
+        raise ValueError("No period found in exp name, cannot find corresponding period name")

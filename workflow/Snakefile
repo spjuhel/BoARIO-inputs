@@ -30,7 +30,7 @@ rule aggreg_xp:
         floodbase = find_floodbase,
         rep_events = find_repevents
     params:
-        period = find_period
+        period = find_periodname
     resources:
         vmem_mb=64000,
         mem_mb=64000,
