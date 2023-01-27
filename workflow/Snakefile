@@ -19,6 +19,13 @@ check_config(config)
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 
+rule aggreg_all_xp:
+    """
+    Aggregate and interpolate all xp results with flood db.
+    """
+    input:
+        expand("{outputdir}/{expdir}/.aggregation_done", outputdir=config["OUTPUT_DIR"],exp_dir=config["EXPS_JSONS"])
+
 rule aggreg_xp:
     """
     Aggregate and interpolate xp results with flood db.
