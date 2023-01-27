@@ -44,8 +44,8 @@ rule aggreg_xp:
         outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
     shell:
         """
-        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir};
-        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --inputloss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir}
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir};
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir}
         touch {output.donefile}
         """
 
