@@ -38,6 +38,10 @@ rule generate_drias:
         expand("{outputdir}/{{expdir}}/aggreg/{loss_type}_drias_carre_essai{nomean}.parquet", outputdir=config["OUTPUT_DIR"], loss_type=["prodloss","finalloss"], nomean=["","_nomean"])
     conda:
         "env/boario-use.yml"
+    resources:
+        mem_mb=32000
+    threads:
+        4
     shell:
         """
         python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/parquet_for_R.py --input-dir {params.outdir}
