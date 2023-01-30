@@ -66,11 +66,11 @@ def build_drias(datafile:str, inputdir:Path, mean:bool=False):
     if not mean:
         df_carre_essai = df_carre_essai.melt(id_vars=['period', 'model', 'mrio_region', 'MRIO', 'semester', 'region_output',
        'Total direct damage to capital (2010€PPP)', 'Population aff (2015 est.)', 'direct_prodloss_as_2010gva_share',
-                                                  'share of GVA used as ARIO input', 'SELF_damage'],value_vars=list(sector_types).append("total"))
+                                                      'share of GVA used as ARIO input', 'SELF_damage'],value_vars=list(sector_types).append("total"), var_name="name")
     else:
         df_carre_essai = df_carre_essai.melt(id_vars=['period', 'mrio_region', 'MRIO', 'semester', 'region_output',
        'Total direct damage to capital (2010€PPP)', 'Population aff (2015 est.)', 'direct_prodloss_as_2010gva_share',
-                                                  'share of GVA used as ARIO input', 'SELF_damage'],value_vars=list(sector_types).append("total"))
+                                                      'share of GVA used as ARIO input', 'SELF_damage'],value_vars=list(sector_types).append("total"), var_name="name")
     df_carre_essai.to_parquet(inputdir/(loss_type+f"_drias_carre_essai{nomean}.parquet"))
 
 def parse_arguments():
