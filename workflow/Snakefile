@@ -25,7 +25,7 @@ rule generate_drias:
     """
     input:
         donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"]),
-        outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
+        outdir=expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"])
     output:
         expand("{outputdir}/{{expdir}}/aggreg/{loss_type}_drias_carre_essai{nomean}.parquet", outputdir=config["OUTPUT_DIR"], loss_type=["prodloss","finalloss"], nomean=["","_nomean"])
     conda:
