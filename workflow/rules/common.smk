@@ -164,10 +164,9 @@ def runs_from_expdir(wildcards):
         xp_dic = json.load(f)
     sim_df = sim_df_from_xp(xp)
     l = sim_df[["mrio","params_group","mrio_region","class"]].values
-    runs = [f"{mrio}/{params}/{region}/{ev_class}/indicators" for mrio,params,region,ev_class in l]
     xp_folder = xp_dic["XP_NAME"]
     out = config["OUTPUT_DIR"]
-    runs = [f"{out}/{xp_folder}/{run}" for run in runs]
+    runs = [f"{out}/{xp_folder}/{mrio}/{params}/{region}/{ev_class}/{xp_folder}~{mrio}~{params}~{region}~{ev_class}.name" for mrio,params,region,ev_class in l]
     return runs
 
 def xpjson_from_name(expdir):

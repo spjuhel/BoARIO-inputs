@@ -99,7 +99,8 @@ def sim_df_from_xp(xp):
     output_dir = Path(config["OUTPUT_DIR"]).resolve()
     xp_name = xp_dic["XP_NAME"]
     xp_path = (output_dir/xp_name)
-    xp_path.mkdir(exist_ok=True)
+    if not xp_path.exists():
+        xp_path.mkdir()
     mrios = xp_dic["MRIOS"]
     rep_events_file = xp_dic["REP_EVENTS_FILE"]
     if not Path(xp_path/rep_events_file).exists():
@@ -109,7 +110,8 @@ def sim_df_from_xp(xp):
     for mrio in mrios:
         sim_mrio_df = pd.DataFrame()
         mrio_path = output_dir/mrio
-        mrio_path.mkdir(exist_ok=True)
+        if not mrio_path.exists():
+            mrio_path.mkdir()
         with Path(config["CONFIG_DIR"]+"/"+xp_dic['PARAMS_TEMPLATE']).open("r") as f:
             sim_params = json.load(f)
 

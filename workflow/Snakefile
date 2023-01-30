@@ -31,7 +31,8 @@ rule generate_drias:
     Generate files for R treatment
     """
     input:
-        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"]),
+        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"])
+    params:
         outdir=expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"])
     output:
         expand("{outputdir}/{{expdir}}/aggreg/{loss_type}_drias_carre_essai{nomean}.parquet", outputdir=config["OUTPUT_DIR"], loss_type=["prodloss","finalloss"], nomean=["","_nomean"])
@@ -39,7 +40,7 @@ rule generate_drias:
         "env/boario-use.yml"
     shell:
         """
-        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/parquet_for_R.py --input-dir {input.outdir}
+        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/parquet_for_R.py --input-dir {params.outdir}
         """
 
 rule aggreg_all_xp:
@@ -70,12 +71,13 @@ rule aggreg_xp:
     threads:
         4
     output:
-        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"]),
+        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"])
+    params:
         outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
     shell:
         """
-        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir};
-        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {output.outdir}
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.prodlosscsv} --loss-type prod --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {params.outdir};
+        /home/sjuhel/mambaforge/envs/versa/bin/python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/prep_dfs.py --input-general {input.generalcsv} --input-loss {input.finallosscsv} --loss-type final --flood-base {input.floodbase} --representative {input.rep_events} --period-name {params.period} --output {params.outdir}
         touch {output.donefile}
         """
 
@@ -139,11 +141,12 @@ rule indicators:
     input:
         unpack(input_for_indicators_symlinks)
     output:
-        a = directory(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/indicators", out=config["OUTPUT_DIR"])),
         b = touch(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/{{xp_folder}}~{{mrio_used}}~{{params_group}}~{{region}}~{{ev_class}}.name",
                             out=config["OUTPUT_DIR"]))
+    params:
+        a = directory(expand("{out}/{{xp_folder}}/{{mrio_used}}/{{params_group}}/{{region}}/{{ev_class}}/indicators", out=config["OUTPUT_DIR"]))
     run:
-        dir_dest = Path(output.a[0]).parent
+        dir_dest = Path(params.a[0]).parent
         for f in input:
             origin = Path(f)
             dest = dir_dest/origin.name
