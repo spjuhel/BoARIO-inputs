@@ -19,12 +19,28 @@ check_config(config)
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 
+rule generate_drias:
+    """
+    Generate files for R treatment
+    """
+    input:
+        donefile=expand("{outputdir}/{{expdir}}/.aggregation_done", outputdir=config["OUTPUT_DIR"]),
+        outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"]))
+    output:
+        expand("{outputdir}/{{expdir}}/aggreg/{loss_type}_drias_carre_essai{nomean}.parquet", outputdir=config["OUTPUT_DIR"], loss_type=["prodloss","finalloss"], nomean=["","_nomean"])
+    conda:
+        "env/boario-use.yml"
+    shell:
+        """
+        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/parquet_for_R.py --input-dir {input.outdir}
+        """
+
 rule aggreg_all_xp:
     """
     Aggregate and interpolate all xp results with flood db.
     """
     input:
-        expand("{outputdir}/{expdir}/.aggregation_done", outputdir=config["OUTPUT_DIR"],exp_dir=config["EXPS_JSONS"])
+        expand("{outputdir}/{expdir}/.aggregation_done", outputdir=config["OUTPUT_DIR"],expdir=config["EXPS_JSONS"])
 
 rule aggreg_xp:
     """
