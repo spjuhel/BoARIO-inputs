@@ -40,7 +40,7 @@ rule aggreg_all_xp:
     Aggregate and interpolate all xp results with flood db.
     """
     input:
-        expand("{expdir}/.aggregation_done",expdir=config["EXPS_JSONS"])
+        expand("{outputdir}/{expdir}/.aggregation_done", outputdir=config["OUTPUT_DIR"],expdir=config["EXPS"])
 
 rule aggreg_xp:
     """
