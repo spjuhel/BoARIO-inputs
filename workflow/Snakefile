@@ -19,6 +19,13 @@ check_config(config)
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 
+rule generate_all_drias:
+    """
+    Generate all the files for R treatment from all xp
+    """
+    input:
+        expand("{outputdir}/{expdir}/aggreg/{loss_type}_drias_carre_essai{nomean}.parquet" ,expdir=config["EXPS"], outputdir=config["OUTPUT_DIR"], loss_type=["prodloss","finalloss"], nomean=["","_nomean"])
+
 rule generate_drias:
     """
     Generate files for R treatment
