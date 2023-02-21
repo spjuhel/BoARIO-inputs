@@ -1,3 +1,5 @@
+
+
 rule minimal_exio:
     input:
         MINIMAL_7_EXIO
@@ -32,17 +34,32 @@ rule generate_subregions_mrio:
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/mrio_subregions.py {input.in_mrio} {wildcards.subregions} -o {output.out_mrio}
         """
 
-rule generate_mrio_full_from_zip:
+rule generate_euregio_full_from_zip:
     input:
-        mrio_file = expand("{inputdir}/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"])
+        io_files = expand("{inputdir}/euregio/{filenames}_{{year}}.csv",inputdir=config["SOURCE_DATA_DIR"],filenames=["Z_","VA_","Y_"]),
+        index_files = expand("{inputdir}/euregio/{filenames}_index.csv",inputdir=config["SOURCE_DATA_DIR"],filenames=["regions_","sectors_","va_","fd_"])
+    conda:
+        "../env/boario-use.yml"
+    output:
+        mrioout = expand("{outputdir}/mrios/euregio/EUREGIO_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
+    resources:
+        vmem_mb=8000,
+        mem_mb=7000,
+        disk_mb=2000
+    shell:
+       """
+       nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/build_pkl.py -t "EXIO3" -o {output.mrioout} -i {input.mrio_file};
+       """
+
+rule generate_exiobase3_full_from_zip:
+    input:
+        mrio_file = expand("{inputdir}/exiobase3/ixi/IOT_{{year}}_ixi.zip",inputdir=config["SOURCE_DATA_DIR"])
     #params:
     #    full_mrio_params = expand("{outputdir}/mrios/exiobase3_full_params.json",outputdir=config["BUILDED_DATA_DIR"])
     conda:
         "../env/boario-use.yml"
-    benchmark:
-        "mrios/exiobase3_{year}_full_bench.csv"
     output:
-        mrioout = expand("{outputdir}/mrios/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
+        mrioout = expand("{outputdir}/mrios/exiobase3/exiobase3_{{year}}_full.pkl",outputdir=config["BUILDED_DATA_DIR"])
     resources:
         vmem_mb=8000,
         mem_mb=7000,
@@ -54,7 +71,7 @@ rule generate_mrio_full_from_zip:
 
 rule mrio_params_build:
     input:
-        ods = expand("{folder}/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
+        ods = expand("{folder}/exiobase3/aggreg-files/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
     params:
         monetary = 1000000,
         main_inv_duration = 90
@@ -63,23 +80,23 @@ rule mrio_params_build:
         mem_mb=1000,
         disk_mb=1000
     output:
-        mrio_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"]),
-        event_params_json = expand("{outputdir}/mrios/exiobase3_{{sector_aggreg_name}}_event_params.json",outputdir=config["BUILDED_DATA_DIR"])
+        mrio_params_json = expand("{outputdir}/params/exiobase3_{{sector_aggreg_name}}_params.json",outputdir=config["BUILDED_DATA_DIR"]),
+        event_params_json = expand("{outputdir}/params/exiobase3_{{sector_aggreg_name}}_event_params.json",outputdir=config["BUILDED_DATA_DIR"])
     shell:
         """
         nice -n 10 python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/mrio_json_params_build.py {input.ods} {params.monetary} {params.main_inv_duration} -po {output.mrio_params_json} -eo {output.event_params_json}
         """
 
-rule mrio_sector_aggreg:
+rule exiobase3_sector_aggreg:
     input:
-        full_mrio_file = rules.generate_mrio_full_from_zip.output.mrioout,
-        sector_aggreg_file = expand("{folder}/exiobase3_{{sector_aggreg_name}}.ods",folder=config["AGGREG_FILES_DIR"])
+        full_mrio_file = rules.generate_exiobase3_full_from_zip.output.mrioout,
+        sector_aggreg_file = expand("{folder}/exiobase3/aggreg-files/exiobase3_{{sector_aggreg_name}}.ods",folder=config["SOURCE_DATA_DIR"])
     params:
-        full_mrio_params = expand("{folder}/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
+        full_mrio_params = expand("{folder}/exiobase3/aggreg-files/exiobase3_{{sector_aggreg_name}}_params.ods",folder=config["SOURCE_DATA_DIR"])
     conda:
         "../env/boario-use.yml"
     output:
-        out_mrio = expand("{folder}/mrios/exiobase3_{{year}}_{{sector_aggreg_name}}.pkl",folder=config["BUILDED_DATA_DIR"])
+        out_mrio = expand("{folder}/mrios/exiobase3/exiobase3_{{year}}_{{sector_aggreg_name}}.pkl",folder=config["BUILDED_DATA_DIR"])
     wildcard_constraints:
         #sector_aggreg_name="(.(?!(full)))*"
         sector_aggreg_name="\d+_sectors",

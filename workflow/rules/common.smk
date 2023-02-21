@@ -194,12 +194,13 @@ def csv_from_all_xp(xps):
             xp_dic = json.load(f)
 
         xp_type = xp_dic["DMG_TYPE"]
-        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp_dic["XP_NAME"], files=[xp_type+"_general", xp_type+"_prodloss", xp_type+"_fdloss"])
+        tmp = expand("{outputdir}/{expdir}/{files}.csv", outputdir=config["OUTPUT_DIR"], expdir=xp_dic["XP_NAME"], files=["general", "prodloss", "finalloss"])
         all_csv.append(tmp)
     return all_csv
 
 
 def run_RoW_inputs(wildcards):
+    raise RuntimeError("This is deprecrated !!")
     xp_config = xps[wildcards.xp_folder]
     return {
         "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
@@ -212,8 +213,10 @@ def run_RoW_inputs(wildcards):
 
 def run_inputs(wildcards):
     """
+    DEPRECATED
     Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
     """
+    raise RuntimeError("This is deprecrated !!")
     xp_config = xps[wildcards.xp_folder]
     return {
         "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
@@ -225,8 +228,14 @@ def run_inputs2(wildcards):
     """
     Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
     """
+    mrio_re = re.compile("exiobase3|euregio|icio")
+    mrio_type = mrio_re.search(wildcards.mrio_used)
+    if not mrio_type:
+        raise ValueError("MRIO {} not recognised",wildcards.mrio_used)
+    else:
+        mrio_type = mrio_type.group()
     return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"])
+        "mrio" : expand("{inputdir}/mrios/{mrio_type}/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"],mrio_type=mrio_type)
     }
 
 
@@ -276,7 +285,7 @@ def find_floodbase(wildcards):
     match = re.search(period_re, wildcards.expdir)
     if match:
         period = match.group(0).replace("-","_")
-        floodbase_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"full_floodbase_{}.parquet".format(period)
+        floodbase_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"flood-data"/"full_floodbase_{}.parquet".format(period)
     else:
         raise ValueError("No period found in exp name, cannot find corresponding floodbase")
 
@@ -290,7 +299,7 @@ def find_repevents(wildcards):
     match = re.search(period_re, wildcards.expdir)
     if match:
         period = match.group(0).replace("-","_")
-        repevents_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"representative_events_{}_nofilter.parquet".format(period)
+        repevents_p = pathlib.Path(config["SOURCE_DATA_DIR"])/"representative_events"/"representative_events_{}_nofilter.parquet".format(period)
     else:
         raise ValueError("No period found in exp name, cannot find corresponding repevents")
 

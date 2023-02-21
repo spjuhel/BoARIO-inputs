@@ -11,74 +11,20 @@ import country_converter as coco
 from pymrio.core.mriosystem import IOSystem
 import numpy as np
 from pymrio.tools.ioparser import ParserError
-from pathlib import Path
 
 EXIO3_TYPES = ["exio3", "EXIO3", "exiobase", "exiobase3", "EXIOBASE", "EXIOBASE3"]
 OECD_TYPES = ["oecd", "OECD", "icio", "ICIO", "oecd-icio", "OECD-ICIO"]
-EUREGIO_TYPES = ["euregio", "EUREGIO"]
-ALL_MRIO_TYPES = EXIO3_TYPES + OECD_TYPES + EUREGIO_TYPES
-REGIONS_RENAMING = {"DEE1":"DEE0","DEE2":"DEE0","DEE3":"DEE0"}
 
-def load_euregio(path:Path,year,inv_treatment=True):
-    ioz_path = path/f"Z_{year}.csv"
-    iova_path = path/f"VA_{year}.csv"
-    ioy_path = path/f"Y_{year}.csv"
-    regions_path = path/"regions_index.csv"
-    sectors_path = path/"sectors.csv"
-    va_path = path/f"va_index.csv"
-    fd_path = path/f"fd_index.csv"
+ALL_MRIO_TYPES = EXIO3_TYPES + OECD_TYPES
 
-    regions_csv = pd.read_csv(regions_path)
-    regions_names = regions_csv.loc[0,:].unique()
-    sectors_csv = pd.read_csv(sectors_path)
-    sectors_names = sectors_csv.loc[0,:].unique()
+logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] %(name)s %(message)s", datefmt="%H:%M:%S")
+scriptLogger = logging.getLogger("MRIO PKL File builder")
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
 
-    fd_csv = pd.read_csv(fd_path, header=None)
-    fd_names = fd_csv.loc[0,:].unique()
-
-    va_csv = pd.read_csv(va_path, header=None)
-    va_names = va_csv.iloc[:,0].unique()
-
-    IO_index = pd.MultiIndex.from_product([regions_names,sectors_names])
-    IOZ = pd.read_csv(ioz_path, names=IO_index, decimal=",")
-    IOZ.index = IO_index
-
-    IOVA = pd.read_csv(iova_path, names=IO_index, decimal=",")
-    IOVA.index = va_names
-
-    Y_columns = pd.MultiIndex.from_product([regions_names,fd_names])
-    IOY = pd.read_csv(ioy_path, names=Y_columns, decimal=",")
-    IOY.index = IO_index
-
-    IOZ = IOZ.fillna(0)
-    IOVA = IOVA.fillna(0)
-    IOY = IOY.fillna(0)
-
-    IOZ = IOZ.rename_axis(["region","sector"])
-    IOZ = IOZ.rename_axis(["region","sector"],axis=1)
-    IOY = IOY.rename_axis(["region","sector"])
-    IOY = IOY.rename_axis(["region","category"],axis=1)
-
-    if inv_treatment:
-        invs = IOY.loc[:,(slice(None),"Inventory_adjustment")].sum(axis=1)
-        invs.name = "Inventory_use"
-        invs_neg = pd.DataFrame(-invs).T
-        invs_neg[invs_neg<0] = 0
-        IOVA = pd.concat([IOVA,invs_neg],axis=0)
-        IOY = IOY.clip(lower=0)
-
-    return IOZ, IOY, IOVA
-
-def makeIOSys(IOZ,IOY,IOVA,year):
-    euregio = pym.IOSystem(Z=IOZ, Y=IOY,year=year, unit=pd.DataFrame(data = ['2010_€_MILLIONS']*5, index = IOVA.index, columns = ['unit']))
-    factor_input = pym.Extension(name = 'VA', F=IOVA)
-    euregio.factor_input = factor_input
-    euregio.calc_all()
-    return euregio
-
-def correct_regions(euregio:pym.IOSystem):
-    euregio.rename_regions(REGIONS_RENAMING).aggregate_duplicates()
-    return euregio
+scriptLogger.addHandler(consoleHandler)
+scriptLogger.setLevel(logging.INFO)
+scriptLogger.propagate = False
 
 def lexico_reindex(mrio: pym.IOSystem) -> pym.IOSystem:
     """Re-index IOSystem lexicographicaly
@@ -155,16 +101,7 @@ def aggreg(mrio_path, mrio_type, year:Optional[int], save_path:os.PathLike):
     with open(save_path, 'wb') as f:
         pkl.dump(mrio_pym, f)
 
-logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s] %(name)s %(message)s", datefmt="%H:%M:%S")
-scriptLogger = logging.getLogger("MRIO PKL File builder")
-consoleHandler = logging.StreamHandler()
-consoleHandler.setFormatter(logFormatter)
-
-scriptLogger.addHandler(consoleHandler)
-scriptLogger.setLevel(logging.INFO)
-scriptLogger.propagate = False
-
-parser = argparse.ArgumentParser(description='Build a pkl MRIO table from a zip file. Considers the zip an EXIOBASE3 by default.')
+parser = argparse.ArgumentParser(description='Build a pkl MRIO table from a zip file. Consider the zip an EXIOBASE3 by default.')
 parser.add_argument("-i", '--mrio-path', type=str, help='The str path to the mrio (zip file or already pre-treated pkl file)', required=True)
 parser.add_argument("-t", '--mrio-type', type=str, help='The type of the mrio', default="EXIO3")
 parser.add_argument("-y", '--year', type=int, help='The year to use (when input is a folder with multiple years)', default=None)
