@@ -8,12 +8,17 @@ import pickle
 from pymrio import logging, os
 import pymrio
 
+REGIONS_RENAMING = {"DEE1":"DEE0","DEE2":"DEE0","DEE3":"DEE0"}
+
+def correct_regions(euregio:pym.IOSystem):
+    euregio.rename_regions(REGIONS_RENAMING).aggregate_duplicates()
+    return euregio
 
 def build_from_folder(folder, year, inv_treatment=True):
     folder = Path(folder).resolve()
     cols_z = [2, 5] + [i for i in range(6, 3730, 1)]
     ioz = pd.read_csv(
-        folder / f"EURegionalIOtable_{year}.csv",
+        folder / "builded-files" / f"euregio_{year}.csv",
         index_col=[0, 1],
         usecols=cols_z,
         engine="c",
@@ -31,7 +36,7 @@ def build_from_folder(folder, year, inv_treatment=True):
     cols_y = [3733, 3736] + [i for i in range(3737, 3737 + 1064, 1)]
     fd_index = pd.read_csv(folder / "fd_index.csv", usecols=[0, 1, 2, 3]).columns
     ioy = pd.read_csv(
-        folder / f"EURegionalIOtable_{year}.csv",
+        folder / "builded-files" / f"euregio_{year}.csv",
         index_col=[0, 1],
         usecols=cols_y,
         engine="c",
@@ -49,7 +54,7 @@ def build_from_folder(folder, year, inv_treatment=True):
     ioy.fillna(value=0.0, inplace=True)
 
     iova = pd.read_csv(
-        folder / f"EURegionalIOtable_{year}.csv",
+        folder / "builded-files" / f"euregio_{year}.csv",
         index_col=[5],
         engine="c",
         header=[0, 3],
@@ -132,24 +137,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             os.environ["CONDA_PREFIX"]
         )
     )
-    folder = args.folder
+    folder = Path(args.input_folder)
     year = args.year
     output = args.output
     inventory = not args.no_inventory
-    if inventory:
-        unitsize = 5
-    else:
-        unitsize = 4
     ioz, ioy, iova = build_from_folder(folder, year, inv_treatment=inventory)
     euregio = pymrio.IOSystem(
         Z=ioz,
         Y=ioy,
         year=year,
         unit=pd.DataFrame(
-            data=["2010_€_MILLIONS"] * unitsize, index=iova.index, columns=["unit"]
+            data=["2010_€_MILLIONS"] * len(iova.index), index=iova.index, columns=["unit"]
         ),
     )
-    with Path(folder / output).open("wb") as f:
+    euregio = correct_regions(euregio)
+    euregio.calc_all()
+    euregio.meta.change_meta("name",f"euregio {year}")
+    with (folder / output).open("wb") as f:
         pickle.dump(euregio, f)
     return 0
 

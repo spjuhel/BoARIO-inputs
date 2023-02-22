@@ -97,10 +97,10 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
     event = event_template.copy()
 
     if match["evtype"] == "recover":
-        logger.info("Setting flood duration to {}".format(float(match["reb"])))
+        logger.info("Setting flood recovery duration to {}".format(float(match["reb"])))
         event["recovery_time"] = float(match["reb"])
     elif match["evtype"] == "rebuilding":
-        logger.info("Setting flood duration to {}".format(float(match["reb"])))
+        logger.info("Setting flood rebuilding duration to {}".format(float(match["reb"])))
         event["rebuild_tau"] = float(match["reb"])
 
     print(event)

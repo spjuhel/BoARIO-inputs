@@ -96,68 +96,6 @@ def indicators_get_disk_mb(wildcards, input):
     n_2years = params_template["n_temporal_units_to_sim"] // 730
     return 500*n_2years
 
-
-def runs(xp):
-    dmg_type = xp['DMG_TYPE']
-    xp_folder = xp['XP_NAME']
-    inv_params = list(zip(xp['INV_TAU'],xp['INV_TIME']))
-    ################################ SUBREGIONS RUNS ########################################
-    if xp["MRIOTYPES"] == "Subregions":
-        if "SUBREGIONS" not in xp.keys():
-            raise ValueError("Run is a subregions run but SUBREGIONS key is not present in the experience dictionary")
-        if "MAINMRIO" not in xp.keys():
-            raise ValueError(
-                """Run is a subregions run but MAINMRIO key is not present in the experience dictionary.
-                This key define the mrio without subregions to compare to (and also to build the subregions mrios from)
-            """)
-        if "SUBREGIONS_MRIOS" not in xp.keys():
-            raise ValueError(
-                """Run is a subregions run but SUBREGION_MRIOS key is not present in the experience dictionary.
-                This key define the mrios with subregions to run the simulations with.
-                """)
-        tmp = [xp['MAINMRIO'] in sub for sub in xp['SUBREGIONS_MRIOS']]
-        if False in tmp:
-            raise ValueError(
-                """Run is a subregions run but SUBREGION_MRIOS key contains values that do not correspond to the MAINMRIO key.
-                This key define the mrios with subregions to run the simulations with.
-                """)
-
-        unsegmented_runs = expand(xp_folder+"/{mrio_used}/{region}_type_Full_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                                          mrio_used=xp['MAINMRIO'],
-                                          region=xp["REGIONS"],
-                                          flood=xp["FLOOD_INT"],
-                                          psi=xp["PSI"])
-
-        segmented_runs_all = []
-        segmented_runs_one = []
-        if "all" in xp['SUBREGIONS']:
-            segmented_runs_all = expand(xp_folder+"/{mrio_used}/{region}-all_type_Subregions_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                                        mrio_used=xp['SUBREGIONS_MRIOS'],
-                                        region=xp["REGIONS"],
-                                        flood=xp["FLOOD_INT"],
-                                        psi=xp["PSI"])
-        if "one" in xp['SUBREGIONS']:
-            segmented_runs_one = expand(xp_folder+"/{mrio_used}/{region}-{region}1_type_Subregions_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                                        mrio_used=xp['SUBREGIONS_MRIOS'],
-                                        region=xp["REGIONS"],
-                                        flood=xp["FLOOD_INT"],
-                                        psi=xp["PSI"])
-
-        tmp = unsegmented_runs + segmented_runs_all + segmented_runs_one
-        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
-        runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
-    ################################ `CLASSIC` RUNS ########################################
-    else:
-        tmp = expand(xp_folder+"/{mrio_used}/{region}_type_{stype}_qdmg_"+dmg_type+"_{flood}_Psi_{psi}",
-                         mrio_used=xp['MRIOS'],
-                         region=xp["REGIONS"],
-                         stype=xp["EVENT_KIND"],
-                         flood=xp["FLOOD_INT"],
-                         psi=xp["PSI"])
-        inv_tmp = expand("_inv_tau_{inv}_inv_time_{inv_t}/indicators.json", zip, inv=xp["INV_TAU"], inv_t=xp["INV_TIME"])
-        runs = expand("{part1}{part2}",part1=tmp,part2=inv_tmp)
-    return expand("{out}/{runs}", out=config['OUTPUT_DIR'], runs=runs)
-
 def runs_from_expdir(wildcards):
     xp = xpjson_from_name(wildcards.expdir)
     with open(xp,'r') as f:
@@ -183,7 +121,6 @@ def xp_from_name(expdir):
         xp = json.load(f)
         return xp
 
-
 def csv_from_all_xp(xps):
     """
     List all csv files corresponding to the dictionary of experiences in argument
@@ -198,33 +135,7 @@ def csv_from_all_xp(xps):
         all_csv.append(tmp)
     return all_csv
 
-
-def run_RoW_inputs(wildcards):
-    raise RuntimeError("This is deprecrated !!")
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}_{wildcards.region}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "event_template" : expand("{maindir}/../exps/{expfolder}/{{mrio_used}}_event_template.json",maindir=config["CONFIG_DIR"],expfolder=config["FOLDER"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "mrio_params" : expand("{inputdir}/mrios/{{mrio_used}}_params.json",inputdir=config["BUILDED_DATA_DIR"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
-    }
-
-
 def run_inputs(wildcards):
-    """
-    DEPRECATED
-    Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
-    """
-    raise RuntimeError("This is deprecrated !!")
-    xp_config = xps[wildcards.xp_folder]
-    return {
-        "mrio" : expand("{inputdir}/mrios/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"]),
-        "params_template" : expand("{inputdir}/{params_template}",inputdir=config["CONFIG_DIR"], params_template=xp_config["PARAMS_TEMPLATE"]),
-        "flood_gdp" : expand("{datadir}/{flood_gdp_file}",datadir=config["SOURCE_DATA_DIR"],flood_gdp_file=xp_config["REP_EVENTS_FILE"])
-    }
-
-def run_inputs2(wildcards):
     """
     Get run general inputs (mrio, params_template, rep_event_flood_file) from experience
     """
@@ -235,7 +146,7 @@ def run_inputs2(wildcards):
     else:
         mrio_type = mrio_type.group()
     return {
-        "mrio" : expand("{inputdir}/mrios/{mrio_type}/{{mrio_used}}.pkl",inputdir=config["BUILDED_DATA_DIR"],mrio_type=mrio_type)
+        "mrio" : expand("{inputdir}/{mrio_type}/builded-files/pkls/{{mrio_used}}.pkl",inputdir=config["MRIO_DATA_DIR"],mrio_type=mrio_type)
     }
 
 
@@ -257,7 +168,7 @@ def input_for_indicators_symlinks(wildcards):
     return [inds,parquets]
 
 def get_event_template(mrio_used,shock_type):
-    mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
+    mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
     if match:
         if match.group("custom"):
@@ -266,10 +177,10 @@ def get_event_template(mrio_used,shock_type):
             event_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-    return expand("{maindir}/params/{tmpl}_event_params_{kind}.json",maindir=config["BUILDED_DATA_DIR"], kind=shock_type, tmpl=event_tmpl)
+    return expand("{maindir}/{mrio}/builded-files/params/{tmpl}_event_params_{kind}.json",maindir=config["MRIO_DATA_DIR"], kind=shock_type, tmpl=event_tmpl, mrio=match["mrio"])
 
 def get_mrio_params(mrio_used,xp_folder):
-    mrio_re = re.compile(r"(?P<mrio>exiobase3)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
+    mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
     if match:
         if match.group("custom"):
@@ -278,7 +189,7 @@ def get_mrio_params(mrio_used,xp_folder):
             params_tmpl = re.sub(mrio_re,r"\g<mrio>_\g<sectors>",match.string)
     else:
         raise ValueError("There is a problem with the mrio filename : {}".format(mrio_used))
-    return expand("{outputdir}/params/{tmpl}_params.json",outputdir=config["BUILDED_DATA_DIR"], tmpl=params_tmpl)
+    return expand("{outputdir}/{mrio}/builded-files/params/{tmpl}_params.json",outputdir=config["MRIO_DATA_DIR"], tmpl=params_tmpl, mrio=match['mrio'])
 
 def find_floodbase(wildcards):
     period_re = re.compile(r"\d{4}-\d{4}")

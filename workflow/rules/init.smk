@@ -57,11 +57,6 @@ run_output_files = [
     "simulated_params.json"
     ]
 
-ALL_YEARS_MRIO = glob_wildcards(config['SOURCE_DATA_DIR']+"/IOT_{year}_ixi.zip").year
-ALL_FULL_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_full.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-ALL_74_EXIO = expand("{outputdir}/mrios/exiobase3_{year}_74_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"], year=ALL_YEARS_MRIO)
-MINIMAL_7_EXIO = expand("{outputdir}/mrios/exiobase3_2020_7_sectors.pkl",outputdir=config["BUILDED_DATA_DIR"])
-
 def event_params_from_xp_mrio(ev_kind,mrio_used):
     mrio_re = re.compile(r"(?P<mrio>exiobase3|euregio|eora)(?:_(?P<year>\d{4}))?_(?P<sectors>\d+_sectors|full)(?P<custom>.*)")
     match = re.search(mrio_re, mrio_used)
@@ -143,12 +138,12 @@ def sim_df_from_xp(xp):
             sim_params["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio,)
             with (params_group_path/"simulation_params.json").open("w") as f:
                 json.dump(sim_params,f,indent=4)
-            mrio_params_file = Path(config["BUILDED_DATA_DIR"]+"/params/"+sim_params["mrio_template_file"])
-            event_params_file = Path(config["BUILDED_DATA_DIR"]+"/params/"+sim_params["event_template_file"])
+            mrio_params_file = Path(config["MRIO_DATA_DIR"]+"/"+str(mrio).split("_",1)[0]+"/builded-files/params/"+sim_params["mrio_template_file"])
+            event_params_file = Path(config["MRIO_DATA_DIR"]+"/"+str(mrio).split("_",1)[0]+"/builded-files/params/"+sim_params["event_template_file"])
             if not (params_group_path/"mrio_params.json").exists():
-                (params_group_path/"mrio_params.json").symlink_to(mrio_params_file)
+                (params_group_path/"mrio_params.json").symlink_to(target=mrio_params_file)
             if not (params_group_path/"event_params.json").exists():
-                (params_group_path/"event_params.json").symlink_to(event_params_file)
+                (params_group_path/"event_params.json").symlink_to(target=event_params_file)
 
             sim_group_df = rep_events[["mrio_region","share of GVA used as ARIO input","duration","class"]].copy()
             sim_group_df["mrio_region"] = sim_group_df["mrio_region"]

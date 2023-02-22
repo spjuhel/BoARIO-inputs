@@ -43,7 +43,9 @@ def event_tmpl_from_ods(ods_file):
     event_params["kapital_damage"] = -1
     event_params["shock_type"] = "kapital_destroyed_rebuild"
     df = pd.read_excel(ods_file)
-    event_params["aff_sectors"] = df.loc[(df.Affected=="Yes"),"Aggregated version sector"].to_list()
+    print(df)
+    event_params["aff_sectors"] = df.loc[(df.Affected.isin(["Yes","yes","y"])),"Aggregated version sector"].to_list()
+    print(event_params["aff_sectors"])
     event_params["rebuilding_sectors"] = df.loc[(df["Rebuilding factor"] > 0),["Aggregated version sector", "Rebuilding factor"]].set_index("Aggregated version sector").to_dict()['Rebuilding factor']
     return event_params
 

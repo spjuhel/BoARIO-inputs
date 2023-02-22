@@ -5,10 +5,10 @@ configfile: "workflow/config.json"
 include: "./rules/init.smk"
 include: "./rules/common.smk"
 include: "./rules/mrio_generation.smk"
-include: "./rules/euregion.smk"
+include: "./rules/flood_generation.smk"
 
-ruleorder: generate_exiobase3_full_from_zip > exiobase3_sector_aggreg
-ruleorder: exiobase3_sector_aggreg > mrio_one_region_RoW_aggreg
+ruleorder: generate_exiobase3_full_from_zip > mrio_sector_aggreg
+ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
 wildcard_constraints:
     run_type="raw|int",
@@ -190,7 +190,7 @@ rule run_generic:
     Generic run
     """
     input:
-        unpack(run_inputs2)
+        unpack(run_inputs)
     output:
         record_files =  temp(directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
                out=config["OUTPUT_DIR"]))),
