@@ -123,6 +123,8 @@ def find_repevents(wildcards):
     match = re.search(period_re, wildcards.expdir)
     xp = xp_from_name(wildcards.expdir)
     mrio_basename = xp['MRIO_NAME']
+    if xp["REP_EVENTS_FILE"] is not None:
+        return pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/xp["REP_EVENTS_FILE"]
     if match:
         period = match.group(0).replace("-","_")
         repevents_p = pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/{mrio_basename}/"representative_events_{}_{}_nofilter.parquet".format(mrio_basename,period)
