@@ -102,14 +102,14 @@ def get_mrio_params(mrio_used,xp_folder):
 
 def find_floodbase(wildcards):
     xp = xp_from_name(wildcards.expdir)
-    if xp["FLOOD_BASE"] is not None:
-        return pathlib.Path(xp["FLOOD_BASE"])
     mrio_basename = xp['MRIO_NAME']
+    if xp["FLOOD_BASE"] is not None:
+        return pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/xp["FLOOD_BASE"]
     period_re = re.compile(r"\d{4}-\d{4}")
     match = re.search(period_re, wildcards.expdir)
     if match:
         period = match.group(0).replace("-","_")
-        floodbase_p = pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/{mrio_basename}/"6_full_floodbase_{}_{}.parquet".format(mrio_basename,period)
+        floodbase_p = pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/"6_full_floodbase_{}_{}.parquet".format(mrio_basename,period)
     else:
         raise ValueError("No period found in exp name, cannot find corresponding floodbase")
 
