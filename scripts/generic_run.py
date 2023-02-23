@@ -122,8 +122,8 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
     logger.info("Setting flood damage (as share of GVA) to {}".format(dmg_as_pct))
     event["r_dmg"] = dmg_as_pct
     event["kapital_damage"] = total_direct_dmg
-    event["aff_regions"] = region
-    logger.info("Setting aff_regions to {}".format(region))
+    event["aff_regions"] = [region]
+    logger.info("Setting aff_regions to {}".format([region]))
     if params_template['model_type'] == "ARIOPsi":
         model = ARIOPsiModel(mrio,
                              order_type=params_template["order_type"],
