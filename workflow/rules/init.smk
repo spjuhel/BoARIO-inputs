@@ -108,7 +108,7 @@ def sim_df_from_xp(xp):
     if period is None:
         rep_events_file = xp_dic["REP_EVENTS_FILE"]
     else:
-        period.replace("-","_")
+        period = period.replace("-","_")
         rep_events_file = "representative_events_{}_{}.parquet".format(mrio_basename,period)
     rep_events_path = pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/rep_events_file
     if not Path(xp_path/rep_events_file).exists():
