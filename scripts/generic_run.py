@@ -60,7 +60,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
 
     # psi_0_90_order_alt_inv_60_reb_60_evtype_recover
 
-    params_re = re.compile(r"psi_(?P<psi>1_0|0_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>recover|rebuild)")
+    params_re = re.compile(r"psi_(?P<psi>1_0|0_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>recover|rebuilding)")
     match = re.search(params_re, params_group)
     if not match:
         raise ValueError("There is a problem with the parameter group : {}".format(params_group))
@@ -103,7 +103,6 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
         logger.info("Setting flood rebuilding duration to {}".format(float(match["reb"])))
         event["rebuild_tau"] = float(match["reb"])
 
-    print(event)
     value_added = (mrio.x.T - mrio.Z.sum(axis=0))
     value_added = value_added.reindex(sorted(value_added.index), axis=0) #type: ignore
     value_added = value_added.reindex(sorted(value_added.columns), axis=1)
@@ -130,7 +129,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                              alpha_base=params_template["alpha_base"],
                              alpha_max=params_template["alpha_max"],
                              alpha_tau=params_template["alpha_tau"],
-                             rebuild_tau=params_template["rebuild_tau"],
+                             rebuild_tau=event["rebuild_tau"],
                              main_inv_dur = mrio_template["main_inv_dur"],
                              monetary_factor= mrio_template["monetary_unit"],
                              psi_param=params_template["psi_param"],
@@ -144,7 +143,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                              alpha_base=params_template["alpha_base"],
                              alpha_max=params_template["alpha_max"],
                              alpha_tau=params_template["alpha_tau"],
-                             rebuild_tau=params_template["rebuild_tau"],
+                             rebuild_tau=event["rebuild_tau"],
                              main_inv_dur = mrio_template["main_inv_dur"],
                              monetary_factor= mrio_template["monetary_unit"],
                              inventory_dict = mrio_template["inventories_dict"],
