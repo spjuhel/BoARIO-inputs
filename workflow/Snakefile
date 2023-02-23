@@ -6,6 +6,7 @@ include: "./rules/init.smk"
 include: "./rules/common.smk"
 include: "./rules/mrio_generation.smk"
 include: "./rules/flood_generation.smk"
+include: "./rules/resources.smk"
 
 ruleorder: generate_exiobase3_full_from_zip > mrio_sector_aggreg
 ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
@@ -14,9 +15,6 @@ wildcard_constraints:
     run_type="raw|int",
     shock_type="rebuilding|recover"
 
-check_config(config)
-
-#TODO : integrate interpolation script
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 

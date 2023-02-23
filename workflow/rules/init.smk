@@ -94,12 +94,24 @@ def sim_df_from_xp(xp):
     output_dir = Path(config["OUTPUT_DIR"]).resolve()
     xp_name = xp_dic["XP_NAME"]
     xp_path = (output_dir/xp_name)
+    print(xp_name)
+    period_re = re.compile(r"\d{4}-\d{4}")
+    match = re.search(period_re, xp_name)
+    if not match:
+        period = xp_dic.get("PERIOD")
+    else:
+        period = match.group(0)
     if not xp_path.exists():
         xp_path.mkdir()
     mrios = xp_dic["MRIOS"]
-    rep_events_file = xp_dic["REP_EVENTS_FILE"]
+    mrio_basename = xp_dic["MRIO_NAME"]
+    if period is None:
+        rep_events_file = xp_dic["REP_EVENTS_FILE"]
+    else:
+        rep_events_file = "representative_events_{}_{}_nofilter.parquet".format(mrio_basename,period)
+    rep_events_path = pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/rep_events_file
     if not Path(xp_path/rep_events_file).exists():
-        Path(xp_path/rep_events_file).symlink_to(Path(config["SOURCE_DATA_DIR"]+"/representative_events/"+rep_events_file))
+        Path(xp_path/rep_events_file).symlink_to(rep_events_path)
     rep_events = pd.read_parquet((xp_path/rep_events_file).resolve())
     sim_df = pd.DataFrame()
     for mrio in mrios:
