@@ -100,7 +100,7 @@ rule init_all_sim_parquet:
     run:
         meta_df = pd.DataFrame()
         for xp in input.xps:
-            xp_df = sim_df_from_xp(xp)
+            xp_df = init_sim_df_from_xp(xp)
             meta_df = pd.concat([meta_df, xp_df],axis=0)
         meta_df.to_parquet(output.all_sim)
 

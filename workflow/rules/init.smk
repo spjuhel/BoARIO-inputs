@@ -89,6 +89,12 @@ def mrio_params_from_xp_mrio(xp,mrio_used):
     return f"{tmpl}_params{mrio_suffix}.json"
 
 def sim_df_from_xp(xp):
+    all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
+    all_sim_df = pd.read_parquet(all_sim)
+    sim_df = all_sim_df.loc[all_sim_df["simulation name"]]
+    return sim_df
+
+def init_sim_df_from_xp(xp):
     with open(xp,'r') as f:
         xp_dic = json.load(f)
     output_dir = Path(config["OUTPUT_DIR"]).resolve()
@@ -159,6 +165,7 @@ def sim_df_from_xp(xp):
                 (params_group_path/"event_params.json").symlink_to(target=event_params_file)
 
             sim_group_df = rep_events[["mrio_region","share of GVA used as ARIO input","duration","class"]].copy()
+            sim_group_df["simulation_name"] = xp_name
             sim_group_df["mrio_region"] = sim_group_df["mrio_region"]
             sim_group_df["ario_dmg_input"] = sim_group_df["share of GVA used as ARIO input"].astype(str)
             sim_group_df["params_group"] = params_group_n
