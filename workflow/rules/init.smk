@@ -91,7 +91,7 @@ def mrio_params_from_xp_mrio(xp,mrio_used):
 def sim_df_from_xp(xp):
     all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
     all_sim_df = pd.read_parquet(all_sim)
-    sim_df = all_sim_df.loc[all_sim_df["simulation name"]]
+    sim_df = all_sim_df.loc[all_sim_df["simulation_name"]]
     return sim_df
 
 def init_sim_df_from_xp(xp):
