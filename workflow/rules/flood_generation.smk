@@ -16,6 +16,8 @@ rule flood_mapping:
     wildcard_constraints:
         mrio_basename="euregio|exiobase3|icio|wiod",
         mrio_subname=".{0}|_full|_\d+_sectors"
+    resources:
+        mem_mb=6000
     threads:
         4
     conda:
