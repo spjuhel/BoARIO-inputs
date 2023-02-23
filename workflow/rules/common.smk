@@ -103,7 +103,7 @@ def get_mrio_params(mrio_used,xp_folder):
 def find_floodbase(wildcards):
     xp = xp_from_name(wildcards.expdir)
     mrio_basename = xp['MRIO_NAME']
-    if xp["FLOOD_BASE"] is not None:
+    if xp.get("FLOOD_BASE") is not None:
         return pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/xp["FLOOD_BASE"]
     period_re = re.compile(r"\d{4}-\d{4}")
     match = re.search(period_re, wildcards.expdir)
@@ -123,7 +123,7 @@ def find_repevents(wildcards):
     match = re.search(period_re, wildcards.expdir)
     xp = xp_from_name(wildcards.expdir)
     mrio_basename = xp['MRIO_NAME']
-    if xp["REP_EVENTS_FILE"] is not None:
+    if xp.get("REP_EVENTS_FILE") is not None:
         return pathlib.Path(config["FLOOD_DATA_DIR"])/"builded-data"/mrio_basename/xp["REP_EVENTS_FILE"]
     if match:
         period = match.group(0).replace("-","_")
