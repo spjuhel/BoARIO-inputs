@@ -160,6 +160,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                      results_dir_name=params_template["results_storage"]
                      )
 
+    scriptLogger.info(f"Building event from:\n {event}")
     if event['shock_type'] == "kapital_destroyed_recover":
         ev = EventKapitalRecover(impact=event["kapital_damage"],
                                  recovery_time=event["recovery_time"],
