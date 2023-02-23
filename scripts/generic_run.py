@@ -173,7 +173,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
     elif event['shock_type'] == "kapital_destroyed_rebuild":
         ev = EventKapitalRebuild(impact=event["kapital_damage"],
                                  rebuild_tau=event["rebuild_tau"],
-                                 rebuilding_sectors=mrio_template["rebuilding_sectors"],
+                                 rebuilding_sectors=event["rebuilding_sectors"],
                                  aff_regions=event["aff_regions"],
                                  aff_sectors=event["aff_sectors"],
                                  impact_regional_distrib=event["dmg_regional_distrib"],
