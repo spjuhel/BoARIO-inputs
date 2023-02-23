@@ -89,9 +89,13 @@ def mrio_params_from_xp_mrio(xp,mrio_used):
     return f"{tmpl}_params{mrio_suffix}.json"
 
 def sim_df_from_xp(xp):
+    with open(xp,'r') as f:
+        xp_dic = json.load(f)
+
+    xp_name = xp_dic["XP_NAME"]
     all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
     all_sim_df = pd.read_parquet(all_sim)
-    sim_df = all_sim_df.loc[all_sim_df["simulation_name"]]
+    sim_df = all_sim_df.loc[all_sim_df["simulation_name"]==xp_name]
     return sim_df
 
 def init_sim_df_from_xp(xp):
