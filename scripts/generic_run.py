@@ -135,7 +135,8 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                              psi_param=params_template["psi_param"],
                              inventory_restoration_tau=params_template["inventory_restoration_tau"],
                              inventory_dict = mrio_template["inventories_dict"],
-                             capital_ratio_dict = mrio_template["capital_ratio_dict"]
+                             capital_ratio_dict = mrio_template["capital_ratio_dict"],
+                             temporal_units_by_step = params_template["temporal_units_by_step"]
         )
     elif params_template['model_type'] == "ARIOBase":
         model = ARIOBaseModel(mrio,
@@ -147,7 +148,8 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                              main_inv_dur = mrio_template["main_inv_dur"],
                              monetary_factor= mrio_template["monetary_unit"],
                              inventory_dict = mrio_template["inventories_dict"],
-                             capital_ratio_dict = mrio_template["capital_ratio_dict"]
+                              capital_ratio_dict = mrio_template["capital_ratio_dict"],
+                             temporal_units_by_step = params_template["temporal_units_by_step"]
         )
     else:
         raise ValueError(f"Unexpected model type {params_template['model_type']}")
