@@ -49,7 +49,7 @@ def dist_is_editable():
 def get_git_describe() -> str:
     return subprocess.check_output(['git', 'describe', '--tags']).decode('ascii').strip()
 
-def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_dir, logger):
+def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_dir, rebuilding_factor, logger):
 
     runs_dir = pathlib.Path(runs_dir).resolve()
     if not runs_dir.exists():
@@ -181,6 +181,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                                  impact_regional_distrib=event["dmg_regional_distrib"],
                                  impact_sectoral_distrib_type=event["dmg_sectoral_distrib_type"],
                                  duration = duration,
+                                 rebuilding_factor = rebuilding_factor,
                                  name = f"{region}_{params_group}_{dmg_as_pct}_{duration}"
                                  )
     else:
@@ -201,6 +202,7 @@ parser.add_argument("duration", type=str, help="The duration of the flood")
 parser.add_argument("params_group", type=str, help="The parameters group to simulate with")
 parser.add_argument("mrio", type=str, help="The mrio path")
 parser.add_argument("out_dir", type=str, help="The general output directory")
+parser.add_argument("rebuilding-factor", type=float, help="A factor to apply to rebuilding demand")
 
 if __name__ == "__main__":
     args = parser.parse_args()
@@ -216,4 +218,4 @@ if __name__ == "__main__":
     scriptLogger.info("BoARIO's location is : {}".format(boario.__path__))
     scriptLogger.info("=============== STARTING RUN ================")
     scriptLogger.info("Runs is on this set: {}_{}_{}_{}_{}".format(args.mrio_name, args.region, args.dmg, args.duration, args.params_group))
-    run(args.region, args.mrio_name, args.mrio, args.params_group, args.dmg, int(args.duration), args.out_dir, scriptLogger)
+    run(args.region, args.mrio_name, args.mrio, args.params_group, args.dmg, int(args.duration), args.out_dir, args.rebuilding_factor, scriptLogger)
