@@ -212,5 +212,5 @@ rule run_generic:
         "boario-use"
     shell:
         """
-        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/generic_run.py {wildcards.mrio_used} {wildcards.region} {wildcards.dmg_as_pct} {wildcards.duration} {wildcards.params_group} {input.mrio} {params.rebuild_factor} {params.output_dir}
+        python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/generic_run.py {wildcards.mrio_used} {wildcards.region} {wildcards.dmg_as_pct} {wildcards.duration} {wildcards.params_group} {input.mrio} {params.output_dir} {params.rebuild_factor}
         """

@@ -129,7 +129,7 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
                              alpha_base=params_template["alpha_base"],
                              alpha_max=params_template["alpha_max"],
                              alpha_tau=params_template["alpha_tau"],
-                             rebuild_tau=event["rebuild_tau"],
+                             rebuild_tau=event.get("rebuild_tau"),
                              main_inv_dur = mrio_template["main_inv_dur"],
                              monetary_factor= mrio_template["monetary_unit"],
                              psi_param=params_template["psi_param"],
@@ -202,7 +202,7 @@ parser.add_argument("duration", type=str, help="The duration of the flood")
 parser.add_argument("params_group", type=str, help="The parameters group to simulate with")
 parser.add_argument("mrio", type=str, help="The mrio path")
 parser.add_argument("out_dir", type=str, help="The general output directory")
-parser.add_argument("rebuilding-factor", type=float, help="A factor to apply to rebuilding demand")
+parser.add_argument("rebuilding_factor", type=float, help="A factor to apply to rebuilding demand")
 
 if __name__ == "__main__":
     args = parser.parse_args()
