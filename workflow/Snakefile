@@ -207,7 +207,7 @@ rule run_generic:
         mem_mb=4000,
         disk_mb=500
     wildcard_constraints:
-        region="[A-Z]{2}"
+        region="[A-Z]{2,3}|[A-Z]{2}\d+"
     conda:
         "boario-use"
     shell:

@@ -154,6 +154,7 @@ rule mrio_sector_aggreg:
         """
 
 rule mrio_one_region_RoW_aggreg:
+    # CHECK WILDCARD_CONSTRAINTS if problems
     input:
         mrio_file = expand("{outputdir}/{{mrio_basename}}/builded-files/pkls/{{mrio}}_FullWorld.pkl",outputdir=config["MRIO_DATA_DIR"]),
         region_aggreg_file = expand("{inputdir}/aggreg-files/{{region}}_aggreg.json",inputdir=config["MRIO_DATA_DIR"]),
