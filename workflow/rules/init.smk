@@ -93,7 +93,18 @@ def sim_df_from_xp(xp):
         xp_dic = json.load(f)
 
     xp_name = xp_dic["XP_NAME"]
-    all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
+    all_sim = pathlib.Path("{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])).resolve()
+    if not all_sim.exists():
+        meta_df = pd.DataFrame()
+        xps = expand("{exp_dir}/{exp_jsons}.json",exp_dir=config["EXPS_JSONS"],exp_jsons=config["EXPS"])
+        out = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"])
+        for xp in xps:
+            xp_df = init_sim_df_from_xp(xp)
+            meta_df = pd.concat([meta_df, xp_df],axis=0)
+            if meta_df.empty:
+                raise RuntimeError("All simulations dataframe is empty")
+            meta_df.to_parquet(out)
+
     all_sim_df = pd.read_parquet(all_sim)
     sim_df = all_sim_df.loc[all_sim_df["simulation_name"]==xp_name]
     return sim_df
