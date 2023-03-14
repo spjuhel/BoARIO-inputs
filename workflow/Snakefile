@@ -70,7 +70,7 @@ rule aggreg_xp:
         floodbase = find_floodbase,
         rep_events = find_repevents
     params:
-        outdir=directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"])),
+        outdir = directory(expand("{outputdir}/{{expdir}}/aggreg", outputdir=config["OUTPUT_DIR"])),
         period = find_periodname
     resources:
         vmem_mb=64000,

@@ -143,4 +143,9 @@ def find_periodname(wildcards):
         period = match.group(0)
         return period
     else:
-        raise ValueError("No period found in exp name, cannot find corresponding period name")
+        xp = xp_from_name(wildcards.expdir)
+        if xp.get("PERIOD") is not None:
+            match = re.search(period_re, xp["PERIOD"])
+            period = match.group(0)
+        else:
+            raise ValueError("No period found in exp name or xp dict, cannot find corresponding period name")
