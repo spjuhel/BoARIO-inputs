@@ -14,7 +14,7 @@ ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 wildcard_constraints:
     run_type="raw|int",
     shock_type="rebuilding|recover",
-    region="[A-Z]{2,3}\d*"
+    region="[A-Z0-9]{2,10}"
 
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
