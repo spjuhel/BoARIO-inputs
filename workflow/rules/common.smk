@@ -10,6 +10,8 @@ def runs_from_expdir(wildcards):
     with open(xp,'r') as f:
         xp_dic = json.load(f)
     sim_df = sim_df_from_xp(xp)
+    if sim_df.empty:
+        raise RuntimeError("simulation_df is empty !")
     l = sim_df[["mrio","params_group","mrio_region","class"]].values
     xp_folder = xp_dic["XP_NAME"]
     out = config["OUTPUT_DIR"]
