@@ -5,6 +5,7 @@
         "euregio_2006_full"
     ],
     "FLOOD_BASE": "test_floodbase_euregio_full_server.parquet",
+    "PERIOD": "2016-2035",
     "REP_EVENTS_FILE": "test_representative_events_euregio_full_server.parquet",
     "EVENT_KIND": ["recover","rebuilding"],
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
