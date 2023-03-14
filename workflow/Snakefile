@@ -102,6 +102,9 @@ rule init_all_sim_parquet:
         for xp in input.xps:
             xp_df = init_sim_df_from_xp(xp)
             meta_df = pd.concat([meta_df, xp_df],axis=0)
+
+        if meta_df.empty:
+            raise RuntimeError("All simulations dataframe is empty")
         meta_df.to_parquet(output.all_sim)
 
 rule generate_csv_from_xp:
@@ -156,33 +159,6 @@ rule indicators:
                 dest.symlink_to(origin)
 
 
-rule indicators_generic:
-    """
-    Build indicators and parquet results files for a specific simulation.
-    """
-    input:
-        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
-               inp=config["OUTPUT_DIR"])
-    output:
-        inds = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/indicators",
-               out=config["OUTPUT_DIR"])),
-        parquets =directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/parquets",
-                                   out=config["OUTPUT_DIR"]))
-    params:
-        records=directory(expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
-               inp=config["OUTPUT_DIR"]))
-    #group: "sim_run"
-    conda:
-        "boario-use"
-    resources:
-        vmem_mb=8000, #indicators_get_vmem_mb,
-        mem_mb=8000, #indicators_get_mem_mb,
-        disk_mb=500 #indicators_get_disk_mb
-    shell:
-        """
-        cd {config[ARIO_DIR]};
-        python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.mrio_used}/{wildcards.params_group}/{wildcards.region}/{wildcards.dmg_as_pct}_{wildcards.duration}';
-        """
 rule run_generic:
     """
     Generic run
@@ -193,7 +169,8 @@ rule run_generic:
         record_files =  temp(directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
                out=config["OUTPUT_DIR"]))),
         json_files = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/jsons",
-                            out=config["OUTPUT_DIR"]))
+                            out=config["OUTPUT_DIR"])),
+        done = touch(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/sim.done",out=config["OUTPUT_DIR"]))
     #group: "sim_run"
     params:
         output_dir = config["OUTPUT_DIR"],
@@ -213,4 +190,31 @@ rule run_generic:
     shell:
         """
         python {config[INPUTS_GENERATION_SCRIPTS_DIR]}/generic_run.py {wildcards.mrio_used} {wildcards.region} {wildcards.dmg_as_pct} {wildcards.duration} {wildcards.params_group} {input.mrio} {params.output_dir} {params.rebuild_factor}
+        """
+
+rule indicators_generic:
+    """
+    Build indicators and parquet results files for a specific simulation.
+    """
+    input:
+        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/sim.done", inp=config["OUTPUT_DIR"])
+    output:
+        inds = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/indicators",
+               out=config["OUTPUT_DIR"])),
+        parquets =directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/parquets",
+                                   out=config["OUTPUT_DIR"]))
+    params:
+        records=directory(expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
+               inp=config["OUTPUT_DIR"]))
+    #group: "sim_run"
+    conda:
+        "boario-use"
+    resources:
+        vmem_mb=8000, #indicators_get_vmem_mb,
+        mem_mb=8000, #indicators_get_mem_mb,
+        disk_mb=500 #indicators_get_disk_mb
+    shell:
+        """
+        cd {config[ARIO_DIR]};
+        python ./scripts/indicator_from_folder.py '{config[OUTPUT_DIR]}/{wildcards.mrio_used}/{wildcards.params_group}/{wildcards.region}/{wildcards.dmg_as_pct}_{wildcards.duration}';
         """

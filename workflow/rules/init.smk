@@ -124,6 +124,8 @@ def init_sim_df_from_xp(xp):
     if not Path(xp_path/rep_events_file).exists():
         Path(xp_path/rep_events_file).symlink_to(rep_events_path)
     rep_events = pd.read_parquet((xp_path/rep_events_file).resolve())
+    if rep_events.empty:
+        raise RuntimeError(f"Representative event parquet is empty ({(xp_path/rep_events_file).resolve()})")
     sim_df = pd.DataFrame()
     for mrio in mrios:
         sim_mrio_df = pd.DataFrame()
@@ -182,6 +184,8 @@ def init_sim_df_from_xp(xp):
             sim_group_df["mrio_template_file"] = mrio_params_from_xp_mrio(xp_dic,mrio)
             sim_group_df["event_template_file"] = event_params_from_xp_mrio(ev_kind,mrio)
             sim_group_df['run'] = sim_group_df.mrio+"/"+sim_group_df.params_group+"/"+sim_group_df.mrio_region+"/"+sim_group_df['ario_dmg_input']+"_"+sim_group_df["duration"].astype(str)+"/"
+            if sim_group_df.empty:
+                raise RuntimeError("sim group df is empty")
             sim_mrio_df = pd.concat([sim_mrio_df,sim_group_df],axis=0)
 
         sim_df = pd.concat([sim_df,sim_mrio_df],axis=0)

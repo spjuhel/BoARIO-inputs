@@ -46,6 +46,8 @@ rule rep_event:
         """
         python {config[BOARIO-TOOLS]}/representative_events.py -i {input} -o {output}
         """
+
+
 rule test_flood_and_rep_event:
     """
     general minimalist flood db and representative events
