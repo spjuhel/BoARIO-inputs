@@ -19,10 +19,10 @@ wildcard_constraints:
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 
 rule local_test:
-    expand("{outputdir}/flood-dottori-test-local/.aggregation_done", outputdir=config["OUTPUT_DIR"])
+    input: expand("{outputdir}/flood-dottori-test-local/.aggregation_done", outputdir=config["OUTPUT_DIR"])
 
 rule server_test:
-    expand("{outputdir}/flood-dottori-test-server/.aggregation_done", outputdir=config["OUTPUT_DIR"])
+    input: expand("{outputdir}/flood-dottori-test-server/.aggregation_done", outputdir=config["OUTPUT_DIR"])
 
 rule generate_all_drias:
     """
