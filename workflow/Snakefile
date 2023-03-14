@@ -14,6 +14,7 @@ ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 wildcard_constraints:
     run_type="raw|int",
     shock_type="rebuilding|recover"
+    region="[A-Z]{2,3}\d*"
 
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
@@ -106,6 +107,7 @@ rule init_all_sim_parquet:
     run:
         meta_df = pd.DataFrame()
         for xp in input.xps:
+            print(xp)
             xp_df = init_sim_df_from_xp(xp)
             meta_df = pd.concat([meta_df, xp_df],axis=0)
 
@@ -190,8 +192,6 @@ rule run_generic:
         vmem_mb=4000,
         mem_mb=4000,
         disk_mb=500
-    wildcard_constraints:
-        region="[A-Z]{2,3}|[A-Z]{2}\d+"
     conda:
         "boario-use"
     shell:
