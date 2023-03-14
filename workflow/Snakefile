@@ -118,6 +118,7 @@ rule generate_csv_from_xp:
     Generate csv files for a specific experience.
     """
     input:
+        all_sim = "{}/all_simulations.parquet".format(config["BUILDED_DATA_DIR"]),
         xp_json = expand("{exp_dir}/{{expdir}}.json",exp_dir=config["EXPS_JSONS"]),
         xp_done = expand("{outputdir}/{{expdir}}/.experience_done", outputdir=config["OUTPUT_DIR"])
     output:
