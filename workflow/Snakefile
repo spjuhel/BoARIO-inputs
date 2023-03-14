@@ -13,7 +13,7 @@ ruleorder: mrio_sector_aggreg > mrio_one_region_RoW_aggreg
 
 wildcard_constraints:
     run_type="raw|int",
-    shock_type="rebuilding|recover"
+    shock_type="rebuilding|recover",
     region="[A-Z]{2,3}\d*"
 
 
