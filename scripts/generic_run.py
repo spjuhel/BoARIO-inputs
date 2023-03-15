@@ -38,6 +38,10 @@ import pathlib
 import logging
 import pickle
 import argparse
+from boario import INFOFORMATTER, logger
+import boario
+logger.propagate = True
+logger.setLevel(logging.INFO)
 
 def dist_is_editable():
    """Is distribution an editable install?"""
