@@ -112,7 +112,8 @@ def run(region, mrio_name, mrio_path, params_group, dmg_as_pct, duration, runs_d
     value_added[value_added < 0] = 0.0
     gdp_df = value_added.groupby("region",axis=1).sum().T["indout"]
     if mrio.unit.unit.unique()[0] != "M.EUR" :
-        scriptLogger.warning("MRIO unit appears to not be 'M.EUR'; but {} instead, which is not yet implemented. Contact the dev !".format(mrio.unit.unit.unique()[0]))
+        scriptLogger.warning("MRIO unit appears to not be 'M.EUR'; but {} instead, which is not yet implemented. Contact the dev !\n Continuing assuming monetary factor is million".format(mrio.unit.unit.unique()[0]))
+        gdp_df = gdp_df*(10**6)
     else:
         gdp_df = gdp_df*(10**6)
 
