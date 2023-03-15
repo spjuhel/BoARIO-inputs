@@ -110,6 +110,7 @@ def produce_region_loss_csv(folder,save_path, jsontype):
         else:
             future_df = pd.concat([future_df,df])
 
+    future_df.fillna(0.,inplace=True)
     #print(future_df.reset_index())
     future_df=future_df.set_index("run_id")
     future_df.to_csv(save_path)
