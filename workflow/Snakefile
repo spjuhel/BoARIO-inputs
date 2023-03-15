@@ -204,7 +204,11 @@ rule indicators_generic:
     Build indicators and parquet results files for a specific simulation.
     """
     input:
-        expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/sim.done", inp=config["OUTPUT_DIR"])
+        record_files =  expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/records",
+                                              out=config["OUTPUT_DIR"]),
+        json_files = expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/jsons",
+                                      out=config["OUTPUT_DIR"]),
+        done = expand("{inp}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/sim.done", inp=config["OUTPUT_DIR"])
     output:
         inds = directory(expand("{out}/{{mrio_used}}/{{params_group}}/{{region}}/{{dmg_as_pct}}_{{duration}}/indicators",
                out=config["OUTPUT_DIR"])),
