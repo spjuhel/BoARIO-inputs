@@ -126,7 +126,7 @@ def init_sim_df_from_xp(xp):
         xp_path.mkdir()
     mrios = xp_dic["MRIOS"]
     mrio_basename = xp_dic["MRIO_NAME"]
-    if period is None:
+    if period is None or xp_dic.get("REP_EVENTS_FILE") is not None:
         rep_events_file = xp_dic["REP_EVENTS_FILE"]
     else:
         period = period.replace("-","_")
