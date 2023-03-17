@@ -158,7 +158,10 @@ def run_interpolation_semester(mrios, semesters, flood_base:pd.DataFrame, region
                 #print("Running interpolation for {}".format(mrio))
                 sem_l=[]
                 for semester in semesters:
-                    serie = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=loss_dict,group=group, region=region, sector_type=sector_type, mrio=mrio, semester=semester))
+                    try:
+                        serie = flood_base_gr.apply(lambda group : projected_loss_region(loss_dict=loss_dict,group=group, region=region, sector_type=sector_type, mrio=mrio, semester=semester))
+                    except FloatingPointError as e:
+                        raise RuntimeError(f"A floating point error happened when computing for region: {region}, for {sector_type}, for {mrio}, for semester {semester} :\n\n{e}")
                     serie.index = flood_base['final_cluster']
                     sem_l.append(serie)
                 df_sem = pd.concat(sem_l, axis=0, keys=semesters, names=["semester"])
@@ -178,12 +181,15 @@ def projected_loss(loss_dict:dict, impacted_region:str, dmg:float, sector_type:s
             return lambda region: loss_dict[region][(mrio, impacted_region, sector_type)](dmg)
         except KeyError:
             return lambda region: 0.0
+        except FloatingPointError as e:
+            raise RuntimeError(f"A floating point error happened when computing for impacted_region: {impacted_region}, for {sector_type}, for {mrio}, for {dmg} :\n\n{e}")
     else:
         try:
             return lambda region: loss_dict[region][(mrio, impacted_region, sector_type, semester)](dmg)
         except KeyError:
             return lambda region: 0.0
-
+        except FloatingPointError as e:
+            raise RuntimeError(f"A floating point error happened when computing for impacted_region: {impacted_region}, for {sector_type}, for {mrio}, for {dmg} :\n\n{e}")
 
 def projected_loss_region(group, loss_dict:dict, region:str, sector_type:str, mrio:str, semester:Optional[str]):
 
