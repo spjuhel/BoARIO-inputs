@@ -1,10 +1,12 @@
 {
     "XP_NAME": "flood-dottori-test-local",
+    "MRIO_NAME": "euregio_full",
     "MRIOS": [
-        "exiobase3_2011_74_sectors"
+        "euregio_2006_full"
     ],
-    "REP_EVENTS_FILE": "representative_events_test_local.parquet",
-    "EVENT_KIND": ["recover"],
+    "REP_EVENTS_FILE": "test_representative_events_euregio_full_local.parquet",
+    "PERIOD": "2016-2035",
+    "EVENT_KIND": ["rebuilding"],
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
     "DMG_TYPE": "int",
     "ORDER_TYPE": "alt",

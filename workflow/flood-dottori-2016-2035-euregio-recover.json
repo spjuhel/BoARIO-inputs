@@ -1,11 +1,8 @@
 {
-    "XP_NAME": "flood-dottori-2036-2050-recover-noalt",
-    "MRIO_NAME": "exiobase3",
+    "XP_NAME": "flood-dottori-2016-2035-euregio-recover",
+    "MRIO_NAME": "euregio_full",
     "MRIOS": [
-        "exiobase3_1995_74_sectors",
-        "exiobase3_2011_74_sectors",
-        "exiobase3_2020_74_sectors",
-        "exiobase3_1995_74_sectors"
+        "euregio_2010_full"
     ],
     "EVENT_KIND": "recover",
     "PARAMS_TEMPLATE": "params_template_snakemake.json",
