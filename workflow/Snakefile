@@ -16,6 +16,8 @@ wildcard_constraints:
     shock_type="rebuilding|recover",
     region="[A-Z0-9]{2,10}"
 
+onerror:
+    shell("""tail -n 50 {log} | mail -s "The workflow had an error" pro@sjuhel.org""")
 
 localrules:generate_csv_from_all_xp, init_all_sim_parquet, xp_parquet, indicators
 
