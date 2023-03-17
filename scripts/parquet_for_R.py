@@ -33,7 +33,7 @@ def build_drias(datafile:str, inputdir:Path, mean:bool=False):
         raise ValueError("Loss type cannot be deduced from datafile {}".format(datafile))
     df = pd.read_parquet(inputdir/datafile)
     df.reset_index(inplace=True)
-    col_regions = df.filter(regex=r"^[A-Z]{2}$").columns
+    col_regions = df.filter(regex=r"^[A-Z0-9]{2,10}$").columns
     col_sel = pd.Index(COL_SELECT)
     cols = col_sel.union(col_regions,sort=False)
 
