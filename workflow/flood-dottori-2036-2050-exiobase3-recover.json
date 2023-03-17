@@ -1,0 +1,23 @@
+{
+    "XP_NAME": "flood-dottori-2036-2050-exiobase3-recover",
+    "MRIO_NAME": "exiobase3_74_sectors",
+    "MRIOS": [
+        "exiobase3_2011_74_sectors",
+        "exiobase3_2020_74_sectors",
+        "exiobase3_2002_74_sectors"
+    ],
+    "EVENT_KIND": "recover",
+    "PARAMS_TEMPLATE": "params_template_snakemake.json",
+    "ORDER_TYPE": "alt",
+    "REB_TAU": 60,
+    "DMG_TYPE": "int",
+    "PSI": [
+        "0_90"
+    ],
+    "INV_TAU": [
+        60
+    ],
+    "INV_TIME": [
+        90
+    ]
+}
