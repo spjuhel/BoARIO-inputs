@@ -22,7 +22,7 @@ import pathlib
 import argparse
 import logging
 
-NAME_RE = r"(?P<xp_name>[a-zA-Z\-\d]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z0-9]{2,10})~(?P<class>(?:\d+%)|max|min).name"
+NAME_RE = r"(?P<xp_name>[a-zA-Z\-\d]+)~(?P<mrio_name>[a-zA-Z\-_\d]+)~(?P<params>psi_(?P<psi>(?:0|1)_\d+)_order_(?P<order>[a-z]+)_inv_(?P<inv>\d+)_reb_(?P<reb>\d+)_evtype_(?P<evtype>[a-zA-Z]+))~(?P<region>[A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})~(?P<class>(?:\d+%)|max|min).name"
 
 parser = argparse.ArgumentParser(description="Produce csv from json indicators")
 parser.add_argument('folder', type=str, help='The str path to the main folder')

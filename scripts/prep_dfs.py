@@ -291,7 +291,7 @@ if __name__ == '__main__':
     res_loss_df.to_parquet(output/"{}loss_interp_df.parquet".format(loss_type))
     res_df.update(res_loss_df,errors="raise")
     res_df = pd.concat([res_df, sim_df],axis=0)
-    col1 = res_df.filter(regex="^[A-Z]{2}$").columns
+    col1 = res_df.filter(regex=r"([A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})").columns
     col2 = pd.Index(["final_cluster", "period","model","mrio_region","MRIO", "sector type", "semester", "Total direct damage to capital (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
     cols = col2.union(col1,sort=False)
     res_df.reset_index(inplace=True)

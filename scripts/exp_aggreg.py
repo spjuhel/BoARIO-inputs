@@ -518,7 +518,7 @@ if __name__ == '__main__':
         res_df.update(res_prodloss_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
         scriptLogger.info("Writing temp result to {}".format(output))
-        col1 = res_df.filter(regex="^[A-Z]{2}$").columns
+        col1 = res_df.filter(regex=r"([A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})").columns
         col2 = pd.Index(["final_cluster", "period","model","mrio_region","MRIO", "sector type", "semester", "Total direct damage to capital (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
@@ -616,7 +616,7 @@ if __name__ == '__main__':
             sim_df.set_index(["final_cluster", "MRIO", "sector type"],inplace=True)
         res_df.update(res_finaldemand_df,errors="raise")
         res_df = pd.concat([res_df, sim_df],axis=0)
-        col1 = res_df.filter(regex="^[A-Z]{2}$").columns
+        col1 = res_df.filter(regex=r"([A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})").columns
         col2 = pd.Index(["final_cluster","period","model","mrio_region","MRIO", "sector type", "semester", "Total direct damage to capital (2010€PPP)", "Population aff (2015 est.)", "dmg_as_direct_prodloss (M€)", "direct_prodloss_as_2010gva_share", "share of GVA used as ARIO input", "return_period", "long", "lat"])
         cols = col2.union(col1,sort=False)
         res_df.reset_index(inplace=True)
@@ -669,13 +669,13 @@ if __name__ == '__main__':
         prodloss_df = pd.read_parquet(output/"1_prodloss_full_flood_base_results.parquet")
         # n_prot = len(prodloss_df.loc[prodloss_df["protected"]])
         #prodloss_df = prodloss_df[~prodloss_df["protected"]]
-        regions_list = prodloss_df.filter(regex="^[A-Z]{2}$").columns
+        regions_list = prodloss_df.filter(regex=r"([A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})").columns
         # a regions_list = ['AT', 'AU', 'BE', 'BG', 'BR', 'CA', 'CH', 'CN', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'ID', 'IE', 'IN', 'IT', 'JP', 'KR', 'LT', 'LU', 'LV', 'MT', 'MX', 'NL', 'NO', 'PL', 'PT', 'RO', 'RU', 'SE', 'SI', 'SK', 'TR', 'TW', 'US', 'WA', 'WE', 'WF', 'WL', 'WM', 'ZA']
         preprepare_for_maps(prodloss_df,"prod",output,regions_list, semester_run)
     elif args.phase == 5:
         scriptLogger.info("#### PHASE 5 ####")
         finaldemand_df = pd.read_parquet(output/"2_fdloss_full_flood_base_results.parquet")
-        regions_list = finaldemand_df.filter(regex="^[A-Z]{2}$").columns
+        regions_list = finaldemand_df.filter(regex=r"([A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})").columns
         #finaldemand_df = finaldemand_df[~finaldemand_df["protected"]]
         preprepare_for_maps(finaldemand_df,"final",output, regions_list, semester_run)
     elif args.phase == 6:

@@ -123,7 +123,7 @@ def split_region(mrio_in: pym.IOSystem, region: str, split_number: int = 2, inte
 if __name__ == '__main__':
     args = parser.parse_args()
     name = pathlib.Path(args.exio_path).stem
-    subregion = re.compile("(?P<region>[A-Z]{2})_sliced_in_(?P<split_number>[0-9]+)")
+    subregion = re.compile("(?P<region>[A-Z]{2,3}\d{0,2}[A-Z]{0,2}\d{0,2})_sliced_in_(?P<split_number>[0-9]+)")
     match = subregion.match(args.subregions_target)
     if match is None:
         scriptLogger.warning("Subregions target '{}' didn't match regex {}".format(args.subregions_target,subregion))
